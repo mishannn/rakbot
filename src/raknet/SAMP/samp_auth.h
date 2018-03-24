@@ -1,0 +1,1 @@
+char *genAuthKey(const char *authIn);
