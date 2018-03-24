@@ -1,7 +1,5 @@
 #pragma once
 
-#define __iob_func _iob_func
-
 #pragma warning(disable:4091)
 #pragma warning(disable:4005)
 #pragma warning(disable:4996)
