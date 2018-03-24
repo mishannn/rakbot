@@ -1,5 +1,7 @@
 #pragma once
 
+#define __iob_func _iob_func
+
 #pragma warning(disable:4091)
 #pragma warning(disable:4005)
 #pragma warning(disable:4996)
@@ -47,7 +49,7 @@
 
 #pragma intrinsic(_ReturnAddress)
 
-#pragma comment (lib, "ole32.lib")
+#pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "wininet.lib")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "Psapi.lib")

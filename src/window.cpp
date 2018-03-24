@@ -175,22 +175,22 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			g_hWndAdminsArea = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTON, "Админы онлайн",
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-				573, 198, 205, 195, hWnd, NULL, g_hInst, NULL);
+				573, 208, 205, 185, hWnd, NULL, g_hInst, NULL);
 			SendMessage(g_hWndAdminsArea, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
 			g_hWndAdmins = CreateWindowEx(0, WC_STATIC, "Загрузка игроков...",
 				WS_CHILD | WS_VISIBLE,
-				583, 218, 185, 165, hWnd, NULL, g_hInst, NULL);
+				583, 228, 185, 155, hWnd, NULL, g_hInst, NULL);
 			SendMessage(g_hWndAdmins, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
 
 			hWndTemp = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTON, "Информация",
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-				573, 2, 205, 195, hWnd, NULL, g_hInst, NULL);
+				573, 2, 205, 205, hWnd, NULL, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
 			g_hWndTitle = CreateWindowEx(0, WC_STATIC, "RakBot " RAKBOT_VERSION "\nАвтор: MishaN",
 				WS_CHILD | WS_VISIBLE,
-				583, 20, 185, 170, hWnd, NULL, g_hInst, NULL);
+				583, 20, 185, 180, hWnd, NULL, g_hInst, NULL);
 			SendMessage(g_hWndTitle, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
 
 			g_hWndLog = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTBOX, "",

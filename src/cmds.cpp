@@ -2255,7 +2255,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 			freopen("CONIN$", "r", stdin);
 
 			printf("* ===================================================== *\n");
-			printf("  Консоль отладки RakBot " RAKBOT_VERSION " инициализирована\n");
+			printf("  RakBot " RAKBOT_VERSION " debug console inited\n");
 			printf("  RakBot.Ru\n");
 			printf("* ===================================================== *\n");
 			return;

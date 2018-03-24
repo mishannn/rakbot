@@ -14,7 +14,7 @@
 #include "mapwnd.h"
 
 HWND MapWindow;
-HANDLE Bitmap;
+HANDLE BitmapHandle;
 
 LRESULT CALLBACK MapWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
@@ -34,6 +34,7 @@ LRESULT CALLBACK MapWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			HBITMAP hBmp;
 			HANDLE hOldBitmap;
 			HPEN hEllipsePen, hPenOld;
+			BITMAP Bitmap;
 
 			GetClientRect(hWnd, &Rect);
 			hdc = BeginPaint(hWnd, &ps);
@@ -43,9 +44,9 @@ LRESULT CALLBACK MapWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				Rect.bottom - Rect.top);
 			SelectObject(hCmpDC, hBmp);
 
-			GetObject(Bitmap, sizeof(BITMAP), &Bitmap);
+			GetObject(BitmapHandle, sizeof(BITMAP), &Bitmap);
 			hMapDC = CreateCompatibleDC(hCmpDC);
-			hOldBitmap = SelectObject(hMapDC, Bitmap);
+			hOldBitmap = SelectObject(hMapDC, BitmapHandle);
 			StretchBlt(hCmpDC, 0, 0, 480, 456, hMapDC, 0, 0, 480, 456, SRCCOPY);
 			SelectObject(hMapDC, hOldBitmap);
 
@@ -125,7 +126,7 @@ void MapWindowThread() {
 		return;
 	}
 
-	Bitmap = LoadImage(NULL, GetRakBotPath("map.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	BitmapHandle = LoadImage(NULL, GetRakBotPath("map.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
 	Sleep(300);
 
@@ -146,7 +147,7 @@ void MapWindowThread() {
 		}
 	}
 
-	DeleteObject(Bitmap);
+	DeleteObject(BitmapHandle);
 
 	DestroyWindow(MapWindow);
 	MapWindow = NULL;

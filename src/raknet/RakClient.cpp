@@ -19,6 +19,8 @@
 #include "PacketEnumerations.h"
 #include "GetTime.h"
 
+#include "Mutex.h"
+#include "Lock.h"
 #include "Settings.h"
 #include "Script.h"
 

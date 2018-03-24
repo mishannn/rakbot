@@ -171,7 +171,7 @@ void LoadConfig() {
 
 		szAppName = "Settings";
 		GetPrivateProfileString(szAppName, "KickReconnect", "15", szBuf, sizeof(szBuf), szPath);
-		vars.reconnectDelay = std::strtoul(szBuf, nullptr, 10) * 1000;
+		vars.reconnectDelay = (std::strtoul(szBuf, nullptr, 10) * 1000) + 500;
 
 		GetPrivateProfileString(szAppName, "AdminReconnect", "300", szBuf, sizeof(szBuf), szPath);
 		vars.adminReconnectDelay = std::strtoul(szBuf, nullptr, 10) * 1000;
