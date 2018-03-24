@@ -230,12 +230,11 @@ void RakBot::log(const char *format, ...) {
 
 	Lock lock(vars.logMutex);
 
-	int bufSize = 512;
-	char *buf = new char[bufSize + 1];
+	char *buf = new char[MAX_LOGLEN + 1];
 
 	std::va_list args;
 	va_start(args, format);
-	int bufLen = vsnprintf(buf, bufSize, format, args);
+	int bufLen = vsnprintf(buf, MAX_LOGLEN, format, args);
 	buf[bufLen] = 0;
 	va_end(args);
 
@@ -248,8 +247,8 @@ void RakBot::log(const char *format, ...) {
 		SYSTEMTIME time;
 		GetLocalTime(&time);
 		
-		char tempBuf[600];
-		int bufLen = snprintf(tempBuf, bufSize, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
+		char tempBuf[MAX_LOGLEN + 64];
+		int bufLen = snprintf(tempBuf, MAX_LOGLEN, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
 		strncpy(buf, tempBuf, bufLen);
 		buf[bufLen] = 0;
 	}

@@ -10,6 +10,7 @@
 #include "Pickup.h"
 #include "Lock.h"
 #include "Vehicle.h"
+#include "Events.h"
 
 #include "MiscFuncs.h"
 
@@ -80,53 +81,32 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 Script::~Script() {}
 
 void Script::luaLog(std::string log) {
-	/* Lock lock(vars.logMutex);
-
 	if (log.empty())
 		return;
 
-	SYSTEMTIME		time;
-	char			path[MAX_PATH], name[MAX_PATH];
+	Lock lock(vars.logMutex);
 
-	GetLocalTime(&time);
+	int logLen = log.length();
+	if (logLen > MAX_LOGLEN)
+		return;
 
-	if (LogFile == nullptr) {
-		if (RakBot::app()->getSettings()->getAddress()->getIp().empty()
-			|| RakBot::app()->getSettings()->getName().empty()
-			|| RakBot::app()->getSettings()->getAddress()->getPort() == 0) {
-			return;
-		}
+	char *buf = new char[MAX_LOGLEN + 1];
+	strncpy(buf, log.c_str(), logLen);
+	buf[logLen] = 0;
 
-		GetModuleFileName(NULL, path, sizeof(path));
-		strcpy(strrchr(path, '\\') + 1, "logs");
-		CreateDirectory(path, NULL);
-		snprintf(name, sizeof(name), "%s\\%s;%d",
-			path,
-			RakBot::app()->getSettings()->getAddress()->getIp().c_str(),
-			RakBot::app()->getSettings()->getAddress()->getPort());
-		CreateDirectory(name, NULL);
-		strcat(name, "\\");
-		strcat(name, RakBot::app()->getSettings()->getName().c_str());
-		strcat(name, ".log");
+	if (RakBot::app()->getEvents()->onPrintLog(std::string(buf), true))
+		return;
 
-		LogFile = fopen(name, "a");
-		if (LogFile == NULL) {
-			return;
-		}
-	}
-
-	fprintf(LogFile, "[%02d:%02d:%02d] %s\n", time.wHour, time.wMinute, time.wSecond, log.c_str());
-	fflush(LogFile);
-
-	int bufSize = 512;
-	char *buf = new char[bufSize + 1];
-	_snprintf(buf, bufSize, "%s", log.c_str());
+	RakBot::app()->logToFile(std::string(buf));
 
 	if (vars.timeStamp) {
-		char *bufTemp = new char[bufSize + 20];
-		_snprintf(bufTemp, bufSize, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
-		delete[] buf;
-		buf = bufTemp;
+		SYSTEMTIME time;
+		GetLocalTime(&time);
+
+		char tempBuf[MAX_LOGLEN + 64];
+		int bufLen = snprintf(tempBuf, MAX_LOGLEN, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
+		strncpy(buf, tempBuf, bufLen);
+		buf[bufLen] = 0;
 	}
 
 	int lbCount = SendMessage(g_hWndLog, LB_GETCOUNT, 0, 0);
@@ -134,7 +114,7 @@ void Script::luaLog(std::string log) {
 		SendMessage(g_hWndLog, LB_DELETESTRING, 0, 0);
 
 	WPARAM idx = SendMessage(g_hWndLog, LB_ADDSTRING, 0, (LPARAM)buf);
-	SendMessage(g_hWndLog, LB_SETTOPINDEX, idx, 0); */
+	SendMessage(g_hWndLog, LB_SETTOPINDEX, idx, 0);
 }
 
 Script *Script::load(std::string scriptName) {
@@ -319,8 +299,12 @@ void Script::luaOnGameInited() {
 	luaCallback("onGameInited");
 }
 
-void Script::luaOnConnect() {
-	luaCallback("onConnect");
+void Script::luaOnConnect(uint16_t playerId) {
+	luaCallback("onConnect", playerId);
+}
+
+void Script::luaOnDisconnect(uint8_t reason) {
+	luaCallback("onDisconnect", reason);
 }
 
 bool Script::luaOnSetPosition(float positionX, float positionY, float positionZ) {

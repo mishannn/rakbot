@@ -34,7 +34,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 			return;
 
 		if (!fromFua) {
-			if (RakBot::app()->getEvents()->onRunCommand(command, false))
+			if (RakBot::app()->getEvents()->onRunCommand(command, fromFua))
 				return;
 		}
 

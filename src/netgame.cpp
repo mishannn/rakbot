@@ -7,6 +7,7 @@
 #include "Script.h"
 #include "Settings.h"
 #include "Vehicle.h"
+#include "Events.h"
 
 #include "main.h"
 #include "netrpc.h"
@@ -45,11 +46,7 @@ void Packet_ConnectionSucceeded(Packet *p) {
 	bot->setPlayerId(localPlayerId);
 
 	RakBot::app()->log("[RAKBOT] Подключено. Вход в игру...");
-
-	for each (Script *script in scripts) {
-		if (script != nullptr)
-			script->luaOnConnect();
-	}
+	RakBot::app()->getEvents()->onConnect(localPlayerId);
 
 	int iVersion = NETGAME_VERSION;
 	uint8_t byteMod = 1;
@@ -529,26 +526,32 @@ void UpdateNetwork() {
 		switch (packetIdentifier) {
 			case ID_DISCONNECTION_NOTIFICATION:
 				RakBot::app()->log("[RAKBOT] Сервер закрыл соединение. Переподключение через %d секунд", vars.reconnectDelay / 1000);
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_KICK);
 				bot->reconnect(vars.reconnectDelay);
 				break;
 			case ID_CONNECTION_BANNED:
 				RakBot::app()->log("[RAKBOT] Вы забанены на этом сервере. Переподключение...");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_BANNED);
 				bot->reconnect(3000);
 				break;
 			case ID_CONNECTION_ATTEMPT_FAILED:
 				RakBot::app()->log("[RAKBOT] Не удалось подключиться к серверу. Переподключение...");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_SERVER_OFFLINE);
 				bot->reconnect(1000);
 				break;
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
 				RakBot::app()->log("[RAKBOT] Сервер заполнен. Переподключение...");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_SERVER_FULL);
 				bot->reconnect(0);
 				break;
 			case ID_INVALID_PASSWORD:
 				RakBot::app()->log("[RAKBOT] Неверный пароль сервера.");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_WRONG_PASSWORD);
 				bot->disconnect(false);
 				break;
 			case ID_CONNECTION_LOST:
 				RakBot::app()->log("[RAKBOT] Соединение было потеряно. Переподключение через %d секунд", vars.reconnectDelay / 1000);
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_CONNECTION_LOST);
 				bot->reconnect(vars.reconnectDelay);
 				break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:

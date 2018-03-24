@@ -27,7 +27,8 @@ public:
 	void luaOnPlayerQuit(uint16_t playerId, uint8_t reasonId);
 	void luaOnPlayerJoin(uint16_t playerId, std::string playerName);
 	void luaOnGameInited();
-	void luaOnConnect();
+	void luaOnConnect(uint16_t playerId);
+	void luaOnDisconnect(uint8_t reason);
 	bool luaOnSetPosition(float positionX, float positionY, float positionZ);
 	void luaOnSpawn(float positionX, float positionY, float positionZ);
 	bool luaOnDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string dialogTitle, std::string okButtonText, std::string cancelButtonText, std::string dialogText);

@@ -21,6 +21,8 @@ public:
 	bool onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string dialogTitle, std::string okButtonText, std::string cancelButtonText, std::string dialogText);
 	void onSetSkin(uint16_t playerid, uint16_t skinId);
 	void onApplyAnimation(uint16_t playerId, uint16_t animId);
+	void onConnect(uint16_t playerId);
+	void onDisconnect(uint8_t reason);
 
 	// MONEY
 	void onSetMoney(int money);

@@ -289,11 +289,11 @@ void ConnectionRejected(RPCParameters *rpcParams) {
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
 	uint8_t byteRejectReason;
-
 	bsData.Read(byteRejectReason);
 
 	if (byteRejectReason == REJECT_REASON_BAD_NICKNAME) {
 		RakBot::app()->log("[RAKBOT] Неправильный ник, либо игрок уже онлайн. Переподключение...");
+		RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_PLAYER_ONLINE);
 		bot->reconnect(0);
 	} else if (byteRejectReason == REJECT_REASON_BAD_MOD) {
 		RakBot::app()->log("[RAKBOT] Неправильная версия модификации");

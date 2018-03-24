@@ -551,6 +551,20 @@ void Events::onSetSkin(uint16_t playerid, uint16_t skinId) {
 
 void Events::onApplyAnimation(uint16_t playerId, uint16_t animId) {}
 
+void Events::onConnect(uint16_t playerId) {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnConnect(playerId);
+	}
+}
+
+void Events::onDisconnect(uint8_t reason) {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnDisconnect(reason);
+	}
+}
+
 void Events::onSetMoney(int money) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)

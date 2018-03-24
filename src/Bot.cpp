@@ -424,6 +424,7 @@ void Bot::disconnect(bool timeOut) {
 
 	RakBot::app()->getServer()->reset();
 	RakBot::app()->log("[RAKBOT] Бот отключен от сервера");
+	RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_SELF);
 }
 
 void Bot::sendInput(std::string input) {
