@@ -59,6 +59,6 @@ public:
 	Events *getEvents();
 	SAMPDialog *getSampDialog();
 
-	void log(std::string format, ...);
+	void log(const char *format, ...);
 	void logToFile(std::string line);
 };

@@ -241,6 +241,7 @@ void LoadConfig() {
 	vars.noAfk = true;
 	vars.timeStamp = true;
 	vars.routeSpeed = 0;
+	vars.logFile = nullptr;
 
 	LoadCustom();
 }

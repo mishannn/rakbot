@@ -139,8 +139,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		if (vars.routeThread.joinable())
 			vars.routeThread.join();
 
-		if (vars.logFile.is_open()) {
-			vars.logFile.close();
+		if (vars.logFile != nullptr) {
+			fclose(vars.logFile);
+			vars.logFile = nullptr;
 		}
 
 		RakBot::app()->log("[RAKBOT] Работа завершена");

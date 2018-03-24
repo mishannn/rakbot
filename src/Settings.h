@@ -154,7 +154,7 @@ struct Vars {
 	int enterVehicleDelay;
 
 	Mutex logMutex;
-	std::fstream logFile;
+	FILE *logFile;
 
 	bool mapWindowOpened;
 	std::thread mapWindowThread;

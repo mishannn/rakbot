@@ -221,8 +221,11 @@ SAMPDialog *RakBot::getSampDialog() {
 	return _sampDialog;
 }
 
-void RakBot::log(std::string format, ...) {
-	if (format.empty())
+void RakBot::log(const char *format, ...) {
+	if (format == nullptr)
+		return;
+
+	if (strlen(format) < 1)
 		return;
 
 	Lock lock(vars.logMutex);
@@ -230,10 +233,9 @@ void RakBot::log(std::string format, ...) {
 	int bufSize = 512;
 	char *buf = new char[bufSize + 1];
 
-	const char *fmt = format.c_str();
-	va_list args;
-	va_start(args, fmt);
-	int bufLen = vsnprintf(buf, bufSize, fmt, args);
+	std::va_list args;
+	va_start(args, format);
+	int bufLen = vsnprintf(buf, bufSize, format, args);
 	buf[bufLen] = 0;
 	va_end(args);
 
@@ -245,7 +247,10 @@ void RakBot::log(std::string format, ...) {
 	if (vars.timeStamp) {
 		SYSTEMTIME time;
 		GetLocalTime(&time);
-		int bufLen = snprintf(buf, bufSize, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
+		
+		char tempBuf[600];
+		int bufLen = snprintf(tempBuf, bufSize, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
+		strncpy(buf, tempBuf, bufLen);
 		buf[bufLen] = 0;
 	}
 
@@ -261,7 +266,7 @@ void RakBot::logToFile(std::string line) {
 	static Mutex logToFileMutex;
 	Lock lock(logToFileMutex);
 
-	if (!vars.logFile.is_open()) {
+	if (vars.logFile == nullptr) {
 		Settings *settings = RakBot::app()->getSettings();
 
 		if (settings->getAddress()->getIp().empty())
@@ -288,9 +293,11 @@ void RakBot::logToFile(std::string line) {
 
 		// MessageBox(NULL, ss.str().c_str(), "", NULL);
 
-		vars.logFile.open(ss.str(), std::fstream::in | std::fstream::out | std::fstream::app);
-		if (!vars.logFile.is_open())
+		vars.logFile = fopen(ss.str().c_str(), "a");
+		if (vars.logFile == nullptr)
 			return;
+
+		fprintf(vars.logFile, "==================================[ÍÎÂÀß ÑÅÑÑÈß]==================================\n");
 	}
 
 	SYSTEMTIME time;
@@ -299,6 +306,6 @@ void RakBot::logToFile(std::string line) {
 	char timeBuf[64];
 	_snprintf(timeBuf, sizeof(timeBuf), "[%02d:%02d:%02d]", time.wHour, time.wMinute, time.wSecond);
 
-	vars.logFile << timeBuf << " " << line << std::endl;
-	vars.logFile.flush();
+	fprintf(vars.logFile, "%s %s\n", timeBuf, line.c_str());
+	fflush(vars.logFile);
 }
