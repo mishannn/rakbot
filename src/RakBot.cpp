@@ -294,7 +294,7 @@ void RakBot::logToFile(std::string line) {
 
 		// MessageBox(NULL, ss.str().c_str(), "", NULL);
 
-		vars.logFile = fopen(ss.str().c_str(), "a");
+		vars.logFile = fopen(ss.str().c_str(), vars.logFileMode.c_str());
 		if (vars.logFile == nullptr)
 			return;
 

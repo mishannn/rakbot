@@ -13,6 +13,10 @@ void LoadCustom() {
 	if (fdCustomSetings) {
 		fclose(fdCustomSetings);
 
+		szAppName = "Log";
+		GetPrivateProfileString(szAppName, "FileMode", "a", szBuf, sizeof(szBuf), szPath);
+		vars.logFileMode = std::string(szBuf);
+
 		szAppName = "Bot";
 		GetPrivateProfileString(szAppName, "MainDelay", "50", szBuf, sizeof(szBuf), szPath);
 		vars.mainDelay = std::strtoul(szBuf, nullptr, 10);
@@ -57,6 +61,9 @@ void LoadCustom() {
 		GetPrivateProfileString(szAppName, "Address", "0.0.0.0", szBuf, sizeof(szBuf), szPath);
 		vars.adapterAddress = std::string(szBuf);
 	} else {
+		szAppName = "Log";
+		WritePrivateProfileString(szAppName, "FileMode", "a", szPath);
+
 		szAppName = "Bot";
 		WritePrivateProfileString(szAppName, "MainDelay", "50", szPath);
 		WritePrivateProfileString(szAppName, "UpdateDelay", "50", szPath);

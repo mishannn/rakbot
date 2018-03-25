@@ -385,13 +385,17 @@ void Chat(RPCParameters *rpcParams) {
 
 void UpdateScoresPingsIPs(RPCParameters *rpcParams) {
 	Bot *bot = RakBot::app()->getBot();
+
+	if (!bot->isConnected())
+		return;
+
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
 	uint16_t playerId;
 	int  iPlayerScore;
 	uint32_t dwPlayerPing;
 
-	for (int i = 0; i < static_cast<int>((rpcParams->numberOfBitsOfData / 8) / 9); i++) {
+	for (int i = 0; i < static_cast<int>(((rpcParams->numberOfBitsOfData / 8) + 1) / 9); i++) {
 		bsData.Read(playerId);
 		bsData.Read(iPlayerScore);
 		bsData.Read(dwPlayerPing);

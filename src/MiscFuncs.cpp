@@ -213,7 +213,7 @@ void DoCoordMaster(bool state, float x, float y, float z) {
 			return;
 
 		vars.coordMasterEnabled = true;
-		RakBot::app()->log("[RAKBOT] CoordMaster: телепорт на координаты (%.2f; %.2f; %.2f)");
+		RakBot::app()->log("[RAKBOT] CoordMaster: телепорт на координаты (%.2f; %.2f; %.2f)", x, y, z);
 	} else {
 		vars.coordMasterTarget[0] = 0.f;
 		vars.coordMasterTarget[1] = 0.f;

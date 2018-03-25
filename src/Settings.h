@@ -156,6 +156,7 @@ struct Vars {
 
 	Mutex logMutex;
 	FILE *logFile;
+	std::string logFileMode;
 
 	bool mapWindowOpened;
 	std::thread mapWindowThread;
