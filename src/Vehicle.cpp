@@ -238,7 +238,7 @@ Player *Vehicle::getPassenger(int n) {
 	return _passenger[n];
 }
 
-// GEARSTATE
+// GEAR STATE
 void Vehicle::setGearState(uint8_t gearState) {
 	lock();
 	_gearState = gearState;
@@ -249,7 +249,7 @@ uint8_t Vehicle::getGearState() {
 	return _gearState;
 }
 
-// TRAILERID
+// TRAILER ID
 void Vehicle::setTrailerId(uint16_t trailerId) {
 	lock();
 	_trailerId = trailerId;
@@ -260,7 +260,7 @@ uint16_t Vehicle::getTrailerId() {
 	return _trailerId;
 }
 
-// TRAINSPEED
+// TRAIN SPEED
 void Vehicle::setTrainSpeed(float trainSpeed) {
 	lock();
 	_trainSpeed = trainSpeed;
