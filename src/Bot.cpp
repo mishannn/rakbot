@@ -1,5 +1,6 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
+#include "RakBot.h"
 #include "Player.h"
 #include "RakNet.h"
 #include "Settings.h"
@@ -74,12 +75,12 @@ void Bot::reconnect(int reconnectDelay) {
 
 	GameInited = false;
 	ConnectRequested = false;
-	BotConnectedTime = UINT32_MAX;
-	BotSpawnedTime = UINT32_MAX;
-	GameInitedTime = UINT32_MAX;
+	BotConnectedTimer.setTimer(UINT32_MAX);
+	BotSpawnedTimer.setTimer(UINT32_MAX);
+	GameInitedTimer.setTimer(UINT32_MAX);
 
 	RakBot::app()->getServer()->reset();
-	ReconnectTime = GetTickCount() + reconnectDelay;
+	ReconnectTimer.setTimer(GetTickCount() + reconnectDelay);
 }
 
 // Connected
@@ -116,7 +117,7 @@ int Bot::getMoney() {
 }
 
 // FUNCS
-void Bot::enterVehicle(uint16_t vehicleId, uint8_t seatId) {
+void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 	static bool enterVehicleReady = true;
 
 	if (getPlayerState() != PLAYER_STATE_ONFOOT) {
@@ -124,12 +125,6 @@ void Bot::enterVehicle(uint16_t vehicleId, uint8_t seatId) {
 		return;
 	}
 
-	if (vehicleId < 1 || vehicleId >= MAX_VEHICLES) {
-		RakBot::app()->log("[ERROR] Посадка в транспорт: неверный ID транспорта!");
-		return;
-	}
-
-	Vehicle *vehicle = RakBot::app()->getVehicle(vehicleId);
 	if (vehicle == nullptr) {
 		RakBot::app()->log("[ERROR] Посадка в транспорт: транспорт недоступен!");
 		return;
@@ -148,12 +143,12 @@ void Bot::enterVehicle(uint16_t vehicleId, uint8_t seatId) {
 		setPosition(i, vehicle->getPosition(i));
 	sync();
 
-	std::thread enterVehicleThread([this, vehicle, vehicleId, seatId]() {
+	std::thread enterVehicleThread([this, vehicle, seatId]() {
 		Sleep(vars.enterVehicleDelay);
 
 		RakClientInterface *rakClient = RakBot::app()->getRakClient();
 		RakNet::BitStream bsSend;
-		bsSend.Write(vehicleId);
+		bsSend.Write<uint16_t>(vehicle->getVehicleId());
 		bsSend.Write(seatId);
 		rakClient->RPC(&RPC_EnterVehicle, &bsSend, HIGH_PRIORITY, RELIABLE, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
 
@@ -167,8 +162,8 @@ void Bot::enterVehicle(uint16_t vehicleId, uint8_t seatId) {
 		}
 		sync();
 
-		RakBot::app()->getEvents()->onPutInVehicle(vehicleId, seatId);
-		RakBot::app()->log("[RAKBOT] Бот посажен в транспорт с ID %d на место %d!", vehicleId, seatId);
+		RakBot::app()->getEvents()->onPutInVehicle(vehicle, seatId);
+		RakBot::app()->log("[RAKBOT] Бот посажен в транспорт с ID %d на место %d!", vehicle->getVehicleId(), seatId);
 		enterVehicleReady = true;
 	});
 	enterVehicleThread.detach();
@@ -237,9 +232,7 @@ void Bot::aimSync() {
 		for (int i = 0; i < 3; i++)
 			aimData.aimPos[i] = getPosition(i);
 
-		int nearestPlayerId = FindNearestPlayer();
-		Player *player = RakBot::app()->getPlayer(nearestPlayerId);
-
+		Player *player = FindNearestPlayer();
 		if (player == nullptr) {
 			aimData.aimf1[0] = 0.f;
 			aimData.aimf1[1] = 1.f;
@@ -313,8 +306,8 @@ void Bot::onfootSync() {
 		onfootSync.quaternion[i] = getQuaternion(i);
 
 	if (vars.sendBadSync) {
-		int vehicleId = FindNearestVehicle();
-		onfootSync.surfVehicleId = (vehicleId > 0) ? vehicleId : 1;
+		Vehicle *vehicle = FindNearestVehicle();
+		onfootSync.surfVehicleId = (vehicle != nullptr) ? vehicle->getVehicleId() : 1;
 		onfootSync.surfOffsets[0] = NAN;
 		onfootSync.surfOffsets[1] = NAN;
 		onfootSync.surfOffsets[2] = NAN;
@@ -418,9 +411,9 @@ void Bot::disconnect(bool timeOut) {
 
 	GameInited = false;
 	ConnectRequested = true;
-	BotConnectedTime = UINT32_MAX;
-	BotSpawnedTime = UINT32_MAX;
-	GameInitedTime = UINT32_MAX;
+	BotConnectedTimer = UINT32_MAX;
+	BotSpawnedTimer = UINT32_MAX;
+	GameInitedTimer = UINT32_MAX;
 
 	RakBot::app()->getServer()->reset();
 	RakBot::app()->log("[RAKBOT] Бот отключен от сервера");
@@ -463,7 +456,7 @@ void Bot::requestSpawn() {
 	RakBot::app()->log("[RAKBOT] Запрошен спавн");
 }
 
-bool Bot::pickUpPickup(uint16_t pickupId, bool checkDist) {
+bool Bot::pickUpPickup(Pickup *pickup, bool checkDist) {
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	if (getPlayerState() != PLAYER_STATE_ONFOOT)
@@ -472,9 +465,8 @@ bool Bot::pickUpPickup(uint16_t pickupId, bool checkDist) {
 	if (!isSpawned())
 		return false;
 
-	Pickup *pickup = RakBot::app()->getPickup(pickupId);
 	if (pickup == nullptr) {
-		RakBot::app()->log("[ERROR] Поднятие пикапа: пикап %d неактивен", pickupId);
+		RakBot::app()->log("[ERROR] Поднятие пикапа: пикап %d неактивен", pickup->getPickupId());
 		return false;
 	}
 
@@ -489,7 +481,7 @@ bool Bot::pickUpPickup(uint16_t pickupId, bool checkDist) {
 	sync();
 
 	RakNet::BitStream bsSend;
-	bsSend.Write<int>(pickupId);
+	bsSend.Write<int>(pickup->getPickupId());
 	rakClient->RPC(&RPC_PickedUpPickup, &bsSend, HIGH_PRIORITY, RELIABLE_ORDERED, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
 	RakBot::app()->log("[RAKBOT] Поднят пикап с ID %d(model: %d)", pickup->getPickupId(), pickup->getModel());
 	return true;
@@ -681,7 +673,7 @@ void Bot::spawn() {
 		setSpawned(true);
 		sync();
 		vars.syncAllowed = true;
-		BotSpawnedTime = GetTickCount();
+		BotSpawnedTimer = GetTickCount();
 		RakBot::app()->getEvents()->onSpawn();
 		spawnReady = true;
 	});

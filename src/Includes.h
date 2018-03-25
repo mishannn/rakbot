@@ -18,8 +18,12 @@
 #include <locale>
 #include <string>
 #include <iomanip>
-#include <regex>
 #include <sstream>
+#include <list>
+#include <thread>
+#include <mutex>
+
+#include <boost/regex.hpp>
 
 #include <shlobj.h>
 #include <shellapi.h>
@@ -34,8 +38,6 @@
 #include <io.h>
 #include <fcntl.h>
 #include <iconv.h>
-#include <thread>
-#include <mutex>
 #include <DbgHelp.h>
 #include <iphlpapi.h>
 #include <Psapi.h>

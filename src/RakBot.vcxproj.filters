@@ -343,8 +343,9 @@
     <ClInclude Include="Events.h" />
     <ClInclude Include="SAMPDialog.h" />
     <ClInclude Include="Vehicle.h" />
-    <ClInclude Include="stdafx.h" />
     <ClInclude Include="Includes.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="raknet\_findfirst.cpp">
@@ -517,6 +518,7 @@
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="SAMPDialog.cpp" />
     <ClCompile Include="Vehicle.cpp" />
+    <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon.ico" />

@@ -46,7 +46,7 @@
 * It would be nice to CC: <Cokus@math.washington.edu> when you write.
 */
 
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include <stdio.h>
 #include <stdlib.h>

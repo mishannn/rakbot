@@ -4,6 +4,6 @@
 #include "Defines.h"
 #include "Structs.h"
 
-extern TeleportPlace TeleportPlaces[300];
+extern struct TeleportPlace TeleportPlaces[300];
 extern bool ConnectRequested, GameInited;
-extern uint32_t BotConnectedTime, BotSpawnedTime, GameInitedTime, ReconnectTime;
+extern class Timer BotConnectedTimer, BotSpawnedTimer, GameInitedTimer, ReconnectTimer;

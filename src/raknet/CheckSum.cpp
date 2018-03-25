@@ -3,7 +3,7 @@
 * @brief CheckSum implementation from http://www.flounder.com/checksum.htm
 *
 */
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include "CheckSum.h"
 

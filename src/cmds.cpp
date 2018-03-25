@@ -1,3 +1,5 @@
+#include "StdAfx.h"
+
 #include "RakBot.h"
 #include "PlayerBase.h"
 #include "Player.h"
@@ -225,8 +227,9 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			bot->pickUpPickup(pickupId, false);
-			RakBot::app()->log("[RAKBOT] Отправка пикапа: отправлен пикап %d", pickupId);
+			RakBot::app()->log("[RAKBOT] Отправка пикапа с ID %d", pickupId);
+			Pickup *pickup = RakBot::app()->getPickup(pickupId);
+			bot->pickUpPickup(pickup, false);
 			return;
 		}
 
@@ -498,77 +501,60 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 					return;
 
 				case 1:
-					vars.coordMasterTarget[0] = 1258.83f;
-					vars.coordMasterTarget[1] = -1810.54f;
-					vars.coordMasterTarget[2] = 10.07f;
+					DoCoordMaster(true, 1258.83f, 10.07f, 10.07f);
 					vars.busWorkerBusModel = 437;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: городской ЛС");
 					break;
 
 				case 2:
-					vars.coordMasterTarget[0] = -1985.03f;
-					vars.coordMasterTarget[1] = 96.93f;
-					vars.coordMasterTarget[2] = 23.82f;
+					DoCoordMaster(true, 1985.03f, 96.93f, 23.82f);
 					vars.busWorkerBusModel = 437;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: городской СФ");
 					break;
 
 				case 3:
-					vars.coordMasterTarget[0] = 2778.17f;
-					vars.coordMasterTarget[1] = 1290.91f;
-					vars.coordMasterTarget[2] = 6.73f;
+					DoCoordMaster(true, 2778.17f, 1290.91f, 6.73f);
 					vars.busWorkerBusModel = 437;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: городской ЛВ");
 					break;
 
 				case 4:
 					vars.busWorkerRouteItem = 0;
-					vars.coordMasterTarget[0] = 1654.91f;
-					vars.coordMasterTarget[1] = -1050.12f;
-					vars.coordMasterTarget[2] = 21.13f;
+					DoCoordMaster(true, 1654.91f, -1050.12f, 21.13f);
 					vars.busWorkerBusModel = 431;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: междугородний ЛС-СФ");
 					break;
 
 				case 5:
 					vars.busWorkerRouteItem = 1;
-					vars.coordMasterTarget[0] = 1654.91f;
-					vars.coordMasterTarget[1] = -1050.12f;
-					vars.coordMasterTarget[2] = 21.13f;
+					DoCoordMaster(true, 1654.91f, -1050.12f, 21.13f);
 					vars.busWorkerBusModel = 431;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: междугородний ЛС-ЛВ");
 					break;
 
 				case 6:
 					vars.busWorkerRouteItem = 2;
-					vars.coordMasterTarget[0] = 1654.91f;
-					vars.coordMasterTarget[1] = -1050.12f;
-					vars.coordMasterTarget[2] = 21.13f;
+					DoCoordMaster(true, 1654.91f, -1050.12f, 21.13f);
 					vars.busWorkerBusModel = 431;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: междугородний СФ-ЛВ");
 					break;
 
 				case 7:
 					vars.busWorkerRouteItem = 3;
-					vars.coordMasterTarget[0] = 1654.91f;
-					vars.coordMasterTarget[1] = -1050.12f;
-					vars.coordMasterTarget[2] = 21.13f;
+					DoCoordMaster(true, 1654.91f, -1050.12f, 21.13f);
 					vars.busWorkerBusModel = 431;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: пригородный ЛС-ФК");
 					break;
 
 				case 8:
 					vars.busWorkerRouteItem = 4;
-					vars.coordMasterTarget[0] = 1654.91f;
-					vars.coordMasterTarget[1] = -1050.12f;
-					vars.coordMasterTarget[2] = 21.13f;
+					DoCoordMaster(true, 1654.91f, -1050.12f, 21.13f);
 					vars.busWorkerBusModel = 431;
 					RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: пригородный ЛС-ЗАВОД");
 					break;
 
 					return;
 			}
-			vars.coordMasterEnabled = 1;
 			return;
 		}
 
@@ -600,10 +586,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 			}
 
 			RakBot::app()->log("[RAKBOT] Устройство на работу %d", vars.iSetWorkIndex);
-			vars.coordMasterTarget[0] = 1480.00f;
-			vars.coordMasterTarget[1] = -1771.00f;
-			vars.coordMasterTarget[2] = 18.00f;
-			vars.coordMasterEnabled = 1;
+			DoCoordMaster(true, 1480.00f, -1771.00f, 18.00f);
 			return;
 		}
 
@@ -619,8 +602,9 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			char floodText[256];
-			if (sscanf(cmd, "%*s%d%d%256c", &vars.floodMode, &vars.floodDelay, floodText) < 4) {
+			boost::smatch match;
+			boost::regex_search(std::string(cmd), match, boost::regex("\\S+\\s+(\\d+)\\s+(\\d+)\\s+(.+)"));
+			if (match.size() != 4) {
 				if (!vars.floodEnabled) {
 					RakBot::app()->log("[RAKBOT] !flood 1 <задержка> <текст> - флуд в чат с указанной задержкой");
 					RakBot::app()->log("[RAKBOT] !flood 2 <задержка> <текст> - флуд в SMS с указанной задержкой");
@@ -632,7 +616,9 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			vars.floodText = std::string(floodText);
+			vars.floodMode = std::stoul(match[1]);
+			vars.floodDelay = std::stoul(match[2]);
+			vars.floodText = match[3];
 			Trim(vars.floodText);
 
 			switch (vars.floodMode) {
@@ -694,8 +680,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				{ 2853.26f, 1286.76f, 11.39f }
 			};
 
-			vect3_copy(atm[sel], vars.coordMasterTarget);
-			vars.coordMasterEnabled = true;
+			DoCoordMaster(true, atm[sel][0], atm[sel][1], atm[sel][2]);
 			vars.getBalanceEnabled = true;
 			RakBot::app()->log("[RAKBOT] Телепорт к банкомату...");
 			return;
@@ -719,23 +704,8 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			vect3_copy(pos, vars.coordMasterTarget);
-			vars.coordMasterEnabled ^= true;
-
-			if (vars.coordMasterEnabled) {
-				char buf[512];
-				sprintf(
-					buf,
-					"[RAKBOT] CoordMaster: телепорт на координаты (%0.2f; %0.2f; %0.2f)",
-					vars.coordMasterTarget[0],
-					vars.coordMasterTarget[1],
-					vars.coordMasterTarget[2]
-				);
-				RakBot::app()->log(buf);
-			} else {
-				RakBot::app()->log("[RAKBOT] CoordMaster: телепорт остановлен");
-			}
-
+			bool coordMasterToggle = (vars.coordMasterEnabled != true);
+			DoCoordMaster(coordMasterToggle, pos[0], pos[1], pos[2]);
 			return;
 		}
 
@@ -1521,8 +1491,8 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				fclose(f);
 
 				int iPlaceIndex = std::strtoul(&cmd[8], nullptr, 10);
-				vect3_copy(TeleportPlaces[iPlaceIndex - 1].position, vars.coordMasterTarget);
-				vars.coordMasterEnabled = 1;
+				float *pos = TeleportPlaces[iPlaceIndex - 1].position;
+				DoCoordMaster(true, pos[0], pos[1], pos[2]);
 
 				sprintf(szBuf, "[RAKBOT] CoordMaster: телепорт на координаты (%0.2f; %0.2f; %0.2f)", vars.coordMasterTarget[0], vars.coordMasterTarget[1], vars.coordMasterTarget[2]);
 				RakBot::app()->log(szBuf);
@@ -1541,7 +1511,6 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 					"Ферма 1|10,0|-12,5|5,3",
 					"Помощь",
 					MB_ICONASTERISK);
-
 				return;
 			}
 
@@ -1588,7 +1557,8 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			bot->enterVehicle(vehicleId, 0);
+			Vehicle *vehicle = RakBot::app()->getVehicle(vehicleId);
+			bot->enterVehicle(vehicle, 0);
 			return;
 		}
 
@@ -1613,7 +1583,8 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			bot->enterVehicle(vehicleId, 1);
+			Vehicle *vehicle = RakBot::app()->getVehicle(vehicleId);
+			bot->enterVehicle(vehicle, 1);
 			RakBot::app()->log("[RAKBOT] Посадка в машину с ID %d", vehicleId);
 			return;
 		}
@@ -1673,8 +1644,8 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 			}
 
 			FarmIndex = std::strtoul(&cmd[5], nullptr, 10);
-			vect3_copy(FarmPos[FarmIndex], vars.coordMasterTarget);
-			vars.coordMasterEnabled = 1;
+			DoCoordMaster(true, FarmPos[FarmIndex][0], FarmPos[FarmIndex][1], FarmPos[FarmIndex][2]);
+
 			vars.botFarmerEnabled = 1;
 			vars.botFarmerAutomated = 1;
 			FarmWork = 0;
@@ -1720,10 +1691,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			vars.coordMasterTarget[0] = 1414.69f;
-			vars.coordMasterTarget[1] = -1700.48f;
-			vars.coordMasterTarget[2] = 13.54f;
-			vars.coordMasterEnabled = 1;
+			DoCoordMaster(true, 1414.69f, -1700.48f, 13.54f);
 
 			vars.iBankPutMoney = moneyAmount;
 			RakBot::app()->log("[RAKBOT] Автоматическое пополнение баланса на %d вирт", vars.iBankPutMoney);
@@ -1937,10 +1905,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 
 			vars.botLoaderEnabled ^= true;
 			if (vars.botLoaderEnabled) {
-				vars.coordMasterTarget[0] = 2126.78f;
-				vars.coordMasterTarget[1] = -2281.03f;
-				vars.coordMasterTarget[2] = 24.88f;
-				vars.coordMasterEnabled = true;
+				DoCoordMaster(true, 2126.78f, -2281.03f, 24.88f);
 				LoaderStep = BOTLOADER_STEP_STARTWORK;
 				RakBot::app()->log("[RAKBOT] Бот грузчика: включен");
 			} else {
@@ -2203,12 +2168,9 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				return;
 			}
 
-			vars.botAutoSchoolEnabled ^= 1;
+			vars.botAutoSchoolEnabled ^= true;
 			if (vars.botAutoSchoolEnabled) {
-				vars.coordMasterTarget[0] = -2026.00f;
-				vars.coordMasterTarget[1] = -101.00f;
-				vars.coordMasterTarget[2] = 35.00f;
-				vars.coordMasterEnabled = 1;
+				DoCoordMaster(true, -2026.00f, -101.00f, 35.00f);
 				RakBot::app()->log("[RAKBOT] Начало сдачи экзамена на права. Телепорт к автошколе...");
 			} else {
 				RakBot::app()->log("[RAKBOT] Сдача экзамена на права принудительно завершена");

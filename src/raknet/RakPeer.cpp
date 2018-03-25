@@ -18,7 +18,7 @@
 #include "RakPeer.h"
 #include "NetworkTypes.h"
 
-#include "RakBot.h"
+#include "StdAfx.h"
 #include "Settings.h"
 #include "Script.h"
 

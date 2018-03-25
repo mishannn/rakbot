@@ -17,7 +17,7 @@
 *  34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include "SHA1.h"
 #include <stdlib.h>

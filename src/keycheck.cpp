@@ -1,4 +1,4 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include "MiscFuncs.h"
 #include "Settings.h"
@@ -244,7 +244,7 @@ CURLcode OpenURL(const std::string &url) {
 
 	CurlWriteOffset = 0;
 	curl_easy_cleanup(curl);
-	curl_free(curl);
+	// curl_free(curl);
 
 	ZeroMemory(CurlBuffer, sizeof(CurlBuffer));
 

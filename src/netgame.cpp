@@ -1,5 +1,6 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
+#include "RakBot.h"
 #include "PlayerBase.h"
 #include "Player.h"
 #include "Bot.h"
@@ -73,7 +74,7 @@ void Packet_ConnectionSucceeded(Packet *p) {
 	rakClient->RPC(&RPC_ClientJoin, &bsSend, HIGH_PRIORITY, RELIABLE, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
 
 	bot->setConnected(true);
-	BotConnectedTime = GetTickCount();
+	BotConnectedTimer = GetTickCount();
 }
 
 void Packet_PlayerSync(Packet *p) {

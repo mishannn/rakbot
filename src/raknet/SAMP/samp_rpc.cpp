@@ -1,4 +1,4 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 // Outcoming 
 // Исходящие 

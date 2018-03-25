@@ -1,5 +1,6 @@
-﻿#include "RakBot.h"
+﻿#include "StdAfx.h"
 
+#include "RakBot.h"
 #include "PlayerBase.h"
 #include "Player.h"
 #include "Bot.h"
@@ -79,6 +80,25 @@ HFONT g_hfText, g_hfListBoxText;
 NOTIFYICONDATA notifyIconData;
 char szHint[64];
 
+std::vector<std::string> commandHistory;
+int currentCommand = 0;
+
+void CommandHistoryPrev() {
+	if (currentCommand > 0)
+		currentCommand--;
+
+	SendMessage(g_hWndInput, WM_SETTEXT, 0, (LPARAM)commandHistory[currentCommand].c_str());
+	SetFocus(g_hWndInput);
+}
+
+void CommandHistoryNext() {
+	if (currentCommand < (commandHistory.size() - 1))
+		currentCommand++;
+
+	SendMessage(g_hWndInput, WM_SETTEXT, 0, (LPARAM)commandHistory[currentCommand].c_str());
+	SetFocus(g_hWndInput);
+}
+
 void SendCommand() {
 	int length = GetWindowTextLength(g_hWndInput);
 
@@ -88,6 +108,9 @@ void SendCommand() {
 	char *text = new char[length + 1];
 	SendMessage(g_hWndInput, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)text);
 	RunCommand(text);
+	commandHistory[(commandHistory.size() - 1)] = std::string(text);
+	commandHistory.push_back("");
+	currentCommand = (commandHistory.size() - 1);
 	delete[] text;
 
 	SendMessage(g_hWndInput, WM_SETTEXT, 0, NULL);
@@ -205,6 +228,8 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
 				5, 325, 430, 20, hWnd, (HMENU)IDC_INPUTBOX, g_hInst, NULL);
 			SendMessage(g_hWndInput, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
+			commandHistory.push_back("");
+			currentCommand = 0;
 
 			g_hWndChangeLayout = CreateWindowEx(0, WC_BUTTON, "L",
 				BS_TEXT | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
@@ -466,7 +491,19 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				{
 					if (GetFocus() == g_hWndInput)
 						SendCommand();
-					break;
+					return true;
+				}
+
+				case VK_UP:
+				{
+					CommandHistoryPrev();
+					return true;
+				}
+
+				case VK_DOWN:
+				{
+					CommandHistoryNext();
+					return true;
 				}
 			}
 			break;

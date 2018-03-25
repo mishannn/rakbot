@@ -1,5 +1,6 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
+#include "RakBot.h"
 #include "PlayerBase.h"
 #include "Player.h"
 #include "Bot.h"

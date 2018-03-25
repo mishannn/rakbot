@@ -14,7 +14,7 @@
 /// Software Foundation; either version 2 of the License, or (at your
 /// option) any later version.
 
-#include "RakBot.h"
+#include "StdAfx.h"
 #include "InternalPacketPool.h"
 #include <assert.h>
 

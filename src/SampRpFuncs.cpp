@@ -1,3 +1,5 @@
+#include "StdAfx.h"
+
 #include "RakBot.h"
 #include "RakNet.h"
 #include "PlayerBase.h"
@@ -54,10 +56,7 @@ void SampRpFuncs::takeCheckpoint() {
 	takeCheckpointThread.detach();
 }
 
-void SampRpFuncs::pickUpPickup(uint16_t pickupId) {
-	static Mutex mutex;
-
-	Pickup *pickup = RakBot::app()->getPickup(pickupId);
+void SampRpFuncs::pickUpPickup(Pickup *pickup) {
 	if (pickup == nullptr)
 		return;
 
@@ -68,18 +67,22 @@ void SampRpFuncs::pickUpPickup(uint16_t pickupId) {
 		return;
 	}
 
-	mutex.lock();
+	static bool pickUpReady = true;
+	while (!pickUpReady)
+		Sleep(10);
+	pickUpReady = false;
+
 	_botSuspended = true;
 	bot->setPosition(0, pickup->getPosition(0));
 	bot->setPosition(1, pickup->getPosition(1));
 	bot->setPosition(2, pickup->getPosition(2) - 2.5f);
 	bot->sync();
 
-	std::thread puckUpPickupThread([bot, pickupId]() {
+	std::thread puckUpPickupThread([bot, pickup]() {
 		Sleep(1500);
-		bot->pickUpPickup(pickupId);
+		bot->pickUpPickup(pickup);
 		_botSuspended = false;
-		mutex.unlock();
+		pickUpReady = true;
 	});
 	puckUpPickupThread.detach();
 }
@@ -111,8 +114,8 @@ bool SampRpFuncs::onServerMessage(std::string msg) {
 		if (msg.find("Сдача на права стоит 500 вирт") != std::string::npos)
 			vars.botAutoSchoolActive = 0;
 
-		std::smatch matches;
-		if (std::regex_search(msg, matches, std::regex("Мешков перетащено: (\\d+)"))) {
+		boost::smatch matches;
+		if (boost::regex_search(msg, matches, boost::regex("Мешков перетащено: (\\d+)"))) {
 			BagCount = std::stoul(matches[1], nullptr, 10);
 		}
 
@@ -150,7 +153,7 @@ bool SampRpFuncs::onServerMessage(std::string msg) {
 					vars.coordMasterEnabled = 1;
 					RakBot::app()->log("[RAKBOT] Телепорт на ферму %d", FarmIndex);
 				} else
-					bot->pickUpPickup(900 + (FarmIndex * 2));
+					bot->pickUpPickup(RakBot::app()->getPickup(900 + (FarmIndex * 2)));
 				return true;
 			}
 		}

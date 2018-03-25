@@ -1,5 +1,6 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
+#include "RakBot.h"
 #include "PlayerBase.h"
 #include "Player.h"
 #include "Bot.h"
@@ -357,7 +358,7 @@ void Script::luaRegisterFunctions() {
 	});
 	_scriptState.set_function("reconnect", [this](int reconnectDelay) {
 		Bot *bot = RakBot::app()->getBot();
-		return bot->reset(reconnectDelay);
+		return bot->reconnect(reconnectDelay);
 	});
 	_scriptState.set_function("getMoney", [this]() {
 		Bot *bot = RakBot::app()->getBot();
@@ -365,7 +366,8 @@ void Script::luaRegisterFunctions() {
 	});
 	_scriptState.set_function("enterVehicle", [this](int vehicleId, int seatId) {
 		Bot *bot = RakBot::app()->getBot();
-		return bot->enterVehicle(vehicleId, seatId);
+		Vehicle *vehicle = RakBot::app()->getVehicle(vehicleId);
+		return bot->enterVehicle(vehicle, seatId);
 	});
 	_scriptState.set_function("exitVehicle", [this]() {
 		Bot *bot = RakBot::app()->getBot();
@@ -389,7 +391,8 @@ void Script::luaRegisterFunctions() {
 	});
 	_scriptState.set_function("sendPickup", [this](int pickupId, bool checkDist) {
 		Bot *bot = RakBot::app()->getBot();
-		return bot->pickUpPickup(pickupId, checkDist);
+		Pickup *pickup = RakBot::app()->getPickup(pickupId);
+		return bot->pickUpPickup(pickup, checkDist);
 	});
 	_scriptState.set_function("sendDialog", [this](int dialogId, int button, int item, std::string input) {
 		Bot *bot = RakBot::app()->getBot();
@@ -427,7 +430,7 @@ void Script::luaRegisterFunctions() {
 		Bot *bot = RakBot::app()->getBot();
 		uint16_t playerId = bot->getPlayerId();
 		if (playerId == PLAYER_ID_NONE)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		return sol::make_object(_scriptState, playerId);
 	});
 	_scriptState.set_function("getSkin", [this]() {
@@ -447,6 +450,7 @@ void Script::luaRegisterFunctions() {
 		bot->setPosition(0, x);
 		bot->setPosition(1, y);
 		bot->setPosition(2, z);
+		return true;
 	});
 	_scriptState.set_function("getSpeed", [this]() {
 		Bot *bot = RakBot::app()->getBot();
@@ -457,6 +461,7 @@ void Script::luaRegisterFunctions() {
 		bot->setSpeed(0, x);
 		bot->setSpeed(1, y);
 		bot->setSpeed(2, z);
+		return true;
 	});
 	_scriptState.set_function("getQuaternion", [this]() {
 		Bot *bot = RakBot::app()->getBot();
@@ -468,12 +473,13 @@ void Script::luaRegisterFunctions() {
 		bot->setQuaternion(1, x);
 		bot->setQuaternion(2, y);
 		bot->setQuaternion(3, z);
+		return true;
 	});
 	_scriptState.set_function("getBotVehicle", [this]() {
 		Bot *bot = RakBot::app()->getBot();
 		Vehicle *vehicle = bot->getVehicle();
 		if (vehicle == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		return sol::make_object(_scriptState, vehicle->getVehicleId());
 	});
 	_scriptState.set_function("getAnimation", [this]() {
@@ -484,6 +490,7 @@ void Script::luaRegisterFunctions() {
 		Bot *bot = RakBot::app()->getBot();
 		bot->getAnimation()->setAnimId(animId);
 		bot->getAnimation()->setAnimFlags(animFlags);
+		return true;
 	});
 	_scriptState.set_function("getKeys", [this]() {
 		Bot *bot = RakBot::app()->getBot();
@@ -494,6 +501,7 @@ void Script::luaRegisterFunctions() {
 		bot->getKeys()->setKeys(keys);
 		bot->getKeys()->setLeftRightKey(lrAnalog);
 		bot->getKeys()->setUpDownKey(udAnalog);
+		return true;
 	});
 	_scriptState.set_function("getScore", [this]() {
 		Bot *bot = RakBot::app()->getBot();
@@ -506,6 +514,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("clickTextdraw", [this](int textdrawId) {
 		Bot *bot = RakBot::app()->getBot();
 		bot->clickTextdraw(textdrawId);
+		return true;
 	});
 
 	// RAKNET
@@ -529,13 +538,13 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("bitStreamNew", [this]() {
 		BitStream *bitStream = new BitStream();
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		return sol::make_object(_scriptState, reinterpret_cast<int>(bitStream));
 	});
 	_scriptState.set_function("bitStreamInit", [this](int dataPtr, int dataSize) {
 		BitStream *bitStream = new BitStream(reinterpret_cast<uint8_t *>(dataPtr), dataSize, false);
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		return sol::make_object(_scriptState, reinterpret_cast<int>(bitStream));
 	});
 	_scriptState.set_function("bitStreamDelete", [this](int bsPtr) {
@@ -548,14 +557,14 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("bitStreamData", [this](int bsPtr) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		return sol::make_object(_scriptState, reinterpret_cast<int>(bitStream->GetData()));
 	});
 	_scriptState.set_function("bitStreamSize", [this](int bsPtr) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
-		return sol::make_object(_scriptState, bitStream->GetNumberOfBytesUsed());
+			return 0;
+		return bitStream->GetNumberOfBytesUsed();
 	});
 	_scriptState.set_function("bitStreamIgnore", [this](int bsPtr, int amount) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
@@ -588,7 +597,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("bitStreamReadByte", [this](int bsPtr, sol::optional<bool> compressed) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		uint8_t value;
 		if (compressed)
 			bitStream->ReadCompressed(value);
@@ -599,7 +608,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("bitStreamReadWord", [this](int bsPtr, sol::optional<bool> compressed) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		uint16_t value;
 		if (compressed)
 			bitStream->ReadCompressed(value);
@@ -610,7 +619,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("bitStreamReadDWord", [this](int bsPtr, sol::optional<bool> compressed) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		uint32_t value;
 		if (compressed)
 			bitStream->ReadCompressed(value);
@@ -621,7 +630,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("bitStreamReadFloat", [this](int bsPtr, sol::optional<bool> compressed) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
 		if (bitStream == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		float value;
 		if (compressed)
 			bitStream->ReadCompressed(value);
@@ -632,7 +641,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("bitStreamReadString", [this](int bsPtr, int strSize, sol::optional<bool> compressed) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
 		if (bitStream == nullptr || strSize < 1)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		char *strBuf = new char[strSize + 1];
 		if (compressed)
 			stringCompressor->DecodeString(strBuf, strSize, bitStream);
@@ -699,27 +708,36 @@ void Script::luaRegisterFunctions() {
 	// MISC
 	_scriptState.set_function("printLog", [this](std::string log) {
 		std::vector<std::string> lines = Split(log, '\n');
+		if (lines.size() < 1)
+			return false;
 		for each (std::string line in lines) {
 			luaLog("[LUA] " + line);
 		}
+		return true;
 	});
 	_scriptState.set_function("runCommand", [this](std::string cmd) {
 		std::vector<std::string> lines = Split(cmd, '|');
+		if (lines.size() < 1)
+			return false;
 		for each (std::string line in lines) {
 			RunCommand(line.c_str(), true);
 		}
+		return true;
 	});
 	_scriptState.set_function("sleep", [this](int ms) {
 		Sleep(ms);
+		return true;
 	});
 	_scriptState.set_function("exit", [this]() {
 		RakBot::app()->exit();
+		return true;
 	});
 	_scriptState.set_function("messageBox", [this](std::string message) {
 		std::thread msgBoxThread([message] {
 			MessageBox(NULL, message.c_str(), "Сообщение Lua!", MB_ICONASTERISK);
 		});
 		msgBoxThread.detach();
+		return true;
 	});
 	_scriptState.set_function("dumpMem", [this](int address, int size) {
 		return std::string(DumpMem(reinterpret_cast<uint8_t *>(address), size));
@@ -738,7 +756,7 @@ void Script::luaRegisterFunctions() {
 		sol::table cpInfo = _scriptState.create_table();
 		Bot *bot = RakBot::app()->getBot();
 		if (!checkpoint.active)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		cpInfo["size"] = checkpoint.size;
 		cpInfo["distance"] = bot->distanceTo(checkpoint.position);
 		cpInfo["position"] = _scriptState.create_table();
@@ -753,7 +771,7 @@ void Script::luaRegisterFunctions() {
 		sol::table cpInfo = _scriptState.create_table();
 		Bot *bot = RakBot::app()->getBot();
 		if (!raceCheckpoint.active)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		cpInfo["size"] = raceCheckpoint.size;
 		cpInfo["type"] = raceCheckpoint.type;
 		cpInfo["distance"] = bot->distanceTo(raceCheckpoint.position);
@@ -774,7 +792,7 @@ void Script::luaRegisterFunctions() {
 		Bot *bot = RakBot::app()->getBot();
 		Pickup *pickup = RakBot::app()->getPickup(pickupId);
 		if (pickup == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		pickupInfo["id"] = pickup->getPickupId();
 		pickupInfo["model"] = pickup->getModel();
 		pickupInfo["type"] = pickup->getType();
@@ -792,7 +810,7 @@ void Script::luaRegisterFunctions() {
 		Bot *bot = RakBot::app()->getBot();
 		stVehicle vehicle = Vehicles[vehicleId];
 		if (!vehicle.isExists)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		vehicleInfo["id"] = vehicleId;
 		vehicleInfo["model"] = vehicle.model;
 		vehicleInfo["firstColor"] = vehicle.firstColor;
@@ -813,7 +831,7 @@ void Script::luaRegisterFunctions() {
 		Bot *bot = RakBot::app()->getBot();
 		GTAObject object = Objects[objectId];
 		if (!object.active)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		objectInfo["id"] = objectId;
 		objectInfo["model"] = object.ulModelId;
 		objectInfo["objectId"] = object.usObjectId;
@@ -836,7 +854,7 @@ void Script::luaRegisterFunctions() {
 		Bot *bot = RakBot::app()->getBot();
 		Player *player = RakBot::app()->getPlayer(playerId);
 		if (player == nullptr)
-			return sol::make_object(_scriptState, false);
+			return sol::make_object(_scriptState, sol::nil);
 		playerInfo["id"] = player->getPlayerId();
 		playerInfo["state"] = player->getPlayerState();
 		playerInfo["health"] = player->getHealth();
@@ -889,29 +907,35 @@ void Script::luaRegisterFunctions() {
 	// ADMINS
 	_scriptState.set_function("add", [this](std::string admin) {
 		vars.admins.push_back(admin);
+		return true;
 	});
 	_scriptState.set_function("clear", [this]() {
 		vars.admins.clear();
+		return true;
 	});
 
 	// AUTO REG
 	_scriptState.set_function("setOwnAutoReg", [this](bool state) {
 		vars.autoRegEnabled = (state == false);
+		return true;
 	});
 	_scriptState.set_function("setMail", [this](std::string mail) {
 		vars.autoRegMail = mail;
+		return true;
 	});
 	_scriptState.set_function("getMail", [this]() {
 		return vars.autoRegMail;
 	});
 	_scriptState.set_function("setReferer", [this](std::string referer) {
 		vars.autoRegReferer = referer;
+		return true;
 	});
 	_scriptState.set_function("getReferer", [this]() {
 		return vars.autoRegReferer;
 	});
 	_scriptState.set_function("setSex", [this](int sex) {
 		vars.autoRegSex = sex;
+		return true;
 	});
 	_scriptState.set_function("getSex", [this]() {
 		return vars.autoRegSex;
@@ -925,6 +949,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("setNickName", [this](std::string name) {
 		Settings *settings = RakBot::app()->getSettings();
 		settings->setName(name);
+		return true;
 	});
 	_scriptState.set_function("getPassword", [this]() {
 		Settings *settings = RakBot::app()->getSettings();
@@ -933,6 +958,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("setPassword", [this](std::string password) {
 		Settings *settings = RakBot::app()->getSettings();
 		settings->setLoginPassword(password);
+		return true;
 	});
 	_scriptState.set_function("getServerPassword", [this]() {
 		Settings *settings = RakBot::app()->getSettings();
@@ -941,6 +967,7 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("setServerPassword", [this](std::string password) {
 		Settings *settings = RakBot::app()->getSettings();
 		settings->setServerPassword(password);
+		return true;
 	});
 	_scriptState.set_function("getServerAddress", [this]() {
 		std::stringstream ss;
@@ -950,13 +977,14 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("setServerAddress", [this](std::string address) {
 		std::vector<std::string> parts = Split(address, ':');
 		if (parts.size() != 2)
-			return;
+			return false;
 		std::string ip = parts[0];
 		uint16_t port = static_cast<uint16_t>(std::stoi(parts[1]));
 		if (port < 1 || port > 65535)
-			return;
+			return false;
 		RakBot::app()->getSettings()->getAddress()->setIp(ip);
 		RakBot::app()->getSettings()->getAddress()->setPort(port);
+		return true;
 	});
 }
 

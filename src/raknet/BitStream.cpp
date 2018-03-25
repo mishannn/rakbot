@@ -14,7 +14,7 @@
 /// Software Foundation; either version 2 of the License, or (at your
 /// option) any later version.
 
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1299 // VC6 doesn't support template specialization
 #include "BitStream_NoTemplate.cpp"

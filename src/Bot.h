@@ -30,7 +30,7 @@ public:
 	void setMoney(int money);
 	int getMoney();
 
-	void enterVehicle(uint16_t vehicleId, uint8_t seatId);
+	void enterVehicle(Vehicle *vehicle, uint8_t seatId);
 	void exitVehicle();
 
 	void sync();
@@ -43,7 +43,7 @@ public:
 	void sendInput(std::string input);
 	void requestClass(int classId);
 	void requestSpawn();
-	bool pickUpPickup(uint16_t pickupId, bool checkDist = true);
+	bool pickUpPickup(Pickup *pickup, bool checkDist = true);
 	bool takeCheckpoint();
 	void dialogResponse(uint16_t dialogId, uint8_t button = 1, uint16_t item = 0, std::string input = std::string());
 	void spawn();

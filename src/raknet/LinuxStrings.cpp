@@ -1,4 +1,4 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #if (defined(__GNUC__)  || defined(__GCCXML__))
 #include <string.h>

@@ -1,4 +1,4 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include "MiscFuncs.h"
 #include "Settings.h"

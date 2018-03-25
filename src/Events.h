@@ -35,6 +35,10 @@ public:
 	void onDestroyVehicle(Vehicle *vehicle);
 	void onSetVehicleParams(Vehicle *vehicle);
 
+	// PUT & EJECT VEHICLE
+	bool onPutInVehicle(Vehicle *vehicleId, uint8_t seatId);
+	bool onEjectFromVehicle();
+
 	// PLAYERS
 	void onPlayerJoin(Player *player);
 	void onPlayerQuit(Player *player, uint8_t reason);
@@ -49,10 +53,6 @@ public:
 
 	// SPECTATING
 	void onToggleSpectating(bool state);
-
-	// PUT & EJECT VEHICLE
-	bool onPutInVehicle(uint16_t vehicleId, uint8_t seatId);
-	bool onEjectFromVehicle();
 
 	// PICKUPS
 	void onCreatePickup(Pickup *pickup);

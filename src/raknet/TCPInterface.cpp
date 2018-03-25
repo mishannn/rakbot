@@ -15,6 +15,7 @@
 /// Software Foundation; either version 2 of the License, or (at your
 /// option) any later version.
 
+#include "StdAfx.h"
 #include "TCPInterface.h"
 #ifdef _WIN32
 //#include <Shlwapi.h>
@@ -187,6 +188,7 @@ PlayerID TCPInterface::Connect(const char* host, unsigned short remotePort) {
 		adapter_addr.sin_addr.s_addr = adapterAddress;
 		adapter_addr.sin_port = 0;
 		bind(sockfd, (sockaddr *)&adapter_addr, sizeof(adapter_addr));
+
 		RakBot::app()->log("[RAKBOT] Выбран адаптер с адресом: %s (TCPInterface)", vars.adapterAddress.c_str());
 	}
 

@@ -1,3 +1,5 @@
+#include "StdAfx.h"
+
 #include "RakBot.h"
 #include "RakNet.h"
 #include "PlayerBase.h"
@@ -146,7 +148,7 @@ void InitGame(RPCParameters *rpcParams) {
 	bot->requestClass(0);
 
 	GameInited = true;
-	GameInitedTime = GetTickCount();
+	GameInitedTimer = GetTickCount();
 
 	RakBot::app()->getEvents()->onGameInited(std::string(hostName));
 }
@@ -348,7 +350,7 @@ void ClientMessage(RPCParameters *rpcParams) {
 	delete[] msgBuf;
 	msgBuf = nullptr;
 
-	msg = std::regex_replace(msg, std::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string());
+	msg = boost::regex_replace(msg, boost::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string());
 
 	if (RakBot::app()->getEvents()->onServerMessage(msg))
 		return;
@@ -850,9 +852,9 @@ void ScrShowDialog(RPCParameters *rpcParams) {
 	RakBot::app()->getSampDialog()->setDialogText(std::string(dialogTextBuf));
 	delete[] dialogTextBuf;
 
-	RakBot::app()->getSampDialog()->setDialogTitle(std::regex_replace(RakBot::app()->getSampDialog()->getDialogTitle(), std::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string()));
-	RakBot::app()->getSampDialog()->setDialogText(std::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), std::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string()));
-	RakBot::app()->getSampDialog()->setDialogText(std::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), std::regex("\t"), std::string(" ")));
+	RakBot::app()->getSampDialog()->setDialogTitle(boost::regex_replace(RakBot::app()->getSampDialog()->getDialogTitle(), boost::regex("\\{[0-9A-Fa-f]{6}\\}"), ""));
+	RakBot::app()->getSampDialog()->setDialogText(boost::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), boost::regex("\\{[0-9A-Fa-f]{6}\\}"), ""));
+	RakBot::app()->getSampDialog()->setDialogText(boost::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), boost::regex("\t"), " "));
 
 	if (RakBot::app()->getEvents()->onDialogShow(
 		RakBot::app()->getSampDialog()->getDialogId(),
@@ -909,8 +911,8 @@ void ScrGameText(RPCParameters *rpcParams) {
 	std::string gameText = std::string(textBuf);
 	delete[] textBuf;
 
-	gameText = std::regex_replace(gameText, std::regex("~n~"), std::string("\n"));
-	gameText = std::regex_replace(gameText, std::regex("~.~"), std::string());
+	gameText = boost::regex_replace(gameText, boost::regex("~n~"), "\n");
+	gameText = boost::regex_replace(gameText, boost::regex("~.~"), "");
 
 	if (RakBot::app()->getEvents()->onGameText(gameText))
 		return;
@@ -1255,14 +1257,14 @@ void PutPlayerInVehicle(RPCParameters *rpcParams) {
 	bsData.Read(vehicleId);
 	bsData.Read(seatId);
 
-	if (RakBot::app()->getEvents()->onPutInVehicle(vehicleId, seatId))
-		return;
-
 	Vehicle *vehicle = RakBot::app()->getVehicle(vehicleId);
 	if (vehicle == nullptr)
 		return;
 
-	bot->enterVehicle(vehicleId, seatId);
+	if (RakBot::app()->getEvents()->onPutInVehicle(vehicle, seatId))
+		return;
+
+	bot->enterVehicle(vehicle, seatId);
 	RakBot::app()->log("[RAKBOT] Бот посажен в транспорт с ID %d", vehicleId);
 }
 

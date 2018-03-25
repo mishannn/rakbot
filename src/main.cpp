@@ -1,5 +1,6 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
+#include "RakBot.h"
 #include "PlayerBase.h"
 #include "Player.h"
 #include "Bot.h"
@@ -10,6 +11,7 @@
 #include "Server.h"
 #include "Lock.h"
 #include "MiscFuncs.h"
+#include "Timer.h"
 
 #include "cmds.h"
 #include "ini.h"
@@ -26,10 +28,10 @@ TeleportPlace TeleportPlaces[300];
 
 bool ConnectRequested = false;
 bool GameInited = false;
-uint32_t BotConnectedTime = UINT32_MAX;
-uint32_t BotSpawnedTime = UINT32_MAX;
-uint32_t GameInitedTime = UINT32_MAX;
-uint32_t ReconnectTime = 0;
+Timer BotConnectedTimer;
+Timer BotSpawnedTimer;
+Timer GameInitedTimer;
+Timer ReconnectTimer;
 
 void LoadAdmins();
 
@@ -49,6 +51,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		OrigExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
 
 		LoadConfig();
+
+		BotConnectedTimer.setTimer(UINT32_MAX);
+		BotSpawnedTimer.setTimer(UINT32_MAX);
+		GameInitedTimer.setTimer(UINT32_MAX);
+		ReconnectTimer.setTimer(0);
 
 		g_hInst = hInstance;
 		g_hIcon = (HICON)LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_ICON));
@@ -94,7 +101,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		while (!vars.botOff) {
 			KeepOnline();
 
-			if (!ConnectRequested && GetTickCount() > ReconnectTime && !vars.keepOnlineWait) {
+			if (!ConnectRequested && ReconnectTimer.isElapsed(0, false) && !vars.keepOnlineWait) {
 				ConnectRequested = true;
 				bot->connect(RakBot::app()->getSettings()->getAddress()->getIp(), RakBot::app()->getSettings()->getAddress()->getPort());
 			}

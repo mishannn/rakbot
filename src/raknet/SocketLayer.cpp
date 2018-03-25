@@ -1,6 +1,8 @@
 #define DEFAULT_MTU_SIZE 1500
 #define MAXIMUM_MTU_SIZE 576
 
+#include "StdAfx.h"
+
 #include "RakBot.h"
 #include "SocketLayer.h"
 #include "RakNet.h"

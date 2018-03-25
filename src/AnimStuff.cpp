@@ -1,11 +1,11 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include <stdint.h>
 #include <string.h>
 
 #include "AnimStuff.h"
 
-char *AnimArray[1811][2] =
+const char *AnimArray[1811][2] =
 {
 	{ "AIRPORT", "THRW_BARL_THRW" },
 	{ "ATTRACTORS", "STEPSIT_IN" },

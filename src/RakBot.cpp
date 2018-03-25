@@ -1,3 +1,5 @@
+#include "StdAfx.h"
+
 #include "RakNet.h"
 #include "PlayerBase.h"
 #include "Player.h"

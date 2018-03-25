@@ -1,6 +1,6 @@
 /// \depreciated
 
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1299 // VC6 doesn't support template specialization
 

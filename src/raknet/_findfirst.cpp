@@ -2,7 +2,7 @@
 * Original file by the_viking, fixed by R√¥mulo Fernandes, fixed by Emmanuel Nars
 * Should emulate windows finddata structure
 */
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #if (defined(__GNUC__)  || defined(__GCCXML__)) && !defined(__WIN32)
 #include "_findfirst.h"

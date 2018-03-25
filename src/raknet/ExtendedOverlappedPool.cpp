@@ -14,7 +14,7 @@
 /// Software Foundation; either version 2 of the License, or (at your
 /// option) any later version.
 
-#include "RakBot.h"
+#include "StdAfx.h"
 
 // No longer used as I no longer support IO Completion ports
 /*

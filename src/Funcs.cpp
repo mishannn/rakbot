@@ -1,5 +1,6 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
+#include "RakBot.h"
 #include "PlayerBase.h"
 #include "Player.h"
 #include "Bot.h"
@@ -7,6 +8,7 @@
 #include "Settings.h"
 #include "Pickup.h"
 #include "Vehicle.h"
+#include "Timer.h"
 
 #include "MiscFuncs.h"
 #include "MathStuff.h"
@@ -31,11 +33,11 @@ void NoAfk() {
 	if (vars.stickEnabled || vars.followEnabled)
 		return;
 
-	if (static_cast<int>(GetTickCount() - BotSpawnedTime) < vars.afterSpawnDelay)
+	if (!BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
 		return;
 
-	static uint32_t timer = 0;
-	if (static_cast<int>(GetTickCount() - timer) < vars.noAfkDelay)
+	static Timer timer;
+	if (!timer.isElapsed(vars.noAfkDelay, true))
 		return;
 
 	Bot *bot = RakBot::app()->getBot();
@@ -43,20 +45,20 @@ void NoAfk() {
 }
 
 void RoutePlay() {
-	/* Bot *bot = RakBot::getInstance()->getBot();
-
-	BitStream data;
 	vars.routeIndex = 0;
 
-	while (vars.routeEnabled && !vars.bBotExit) {
+	while (vars.routeEnabled && !vars.botOff) {
 		Sleep(static_cast<uint32_t>(vars.routeSpeed));
+
+		Bot *bot = RakBot::app()->getBot();
+		RakClientInterface *rakClient = RakBot::app()->getRakClient();
+		BitStream data;
 
 		if (bot->isSpawned()) {
 			if (vars.routeIndex >= vars.routeData.size()) {
 				if (!vars.routeLoop) {
 					vars.routeEnabled = false;
-					vars.noAfkEnabled = true;
-
+					vars.syncAllowed = true;
 					RakBot::app()->log("[RAKBOT] Сохраненный маршрут: остановлен");
 					break;
 				} else {
@@ -65,23 +67,24 @@ void RoutePlay() {
 				}
 			}
 
-			vect4_copy(vars.routeData[vars.routeIndex].quaternion, players[localPlayerID].onfootData.quaternion);
-			vect3_copy(vars.routeData[vars.routeIndex].speed, players[localPlayerID].onfootData.speed);
-			vect3_copy(vars.routeData[vars.routeIndex].position, players[localPlayerID].onfootData.position);
-			players[localPlayerID].onfootData.animFlags = vars.routeData[vars.routeIndex].animFlags;
-			players[localPlayerID].onfootData.animId = vars.routeData[vars.routeIndex].animId;
-			players[localPlayerID].onfootData.keys = vars.routeData[vars.routeIndex].keys;
-			players[localPlayerID].onfootData.leftRightKey = vars.routeData[vars.routeIndex].leftRightKey;
-			players[localPlayerID].onfootData.upDownKey = vars.routeData[vars.routeIndex].upDownKey;
+			for (int i = 0; i < 4; i++)
+				bot->setQuaternion(i, vars.routeData[vars.routeIndex].quaternion[i]);
 
-			data.Reset();
-			data.Write<uint8_t>(ID_PLAYER_SYNC);
-			data.Write(reinterpret_cast<char *>(&players[localPlayerID].onfootData), sizeof(OnfootData));
-			rakClient->Send(&data, HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0);
+			for (int i = 0; i < 3; i++)
+				bot->setPosition(i, vars.routeData[vars.routeIndex].position[i]);
 
+			for (int i = 0; i < 3; i++)
+				bot->setSpeed(i, vars.routeData[vars.routeIndex].speed[i]);
+
+			bot->getAnimation()->setAnimFlags(vars.routeData[vars.routeIndex].animFlags);
+			bot->getAnimation()->setAnimId(vars.routeData[vars.routeIndex].animId);
+			bot->getKeys()->setKeys(vars.routeData[vars.routeIndex].keys);
+			bot->getKeys()->setLeftRightKey(vars.routeData[vars.routeIndex].leftRightKey);
+			bot->getKeys()->setUpDownKey(vars.routeData[vars.routeIndex].upDownKey);
+			bot->sync();
 			vars.routeIndex++;
 		}
-	} */
+	}
 }
 
 void CheckChangePos() {
@@ -96,7 +99,7 @@ void CheckChangePos() {
 			if (vars.mapWindowOpened)
 				UpdateMapWindow();
 
-			vars.lastChangePos = GetTickCount();
+			vars.lastChangePos.setTimer();
 			for (int i = 0; i < 3; i++)
 				fOldPos[i] = bot->getPosition(i);
 			break;
@@ -119,10 +122,9 @@ void CheckChangePos() {
 void UpdateInfo() {
 	Bot *bot = RakBot::app()->getBot();
 
-	static uint32_t timer = 0;
-	if ((GetTickCount() - timer) < 500)
+	static Timer timer;
+	if (!timer.isElapsed(500, true))
 		return;
-	timer = GetTickCount();
 
 	if (bot->isConnected()) {
 		char botInfo[1024];
@@ -158,14 +160,15 @@ void CheckOnlineAndId() {
 			}
 		}
 
-		if (((GetTickCount() - GameInitedTime) > 5000)) {
-			if (vars.checkOnlineEnabled) {
-				int playersCount = RakBot::app()->getPlayersCount();
-				if (playersCount > vars.maxOnline || playersCount < vars.minOnline) {
-					RakBot::app()->log("[RAKBOT] Неподходящий онлайн (%d). Переподключение...", playersCount);
-					bot->disconnect(false);
-					bot->reconnect(vars.reconnectDelay);
-				}
+		if (!GameInitedTimer.isElapsed(5000, false))
+			return;
+
+		if (vars.checkOnlineEnabled) {
+			int playersCount = RakBot::app()->getPlayersCount();
+			if (playersCount > vars.maxOnline || playersCount < vars.minOnline) {
+				RakBot::app()->log("[RAKBOT] Неподходящий онлайн (%d). Переподключение...", playersCount);
+				bot->disconnect(false);
+				bot->reconnect(vars.reconnectDelay);
 			}
 		}
 	}
@@ -187,10 +190,9 @@ void Follow() {
 }
 
 void AdminChecker() {
-	static uint32_t timer = 0;
-	if ((GetTickCount() - timer) < 500)
+	static Timer timer;
+	if (!timer.isElapsed(500, true))
 		return;
-	timer = GetTickCount();
 
 	Bot *bot = RakBot::app()->getBot();
 	if (!bot->isConnected()) {
@@ -265,7 +267,7 @@ void AdminChecker() {
 int LoaderStep = -1;
 int BagCount = 0;
 bool BotWithBag = false;
-uint32_t BotTakenBagTime = UINT32_MAX;
+Timer BotTakenBagTimer = UINT32_MAX;
 
 void BotLoader() {
 	Bot *bot = RakBot::app()->getBot();
@@ -283,12 +285,12 @@ void BotLoader() {
 			return;
 		}
 
-		int pickupId = FindNearestPickup(1275);
-		if (pickupId == PICKUP_ID_NONE)
+		Pickup *pickup = FindNearestPickup(1275);
+		if (pickup == nullptr)
 			return;
 
 		RakBot::app()->log("[RAKBOT] Начало работы грузчика...");
-		SampRpFuncs::pickUpPickup(pickupId);
+		SampRpFuncs::pickUpPickup(pickup);
 		return;
 	}
 
@@ -315,15 +317,15 @@ void BotLoader() {
 			return;
 		}
 
-		if (BotWithBag && (BotTakenBagTime == UINT32_MAX)) {
+		if (BotWithBag && (BotTakenBagTimer.getTimer() == UINT32_MAX)) {
 			bot->sync(2231.10f, -2285.39f, 11.88f);
-			BotTakenBagTime = GetTickCount();
+			BotTakenBagTimer.setTimer();
 			return;
 		}
 
-		if (BotWithBag && (static_cast<int>(GetTickCount() - BotTakenBagTime) > (vars.botLoaderDelay - 3000))) {
+		if (BotWithBag && (BotTakenBagTimer.isElapsed(vars.botLoaderDelay - 3000, false))) {
 			LoaderStep = BOTLOADER_STEP_PUTBAG;
-			BotTakenBagTime = UINT32_MAX;
+			BotTakenBagTimer.setTimer(UINT32_MAX);
 			return;
 		}
 		return;
@@ -445,6 +447,10 @@ void BotLoader() {
 }
 
 void BusBot() {
+	static Timer timer;
+	if (!timer.isElapsed(1500, true))
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
 
 	if (bot->getPlayerState() == PLAYER_STATE_DRIVER)
@@ -456,15 +462,9 @@ void BusBot() {
 	if (!vars.busWorkerRoute)
 		return;
 
-	static uint32_t timer = 0;
-	if (GetTickCount() - timer < 1500)
-		return;
-	timer = GetTickCount();
-
 	bot->sync();
 
-	int busId = FindNearestVehicleByModel(vars.busWorkerBusModel);
-	Vehicle *vehicle = RakBot::app()->getVehicle(busId);
+	Vehicle *vehicle = FindNearestVehicle(vars.busWorkerBusModel);
 	if (vehicle == nullptr)
 		return;
 
@@ -472,7 +472,7 @@ void BusBot() {
 		bot->setPosition(i, vehicle->getPosition(i));
 	bot->sync();
 	bot->wait(500);
-	bot->enterVehicle(busId, 0);
+	bot->enterVehicle(vehicle, 0);
 }
 
 float FarmFieldPos[5][3] =
@@ -502,28 +502,25 @@ bool FarmGetPay = 0;
 #define FARM_FIRST_PICK 901
 
 void FarmerBot() {
+	static Timer timer;
+	if (!timer.isElapsed(1000, true))
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
 
 	if (!vars.botFarmerEnabled || vars.coordMasterEnabled || !bot->isSpawned() || SampRpFuncs::isBotSuspended())
 		return;
-
-	static uint32_t timer = 0;
-	if (GetTickCount() - timer < 1000)
-		return;
-	timer = GetTickCount();
 
 	if (!vars.sendBadSync)
 		vars.sendBadSync = true;
 
 	if (FarmWork) {
 		if (!checkpoint.active) {
-			int pickupId = FindNearestPickup(19197);
-			Pickup *pickup = RakBot::app()->getPickup(pickupId);
-
+			Pickup *pickup = FindNearestPickup(19197);
 			if (pickup != nullptr) {
 				if (bot->distanceTo(pickup) < 50.0f) {
-					bot->pickUpPickup(pickupId, FALSE);
-					RakBot::app()->log("[RAKBOT] Сдача куста в машину %d", pickupId);
+					bot->pickUpPickup(pickup, FALSE);
+					RakBot::app()->log("[RAKBOT] Сдача куста в машину %d", pickup->getPickupId());
 				} else {
 					for (int i = 0; i < 3; i++)
 						vars.coordMasterTarget[i] = pickup->getPosition(i);
@@ -532,8 +529,7 @@ void FarmerBot() {
 					RakBot::app()->log("[RAKBOT] Телепорт к машине");
 				}
 			} else {
-				static uint32_t notFoundCarsTimer = 0;
-
+				static Timer notFoundCarsTimer;
 				if (vars.botFarmerAutomated && vars.bQuestEnabled) {
 					RakBot::app()->log("[RAKBOT] Не удается найти машины! Смена фермы...");
 
@@ -543,9 +539,9 @@ void FarmerBot() {
 					FarmWork = 0;
 					FarmCount = 0;
 					ChangeFarm = 1;
-				} else if (GetTickCount() - notFoundCarsTimer > 8000) {
+				} else if (notFoundCarsTimer.isElapsed(8000, true)) {
 					RakBot::app()->log("[RAKBOT] Не удается найти машины!");
-					notFoundCarsTimer = GetTickCount();
+					notFoundCarsTimer.setTimer();
 				}
 				return;
 			}
@@ -558,7 +554,7 @@ void FarmerBot() {
 
 		if (pickup) {
 			if (bot->distanceTo(pickup) < 50.0f) {
-				bot->pickUpPickup(pickupId, FALSE);
+				bot->pickUpPickup(pickup, FALSE);
 				RakBot::app()->log("[RAKBOT] Пользуемся раздевалкой...");
 			} else {
 				for (int i = 0; i < 3; i++)
@@ -577,22 +573,22 @@ void FarmerBot() {
 }
 
 void CoordMaster() {
+	static Timer timer;
+	if (!timer.isElapsed(vars.coordMasterDelay, true))
+		return;
+
 	if (!vars.coordMasterEnabled || !vars.syncAllowed)
 		return;
 
 	Bot *bot = RakBot::app()->getBot();
 
-	if (static_cast<int>(GetTickCount() - BotSpawnedTime) < vars.afterSpawnDelay)
+	if (!BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
 		return;
 
 	if (!bot->isSpawned())
 		return;
 
 	bot->sync();
-
-	static uint32_t timer = 0;
-	if (static_cast<int>(GetTickCount() - timer) < vars.coordMasterDelay)
-		return;
 
 	float position[3];
 	for (int i = 0; i < 3; i++)
@@ -644,22 +640,19 @@ void CoordMaster() {
 	for (int i = 0; i < 3; i++)
 		bot->setPosition(i, position[i]);
 	bot->sync();
-
-	timer = GetTickCount();
 }
 
 void GetBalance() {
+	static Timer timer;
+	if (!timer.isElapsed(3000, true))
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
 
 	if (!vars.getBalanceEnabled || vars.coordMasterEnabled)
 		return;
 
-	static uint32_t timer = 0;
-	if (GetTickCount() - timer < 3000)
-		return;
-
 	bot->sendInput("/atm");
-	timer = GetTickCount();
 }
 
 void Stick() {
@@ -691,16 +684,16 @@ void Stick() {
 }
 
 void AntiAFK() {
+	static Timer timer;
+	if (!timer.isElapsed(vars.antiAfkDelay, true))
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
 
 	if (!vars.antiAfkEnabled)
 		return;
 
 	static float k = 1.f;
-	static uint32_t timer = 0;
-	if (GetTickCount() - timer < vars.antiAfkDelay)
-		return;
-	timer = GetTickCount();
 
 	float offset = (vars.antiAfkOffset != 0.f) ? vars.antiAfkOffset : 0.01f;
 	bot->setPosition(0, bot->getPosition(0) + (offset * k));
@@ -713,87 +706,79 @@ void AntiAFK() {
 }
 
 void AutoLicensePass() {
-	/* Bot *bot = RakBot::getInstance()->getBot();
+	static Timer timer;
+	if (!timer.isElapsed(3000, true))
+		return;
 
-	static uint32_t dwTime = 0;
+	if (!vars.botAutoSchoolEnabled || vars.coordMasterEnabled)
+		return;
 
-	if (vars.botAutoSchoolEnabled && !vars.coordMasterEnabled) {
-		if (GetTickCount() - dwTime > 3000) {
-			if (localPlayerID == 65535) {
-				return;
-			}
+	Bot *bot = RakBot::app()->getBot();
 
-			if (localVehicleId != 65535) {
-				return;
-			}
+	if (!bot->isSpawned())
+		return;
 
-			if (!raceCheckpoint.isActive) {
-				int iDoorPickupID = FindNearestPickup(1318);
+	if (bot->getPlayerState() != PLAYER_STATE_ONFOOT)
+		return;
 
-				if (pickups[iDoorPickupID].position[2] < 1000.0f &&
-					vect3_dist(pickups[iDoorPickupID].position, players[localPlayerID].onfootData.position) < 50.0f) {
-					if (vars.botAutoSchoolActive) {
-						for (VEHICLEID i = 0; i < MAX_VEHICLES; i++) {
-							if (vehicles[i].isExists) {
-								if (vehicles[i].model == 426 && vehicles[i].firstColor == 79 && vehicles[i].secondColor == 79) {
-									vect3_copy(vehicles[i].position, players[localPlayerID].onfootData.position);
-									OnfootSync();
+	if (!raceCheckpoint.active) {
+		Pickup *doorPickup = FindNearestPickup(1318);
+		if (doorPickup == nullptr)
+			return;
 
-									Sleep(1000);
-
-									RakNet::BitStream bsSend;
-									bsSend.Write(i);
-									bsSend.Write(0);
-									rakClient->RPC(&RPC_EnterVehicle, &bsSend, HIGH_PRIORITY, RELIABLE, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
-
-									RakBot::app()->log("[RAKBOT] Начало сдачи экзамена на машине с ID %d", i);
-									localVehicleId = i;
-									DriverSync();
-									vars.checkPointMaster = 1;
-									break;
-								}
-							}
-						}
-					} else {
-						RakBot::app()->log("[RAKBOT] Вход в здание автошколы...");
-						SampPickUpPickup(iDoorPickupID, TRUE);
+		if (bot->distanceTo(doorPickup) < 50.f) {
+			if (doorPickup->getPosition(2) < 1000.f) {
+				if (vars.botAutoSchoolActive) {
+					Vehicle *vehicle = FindNearestVehicle(1, 426, 79, 79);
+					if (vehicle != nullptr) {
+						bot->enterVehicle(vehicle, 0);
 					}
-				} else if (vect3_dist(pickups[iDoorPickupID].position, players[localPlayerID].onfootData.position) < 50.0f &&
-					(vars.botAutoSchoolActive == 1 || vars.botAutoSchoolEnabled == 0)) {
-					RakBot::app()->log("[RAKBOT] Выход из здания автошколы...");
-					SampPickUpPickup(iDoorPickupID, TRUE);
-				} else if (checkpoint.isActive) {
-					RakBot::app()->log("[RAKBOT] Начало сдачи экзамена...");
-					GetCheckpoint();
-
-					if (vars.botAutoSchoolFinished)
-						vars.botAutoSchoolEnabled = 0;
+				} else {
+					RakBot::app()->log("[RAKBOT] Вход в здание автошколы...");
+					bot->pickUpPickup(doorPickup, true);
 				}
+				return;
 			}
-			dwTime = GetTickCount();
+
+			if ((vars.botAutoSchoolActive == 1) || (vars.botAutoSchoolEnabled == 0)) {
+				RakBot::app()->log("[RAKBOT] Выход из здания автошколы...");
+				bot->pickUpPickup(doorPickup, true);
+				return;
+			}
+
+			if (checkpoint.active) {
+				RakBot::app()->log("[RAKBOT] Начало сдачи экзамена...");
+				bot->takeCheckpoint();
+
+				if (vars.botAutoSchoolFinished)
+					vars.botAutoSchoolEnabled = 0;
+
+				return;
+			}
 		}
-	} */
+	}
 }
 
 void Flood() {
+	static Timer timer;
+	if (!timer.isElapsed(vars.floodDelay, true))
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
 
 	if (vars.floodEnabled) {
-		static int timer = 0, id = 0;
-		if ((int)GetTickCount() - timer > vars.floodDelay) {
-			switch (vars.floodMode) {
-				case 1:
-					bot->sendInput(std::string(vars.floodText));
-					break;
+		static int id = 0;
+		switch (vars.floodMode) {
+			case 1:
+				bot->sendInput(std::string(vars.floodText));
+				break;
 
-				case 2:
-					char buf[256];
-					snprintf(buf, sizeof(buf), "/sms %d %s", id, vars.floodText.c_str());
-					bot->sendInput(std::string(buf));
-					id = id < 1000 ? id + 1 : 0;
-					break;
-			}
-			timer = GetTickCount();
+			case 2:
+				char buf[256];
+				snprintf(buf, sizeof(buf), "/sms %d %s", id, vars.floodText.c_str());
+				bot->sendInput(std::string(buf));
+				id = id < 1000 ? id + 1 : 0;
+				break;
 		}
 	}
 }
@@ -815,8 +800,8 @@ void CheckPickUp() {
 
 		if (bot->distanceTo(pickup) < 1.0f) {
 			if (i != iLastPickup) {
-				if (GetTickCount() - vars.lastChangePos > 3000) {
-					bot->pickUpPickup(i, true);
+				if (vars.lastChangePos.isElapsed(1500, false)) {
+					bot->pickUpPickup(pickup, true);
 					RakBot::app()->log("[RAKBOT] Автоматическое поднятие пикапа %d", i);
 					iLastPickup = i;
 				}
@@ -828,141 +813,96 @@ void CheckPickUp() {
 }
 
 void CheckPointMaster() {
-	/* Bot *bot = RakBot::getInstance()->getBot();
+	Bot *bot = RakBot::app()->getBot();
 
-	if (!vars.checkPointMaster) {
+	if (!vars.checkPointMaster || vars.coordMasterEnabled)
 		return;
-	}
 
-	DriverSync();
-
-	if (!raceCheckpoint.isActive) {
+	if (!raceCheckpoint.active && !checkpoint.active)
 		return;
-	}
 
-	if (localPlayerID == 65535) {
-		return;
-	}
-
-	if (localVehicleId == 65535) {
-		return;
-	}
-
-	static uint32_t dwCount = 0;
-	static bool bFirstJump = 1;
-
-	if (GetTickCount() < dwCount) {
-		return;
-	}
-
-	float fDist = vect3_dist(players[localPlayerID].onfootData.position, raceCheckpoint.fCurPos);
-
-	if (fDist > vars.fCoordDist) {
-		float fDistXY = vect2_dist(players[localPlayerID].onfootData.position, raceCheckpoint.fCurPos);
-		float fDistSin = (raceCheckpoint.fCurPos[0] - players[localPlayerID].onfootData.position[0]) / fDistXY;
-		float fDistCos = (raceCheckpoint.fCurPos[1] - players[localPlayerID].onfootData.position[1]) / fDistXY;
-		float fHeightSin = fDistXY / fDist;
-		float fHeightCos = (raceCheckpoint.fCurPos[2] - 5.0f - players[localPlayerID].onfootData.position[2]) / fDist;
-
-		players[localPlayerID].onfootData.position[0] += fDistSin * fHeightSin * vars.fCoordDist;
-		players[localPlayerID].onfootData.position[1] += fDistCos * fHeightSin * vars.fCoordDist;
-
-		if (bFirstJump) {
-			players[localPlayerID].onfootData.position[2] -= vars.fCoordDist / 2;
-			bFirstJump = 0;
-		} else
-			players[localPlayerID].onfootData.position[2] += fHeightCos * vars.fCoordDist;
-	} else {
-		vect2_copy(raceCheckpoint.fCurPos, players[localPlayerID].onfootData.position);
-		players[localPlayerID].onfootData.position[2] = raceCheckpoint.fCurPos[2] - 5.0f;
-		bFirstJump = 1;
-	}
-
-	dwCount = GetTickCount() + vars.iCoordTime; */
+	float *pos = checkpoint.active ? checkpoint.position : raceCheckpoint.position;
+	DoCoordMaster(true, pos[0], pos[1], pos[2] - 5.f);
 }
 
 void SetWork() {
-	/* Bot *bot = RakBot::getInstance()->getBot();
-
-	if (!vars.iSetWorkIndex || vars.coordMasterEnabled) {
+	static Timer timer;
+	if (!timer.isElapsed(1000, true))
 		return;
-	}
 
-	if (localPlayerID == 65535) {
+	Bot *bot = RakBot::app()->getBot();
+
+	if (!vars.iSetWorkIndex || vars.coordMasterEnabled)
 		return;
+
+	if (!bot->isSpawned())
+		return;
+
+	Pickup *pickup = FindNearestPickup(1318);
+	if (pickup != nullptr) {
+		if (pickup->getPosition(2) < 1000.0f)
+			bot->pickUpPickup(pickup);
+	} else {
+		bot->takeCheckpoint();
 	}
-
-	static uint32_t dwTimer = 0;
-
-	if (GetTickCount() - dwTimer > 1000) {
-		int iPickupID = FindNearestPickup(1318);
-
-		if (pickups[iPickupID].byteActive && pickups[iPickupID].position[2] < 1000.0f) {
-			if (pickups[iPickupID].byteActive)
-				SampPickUpPickup(iPickupID, TRUE);
-		} else
-			GetCheckpoint();
-
-		dwTimer = GetTickCount();
-	} */
 }
 
 void Bank() {
-	/* Bot *bot = RakBot::getInstance()->getBot();
+	static Timer timer;
+	if (!timer.isElapsed(1000, true))
+		return;
 
-	if (vars.iBankPutMoney && !vars.coordMasterEnabled) {
-		static uint32_t dwTimer = 0;
+	if (!vars.iBankPutMoney || vars.coordMasterEnabled)
+		return;
 
-		if (GetTickCount() - dwTimer > 1000) {
-			if (localPlayerID == 65535) {
-				return;
-			}
+	Bot *bot = RakBot::app()->getBot();
 
-			int iPickupID = FindNearestPickup(1318);
-			if (pickups[iPickupID].byteActive && pickups[iPickupID].position[1] < -1500.0f &&
-				vect3_dist(pickups[iPickupID].position, players[localPlayerID].onfootData.position) < 50.0f) {
-				SampPickUpPickup(iPickupID, TRUE);
-			} else if (pickups[iPickupID].byteActive) {
-				char buf[512];
-				sprintf(buf, "/bank %d", vars.iBankPutMoney);
-				SendServerCommand(buf);
-				vars.iBankPutMoney = 0;
-				if (vars.bQuestEnabled)
-					vars.bQuestSpawn = 1;
-				Spawn();
-			}
-			dwTimer = GetTickCount();
-		}
-	} */
+	if (!bot->isSpawned())
+		return;
+
+	Pickup *pickup = FindNearestPickup(1318);
+	if (pickup == nullptr)
+		return;
+
+	if (pickup->getPosition(1) < -1500.0f) {
+		bot->pickUpPickup(pickup, true);
+		return;
+	}
+
+	std::string cmd = "/bank " + std::to_string(vars.iBankPutMoney);
+	bot->sendInput(cmd);
+	vars.iBankPutMoney = 0;
+	if (vars.bQuestEnabled)
+		vars.bQuestSpawn = 1;
+	bot->spawn();
 }
 
 void GetSkin() {
-	/* Bot *bot = RakBot::getInstance()->getBot();
+	static Timer timer;
+	if (!timer.isElapsed(1000, true))
+		return;
 
-	if (vars.bBuySkin && !vars.coordMasterEnabled) {
-		static uint32_t dwTimer = 0;
+	if (!vars.bBuySkin || vars.coordMasterEnabled)
+		return;
 
-		if (GetTickCount() - dwTimer > 1000) {
-			if (localPlayerID == 65535) {
-				return;
-			}
+	Bot *bot = RakBot::app()->getBot();
 
-			int iPickupID = FindNearestPickup(1275);
-			if (iPickupID != -1) {
-				iPickupID--;
-				if (pickups[iPickupID].byteActive) {
-					SampPickUpPickup(iPickupID, TRUE);
-				}
-			} else {
-				iPickupID = FindNearestPickup(1318);
-				if (iPickupID != -1) {
-					if (pickups[iPickupID].byteActive)
-						SampPickUpPickup(iPickupID, TRUE);
-				}
-			}
-			dwTimer = GetTickCount();
-		}
-	} */
+	if (!bot->isSpawned())
+		return;
+
+	Pickup *pickup;
+
+	pickup = FindNearestPickup(1275);
+	if (pickup != nullptr) {
+		bot->pickUpPickup(pickup, true);
+		return;
+	}
+
+	pickup = FindNearestPickup(1318);
+	if (pickup != nullptr) {
+		bot->pickUpPickup(RakBot::app()->getPickup(pickup->getPickupId() - 1), true);
+		return;
+	}
 }
 
 void KeepOnline() {

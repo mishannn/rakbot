@@ -1,4 +1,4 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include "RakBot.h"
 #include "PlayerBase.h"
@@ -14,42 +14,13 @@
 
 // following functions
 
-int FindNearestVehicle() {
+Pickup *FindNearestPickup(int model) {
 	Bot *bot = RakBot::app()->getBot();
-
-	RakClientInterface *rakClient = RakBot::app()->getRakClient();
-	if (rakClient == nullptr)
-		return VEHICLE_ID_NONE;
+	Pickup *result = nullptr;
 
 	if (!bot->isSpawned())
-		return VEHICLE_ID_NONE;
+		return result;
 
-	int iVehicleId = VEHICLE_ID_NONE;
-	float fDist = -1.0f;
-
-	for (uint16_t i = 1; i < MAX_VEHICLES; i++) {
-		Vehicle *vehicle = RakBot::app()->getVehicle(i);
-		if (vehicle == nullptr)
-			continue;
-
-		float fTempDist = bot->distanceTo(vehicle);
-
-		if (fTempDist < fDist || fDist < 0.0f) {
-			iVehicleId = i;
-			fDist = fTempDist;
-		}
-	}
-
-	return iVehicleId;
-}
-
-int FindNearestPickup(int model) {
-	Bot *bot = RakBot::app()->getBot();
-
-	if (!bot->isSpawned())
-		return PICKUP_ID_NONE;
-
-	int iPickupID = PICKUP_ID_NONE;
 	float fDist = -1.0f;
 
 	for (int i = 1; i < MAX_PICKUPS; i++) {
@@ -62,23 +33,22 @@ int FindNearestPickup(int model) {
 			continue;
 
 		float fTempDist = bot->distanceTo(pickup);
-
 		if (fTempDist < fDist || fDist < 0.0f) {
-			iPickupID = i;
+			result = pickup;
 			fDist = fTempDist;
 		}
 	}
 
-	return iPickupID;
+	return result;
 }
 
-int FindNearestPlayer() {
+Player *FindNearestPlayer(int skin) {
 	Bot *bot = RakBot::app()->getBot();
+	Player *result = nullptr;
 
 	if (!bot->isSpawned())
-		return PLAYER_ID_NONE;
+		return result;
 
-	int playerId = PLAYER_ID_NONE;
 	float fDist = -1.0f;
 
 	for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -89,24 +59,27 @@ int FindNearestPlayer() {
 		if (!player->isInStream())
 			continue;
 
+		if (skin != -1 && player->getSkin() != skin)
+			continue;
+
 		float fTempDist = bot->distanceTo(player);
 
 		if (fTempDist < fDist || fDist < 0.0f) {
-			playerId = i;
+			result = player;
 			fDist = fTempDist;
 		}
 	}
 
-	return playerId;
+	return result;
 }
 
-int FindNearestVehicleByModel(int model) {
+Vehicle *FindNearestVehicle(int opened, int model, int color1, int color2) {
 	Bot *bot = RakBot::app()->getBot();
+	Vehicle *result = nullptr;
 
 	if (!bot->isSpawned())
-		return VEHICLE_ID_NONE;
+		return result;
 
-	int vehicleId = VEHICLE_ID_NONE;
 	float fDist = -1.0f;
 
 	for (int i = 1; i < MAX_VEHICLES; i++) {
@@ -114,31 +87,40 @@ int FindNearestVehicleByModel(int model) {
 		if (vehicle == nullptr)
 			continue;
 
-		if (vehicle->getModel() != model)
+		if ((opened != -1) && (static_cast<int>(vehicle->isDoorsOpened()) != opened))
+			continue;
+
+		if ((model != -1) && (vehicle->getModel() != model))
+			continue;
+
+		if ((color1 != -1) && (vehicle->getFirstColor() != color1))
+			continue;
+
+		if ((color2 != -1) && (vehicle->getSecondColor() != color2))
 			continue;
 
 		float fTempDist = bot->distanceTo(vehicle);
 
 		if (fTempDist < fDist || fDist < 0.0f) {
-			vehicleId = i;
+			result = vehicle;
 			fDist = fTempDist;
 		}
 	}
 
-	return vehicleId;
+	return result;
 }
 
-int GetPlayerID(char *name) {
+Player *FindPlayerByName(std::string name) {
 	for (int i = 0; i < MAX_PLAYERS; i++) {
 		Player *player = RakBot::app()->getPlayer(i);
 		if (player == nullptr)
 			continue;
 
 		if (player->getName() == name)
-			return i;
+			return player;
 	}
 
-	return -1;
+	return nullptr;
 }
 
 
@@ -219,4 +201,28 @@ std::vector<std::string> Split(const std::string &s, char delim) {
 		// elems.push_back(std::move(item)); // if C++11 (based on comment from @mchiasson)
 	}
 	return elems;
+}
+
+void DoCoordMaster(bool state, float x, float y, float z) {
+	if (state) {
+		vars.coordMasterTarget[0] = x;
+		vars.coordMasterTarget[1] = y;
+		vars.coordMasterTarget[2] = z;
+
+		if (vars.coordMasterEnabled)
+			return;
+
+		vars.coordMasterEnabled = true;
+		RakBot::app()->log("[RAKBOT] CoordMaster: телепорт на координаты (%.2f; %.2f; %.2f)");
+	} else {
+		vars.coordMasterTarget[0] = 0.f;
+		vars.coordMasterTarget[1] = 0.f;
+		vars.coordMasterTarget[2] = 0.f;
+
+		if (!vars.coordMasterEnabled)
+			return;
+
+		vars.coordMasterEnabled = false;
+		RakBot::app()->log("[RAKBOT] CoordMaster: телепорт остановлен");
+	}
 }

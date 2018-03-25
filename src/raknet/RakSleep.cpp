@@ -1,4 +1,4 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #if defined(_COMPATIBILITY_1)
 #include "Compatibility1Includes.h"

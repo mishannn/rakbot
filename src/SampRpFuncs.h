@@ -8,7 +8,7 @@ public:
 	SampRpFuncs();
 	~SampRpFuncs();
 
-	static void pickUpPickup(uint16_t pickupId);
+	static void pickUpPickup(Pickup *pickupId);
 	static void takeCheckpoint();
 	static bool isBotSuspended() { return _botSuspended; }
 	static bool isSampRpServer();

@@ -1,4 +1,4 @@
-#include "RakBot.h"
+#include "StdAfx.h"
 
 #include "DataCompressor.h"
 #include "DS_HuffmanEncodingTree.h"

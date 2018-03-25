@@ -1,3 +1,5 @@
+#include "StdAfx.h"
+
 #include "RakBot.h"
 #include "RakNet.h"
 #include "PlayerBase.h"
@@ -672,11 +674,11 @@ void Events::onToggleSpectating(bool state) {
 	}
 }
 
-bool Events::onPutInVehicle(uint16_t vehicleId, uint8_t seatId) {
+bool Events::onPutInVehicle(Vehicle *vehicle, uint8_t seatId) {
 	bool luaResult = false;
 	for each (Script *script in scripts) {
 		if (script != nullptr)
-			if (script->luaOnPutInVehicle(vehicleId, seatId))
+			if (script->luaOnPutInVehicle(vehicle->getVehicleId(), seatId))
 				luaResult = true;
 	}
 	if (luaResult)

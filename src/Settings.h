@@ -4,12 +4,13 @@
 #include "Defines.h"
 #include "Structs.h"
 
+#include "Timer.h"
 #include "Mutex.h"
 
 struct Vars {
 	bool windowOpened;
 	bool waitForRequestSpawnReply;
-	int lastChangePos;
+	Timer lastChangePos;
 
 	std::vector<std::string> admins;
 	std::string adminsUrl;
