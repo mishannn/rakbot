@@ -2,9 +2,9 @@
 
 #include "SAMPDialog.h"
 
-SAMPDialog::SAMPDialog() {}
+SAMPDialog::SAMPDialog() { }
 
-SAMPDialog::~SAMPDialog() {}
+SAMPDialog::~SAMPDialog() { }
 
 void SAMPDialog::reset() {
 	lock();
