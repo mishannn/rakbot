@@ -38,12 +38,15 @@ void LuaPanic(sol::optional<std::string> maybe_msg) {
 
 Script::Script(std::string scriptName) : _scriptName(scriptName) {
 	try {
+		_funcExecuting = false;
+
 		std::string scriptPath = std::string(GetRakBotPath("scripts")) + "\\" + _scriptName;
 
 		// LOAD FILE
 		std::ifstream scriptFile(scriptPath);
 		if (!scriptFile.is_open()) {
-			luaLog("[ERROR] Ошибка загрузки скрипта \"" + _scriptName + "\": файл не найден");
+			std::string s = "[ERROR] Ошибка загрузки скрипта \"" + _scriptName + "\": файл не найден";
+			RakBot::app()->log(s.c_str());
 			return;
 		}
 		scriptFile.close();
@@ -63,7 +66,8 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 		sol::protected_function_result result = script.get<sol::protected_function>()();
 		if (!result.valid())
 			throw result.get<sol::error>();
-		luaLog("[LUA] Скрипт \"" + _scriptName + "\" успешно загружен");
+		std::string s = "[LUA] Скрипт \"" + _scriptName + "\" успешно загружен";
+		RakBot::app()->log(s.c_str());
 	} catch (const char *e) {
 		std::string message = "Ошибка загрузки скрипта \"" + _scriptName + "\": " + e;
 		luaError(message);
@@ -80,43 +84,6 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 }
 
 Script::~Script() {}
-
-void Script::luaLog(std::string log) {
-	if (log.empty())
-		return;
-
-	Lock lock(vars.logMutex);
-
-	int logLen = log.length();
-	if (logLen > MAX_LOGLEN)
-		return;
-
-	char *buf = new char[MAX_LOGLEN + 1];
-	strncpy(buf, log.c_str(), logLen);
-	buf[logLen] = 0;
-
-	if (RakBot::app()->getEvents()->onPrintLog(std::string(buf), true))
-		return;
-
-	RakBot::app()->logToFile(std::string(buf));
-
-	if (vars.timeStamp) {
-		SYSTEMTIME time;
-		GetLocalTime(&time);
-
-		char tempBuf[MAX_LOGLEN + 64];
-		int bufLen = snprintf(tempBuf, MAX_LOGLEN, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
-		strncpy(buf, tempBuf, bufLen);
-		buf[bufLen] = 0;
-	}
-
-	int lbCount = SendMessage(g_hWndLog, LB_GETCOUNT, 0, 0);
-	if (lbCount >= MAX_LOGLINES)
-		SendMessage(g_hWndLog, LB_DELETESTRING, 0, 0);
-
-	WPARAM idx = SendMessage(g_hWndLog, LB_ADDSTRING, 0, (LPARAM)buf);
-	SendMessage(g_hWndLog, LB_SETTOPINDEX, idx, 0);
-}
 
 Script *Script::load(std::string scriptName) {
 	try {
@@ -312,8 +279,8 @@ bool Script::luaOnSetPosition(float positionX, float positionY, float positionZ)
 	return luaCallback("onSetPosition", positionX, positionY, positionZ);
 }
 
-void Script::luaOnSpawn(float positionX, float positionY, float positionZ) {
-	luaCallback("onSpawn", positionX, positionY, positionZ);
+void Script::luaOnSpawned(float positionX, float positionY, float positionZ) {
+	luaCallback("onSpawned", positionX, positionY, positionZ);
 }
 
 bool Script::luaOnDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string dialogTitle, std::string okButtonText, std::string cancelButtonText, std::string dialogText) {
@@ -711,7 +678,8 @@ void Script::luaRegisterFunctions() {
 		if (lines.size() < 1)
 			return false;
 		for each (std::string line in lines) {
-			luaLog("[LUA] " + line);
+			std::string s = "[LUA] " + line;
+			RakBot::app()->log(s.c_str());
 		}
 		return true;
 	});
@@ -720,7 +688,7 @@ void Script::luaRegisterFunctions() {
 		if (lines.size() < 1)
 			return false;
 		for each (std::string line in lines) {
-			RunCommand(line.c_str(), true);
+			RunCommand(line.c_str());
 		}
 		return true;
 	});
@@ -1017,7 +985,8 @@ void Script::luaError(std::string error) {
 	std::vector<std::string> lines = Split(error, '\n');
 
 	for each (std::string line in lines) {
-		luaLog("[ERROR] " + line);
+		std::string s = "[ERROR] " + line;
+		RakBot::app()->log(s.c_str());
 	}
 }
 
@@ -1053,29 +1022,42 @@ bool Script::luaCallback(std::string funcName, Args && ...args) {
 	try {
 		Lock lock(*this);
 
-		sol::protected_function func = _scriptState[funcName];
-		if (!func.valid())
+		if (_funcExecuting)
 			return false;
+
+		_funcExecuting = true;
+
+		sol::protected_function func = _scriptState[funcName];
+		if (!func.valid()) {
+			_funcExecuting = false;
+			return false;
+		}
 
 		sol::protected_function_result result = func(std::forward<Args>(args)...);
 		if (!result.valid())
 			throw result.get<sol::error>();
 
-		if (result.get_type() != sol::type::boolean)
+		if (result.get_type() != sol::type::boolean) {
+			_funcExecuting = false;
 			return false;
+		}
 
+		_funcExecuting = false;
 		return result.get<bool>();
 	} catch (const char *e) {
 		std::string message = "Ошибка в функции \"" + funcName + "\" скрипта \"" + _scriptName + "\": " + e;
 		luaError(message);
+		_funcExecuting = false;
 		return false;
 	} catch (const std::exception &e) {
 		std::string message = "Ошибка в функции \"" + funcName + "\" скрипта \"" + _scriptName + "\": " + e.what();
 		luaError(message);
+		_funcExecuting = false;
 		return false;
 	} catch (...) {
 		std::string message = "Неизвестная ошибка в функции \"" + funcName + "\" скрипта \"" + _scriptName + "\"";
 		luaError(message);
+		_funcExecuting = false;
 		return false;
 	}
 }

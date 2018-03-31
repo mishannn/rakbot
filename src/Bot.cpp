@@ -196,6 +196,9 @@ void Bot::exitVehicle() {
 }
 
 void Bot::sync() {
+	if (RakBot::app()->getEvents()->onSync())
+		return;
+
 	switch (getPlayerState()) {
 		case PLAYER_STATE_ONFOOT:
 			onfootSync();
@@ -421,6 +424,9 @@ void Bot::disconnect(bool timeOut) {
 }
 
 void Bot::sendInput(std::string input) {
+	if (RakBot::app()->getEvents()->onSendInput(input))
+		return;
+
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 	RakNet::BitStream bsSend;
 
@@ -493,11 +499,14 @@ bool Bot::takeCheckpoint() {
 
 	float *position = checkpoint.active ? checkpoint.position : raceCheckpoint.position;
 
+	if (RakBot::app()->getEvents()->onTakeCheckpoint(position[0], position[1], position[2]))
+		return;
+
 	for (int i = 0; i < 3; i++)
 		setPosition(i, position[i]);
 	sync();
 
-	RakBot::app()->log("[RAKBOT] Бот телепортирован на чекпоинт");
+	// RakBot::app()->log("[RAKBOT] Бот телепортирован на чекпоинт");
 	return true;
 }
 
@@ -611,6 +620,9 @@ void Bot::spectateSync() {
 }
 
 void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::string input) {
+	if (RakBot::app()->getEvents()->onDialogResponse(dialogId, button, item, input))
+		return;
+
 	static bool dialogResponseReady = true;
 	while (!dialogResponseReady)
 		Sleep(10);
@@ -635,6 +647,9 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 }
 
 void Bot::spawn() {
+	if (RakBot::app()->getEvents()->onSpawn())
+		return;
+
 	static bool spawnReady = true;
 	while (!spawnReady)
 		Sleep(10);
@@ -674,7 +689,7 @@ void Bot::spawn() {
 		sync();
 		vars.syncAllowed = true;
 		BotSpawnedTimer = GetTickCount();
-		RakBot::app()->getEvents()->onSpawn();
+		RakBot::app()->getEvents()->onSpawned();
 		spawnReady = true;
 	});
 	spawnSyncThread.detach();
@@ -696,6 +711,9 @@ void Bot::kill() {
 }
 
 void Bot::clickTextdraw(uint16_t textDrawId) {
+	if (RakBot::app()->getEvents()->onTextDrawClick(textDrawId))
+		return;
+
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	RakNet::BitStream bsSend;

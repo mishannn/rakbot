@@ -1,1 +1,1 @@
-void RunCommand(const char *cmd, bool fromFua = false);
+void RunCommand(const char *cmd);

@@ -31,12 +31,12 @@ bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
 		return false;
 
 	if (resetIfTrue)
-		setTimer();
+		reset();
 
 	return true;
 }
 
-void Timer::setTimer() {
+void Timer::reset() {
 	lock();
 	_timer = GetTickCount();
 	unlock();

@@ -99,7 +99,7 @@ void CheckChangePos() {
 			if (vars.mapWindowOpened)
 				UpdateMapWindow();
 
-			vars.lastChangePos.setTimer();
+			vars.lastChangePos.reset();
 			for (int i = 0; i < 3; i++)
 				fOldPos[i] = bot->getPosition(i);
 			break;
@@ -270,6 +270,10 @@ bool BotWithBag = false;
 Timer BotTakenBagTimer = UINT32_MAX;
 
 void BotLoader() {
+	static Timer afterGetPayTimer(0);
+	if (!afterGetPayTimer.isElapsed(3000, false))
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
 
 	if (!vars.botLoaderEnabled || !bot->isSpawned() || vars.coordMasterEnabled || SampRpFuncs::isBotSuspended())
@@ -295,11 +299,13 @@ void BotLoader() {
 	}
 
 	if (LoaderStep == BOTLOADER_STEP_TAKEBAG) {
-		if ((BagCount >= vars.botLoaderCount) && (BagCount % vars.botLoaderCount == 0)) {
-			bot->sync(2160.f, -2265.f, 14.08f);
-			LoaderStep = BOTLOADER_STEP_GETPAY;
-			return;
-		}
+		/* if (vars.botLoaderCount > 0) {
+			if ((BagCount >= vars.botLoaderCount) && (BagCount % vars.botLoaderCount == 0)) {
+				bot->sync(2160.f, -2265.f, 14.08f);
+				LoaderStep = BOTLOADER_STEP_GETPAY;
+				return;
+			}
+		} */
 
 		if (BotWithBag) {
 			LoaderStep = BOTLOADER_STEP_WAITING;
@@ -319,7 +325,7 @@ void BotLoader() {
 
 		if (BotWithBag && (BotTakenBagTimer.getTimer() == UINT32_MAX)) {
 			bot->sync(2231.10f, -2285.39f, 11.88f);
-			BotTakenBagTimer.setTimer();
+			BotTakenBagTimer.reset();
 			return;
 		}
 
@@ -343,18 +349,19 @@ void BotLoader() {
 		return;
 	}
 
-	if (LoaderStep == BOTLOADER_STEP_GETPAY) {
+	/* if (LoaderStep == BOTLOADER_STEP_GETPAY) {
 		Pickup *pickup = FindNearestPickup(1274);
 		if (pickup == nullptr)
 			return;
 
 		RakBot::app()->log("[RAKBOT] Получение ЗП грузчика...");
 		SampRpFuncs::pickUpPickup(pickup);
-		bot->sync(2160.f, -2265.f, 14.08f);
-		LoaderStep = BOTLOADER_STEP_STARTWORK;
+		bot->sync(2231.10f, -2285.39f, 11.88f);
+		LoaderStep = BOTLOADER_STEP_TAKEBAG;
 		BagCount = 0;
+		afterGetPayTimer.reset();
 		return;
-	}
+	} */
 
 	/* int iPickupID = ;
 	if (iPickupID != -1) {
@@ -541,7 +548,7 @@ void FarmerBot() {
 					ChangeFarm = 1;
 				} else if (notFoundCarsTimer.isElapsed(8000, true)) {
 					RakBot::app()->log("[RAKBOT] Не удается найти машины!");
-					notFoundCarsTimer.setTimer();
+					notFoundCarsTimer.reset();
 				}
 				return;
 			}

@@ -11,7 +11,7 @@ public:
 	Timer(uint32_t timer);
 	~Timer();
 
-	void setTimer();
+	void reset();
 	void setTimer(uint32_t timer);
 	uint32_t getTimer() { return _timer; }
 

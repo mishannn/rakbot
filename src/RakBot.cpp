@@ -240,7 +240,7 @@ void RakBot::log(const char *format, ...) {
 	buf[bufLen] = 0;
 	va_end(args);
 
-	if (RakBot::app()->getEvents()->onPrintLog(std::string(buf), false))
+	if (RakBot::app()->getEvents()->onPrintLog(std::string(buf)))
 		return;
 
 	logToFile(std::string(buf));

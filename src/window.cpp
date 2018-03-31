@@ -575,7 +575,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					SendMessage(g_hWndPickupID, WM_GETTEXT, (WPARAM)sizeof(buf), (LPARAM)buf);
 					int pickupId = atoi(buf);
 
-					snprintf(buf, sizeof(buf), "!spic %d", pickupId);
+					snprintf(buf, sizeof(buf), "!sendpick %d", pickupId);
 					RunCommand(buf);
 					break;
 				}

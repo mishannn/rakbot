@@ -26,19 +26,17 @@
 
 #define cmdcmp(command) !strnicmp(cmd, command, strlen(command))
 
-void RunCommand(const char *cmdstr, bool fromFua) {
+void RunCommand(const char *cmdstr) {
 	std::string command = std::string(cmdstr);
-	std::thread runCommandThread([command, fromFua] {
+	std::thread runCommandThread([command] {
 		static Mutex runCommandMutex;
 		Lock lock(runCommandMutex);
 
 		if (command.empty())
 			return;
 
-		if (!fromFua) {
-			if (RakBot::app()->getEvents()->onRunCommand(command, fromFua))
-				return;
-		}
+		if (RakBot::app()->getEvents()->onRunCommand(command))
+			return;
 
 		RakClientInterface *rakClient = RakBot::app()->getRakClient();
 		Bot *bot = RakBot::app()->getBot();
@@ -2527,7 +2525,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 				RakBot::app()->log("[ERROR] ќшибка удалени€ данных сохраненного аккаунта");
 				return;
 			}
-			
+
 			if (!DeleteFile(szAccountLink)) {
 				RakBot::app()->log("[ERROR] ќшибка удалени€ €рлыка сохраненного аккаунта");
 				return;

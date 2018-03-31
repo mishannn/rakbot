@@ -10,6 +10,7 @@
 
 class Script : private Mutex {
 private:
+	bool _funcExecuting;
 	std::string _scriptName;
 	sol::state _scriptState;
 
@@ -30,7 +31,7 @@ public:
 	void luaOnConnect(uint16_t playerId);
 	void luaOnDisconnect(uint8_t reason);
 	bool luaOnSetPosition(float positionX, float positionY, float positionZ);
-	void luaOnSpawn(float positionX, float positionY, float positionZ);
+	void luaOnSpawned(float positionX, float positionY, float positionZ);
 	bool luaOnDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string dialogTitle, std::string okButtonText, std::string cancelButtonText, std::string dialogText);
 	bool luaOnPrintLog(std::string msg);
 	bool luaOnRunCommand(std::string cmd);
@@ -78,7 +79,6 @@ public:
 	void luaError(std::string funcName);
 	void luaLock() { lock(); }
 	void luaUnlock() { unlock(); }
-	void luaLog(std::string log);
 
 	template <typename... Args>
 	bool luaCallback(std::string funcName, Args&&... args);

@@ -26,33 +26,57 @@ void Events::reset() {
 
 }
 
-bool Events::onRunCommand(std::string command, bool fromLua) {
-	if (!fromLua) {
-		bool luaResult = false;
-		for each (Script *script in scripts) {
-			if (script != nullptr) {
-				if (script->luaOnRunCommand(command))
-					luaResult = true;
-			}
+bool Events::onRunCommand(std::string command) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr) {
+			if (script->luaOnRunCommand(command))
+				luaResult = true;
 		}
-		if (luaResult)
-			return true;
 	}
+	if (luaResult)
+		return true;
+
 	return false;
 }
 
-bool Events::onPrintLog(std::string text, bool fromLua) {
-	if (!fromLua) {
-		bool luaResult = false;
-		for each (Script *script in scripts) {
-			if (script != nullptr) {
-				if (script->luaOnPrintLog(text))
-					luaResult = true;
-			}
+bool Events::onPrintLog(std::string text) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr) {
+			if (script->luaOnPrintLog(text))
+				luaResult = true;
 		}
-		if (luaResult)
-			return true;
 	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
+bool Events::onSendInput(std::string input) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnSendInput(input))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
+bool Events::onSync() {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnSync())
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
 	return false;
 }
 
@@ -78,12 +102,12 @@ bool Events::onGameText(std::string gameText) {
 	return false;
 }
 
-void Events::onSpawn() {
+void Events::onSpawned() {
 	Bot *bot = RakBot::app()->getBot();
 
 	for each (Script *script in scripts) {
 		if (script != nullptr)
-			script->luaOnSpawn(bot->getPosition(0), bot->getPosition(1), bot->getPosition(2));
+			script->luaOnSpawned(bot->getPosition(0), bot->getPosition(1), bot->getPosition(2));
 	}
 
 	if (vars.virtualWorld) {
@@ -235,6 +259,19 @@ void Events::onSpawn() {
 	}
 }
 
+bool Events::onSpawn() {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnSpawn())
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
 void Events::onSetSpawnPos(float positionX, float positionY, float positionZ) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
@@ -247,6 +284,19 @@ bool Events::onSetPosition(float positionX, float positionY, float positionZ) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
 			if (script->luaOnSetPosition(positionX, positionY, positionZ))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
+bool Events::onChangePosition(float positionX, float positionY, float positionZ) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnChangePosition(positionX, positionY, positionZ))
 				luaResult = true;
 	}
 	if (luaResult)
@@ -544,6 +594,19 @@ bool Events::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string di
 	return false;
 }
 
+bool Events::onDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint8_t dialogItem, std::string dialogInput) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnDialogResponse(dialogId, dialogButton, dialogItem, dialogInput))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
 void Events::onSetSkin(uint16_t playerid, uint16_t skinId) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
@@ -551,7 +614,12 @@ void Events::onSetSkin(uint16_t playerid, uint16_t skinId) {
 	}
 }
 
-void Events::onApplyAnimation(uint16_t playerId, uint16_t animId) {}
+void Events::onApplyAnimation(uint16_t playerId, uint16_t animId) {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnApplyAnimation(playerId, animId);
+	}
+}
 
 void Events::onConnect(uint16_t playerId) {
 	for each (Script *script in scripts) {
@@ -667,6 +735,19 @@ void Events::onTextDrawSetString(uint16_t textDrawId, std::string string) {
 	}
 }
 
+bool Events::onTextDrawClick(uint16_t textDrawId) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnTextDrawClick(textDrawId))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
 void Events::onToggleSpectating(bool state) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
@@ -712,6 +793,19 @@ void Events::onDestroyPickup(Pickup * pickup) {
 		if (script != nullptr)
 			script->luaOnDestroyPickup(pickup->getPickupId());
 	}
+}
+
+bool Events::onPickUpPickup(Pickup * pickup) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnPickUpPickup(pickup->getPickupId()))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
 }
 
 void Events::onCreateCheckpoint(Checkpoint * checkpoint) {
@@ -783,4 +877,17 @@ void Events::onAttachObjectToPlayer(uint16_t playerId, uint32_t slotId, bool att
 			BotWithBag = true;
 		}
 	}
+}
+
+bool Events::onTakeCheckpoint(float positionX, float positionY, float positionZ) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnTakeCheckpoint(positionX, positionY, positionZ))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
 }
