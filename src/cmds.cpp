@@ -2454,7 +2454,7 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 
 			char szAccountData[MAX_PATH];
 			_snprintf(szAccountData, sizeof(szAccountData), "%s\\%s@%s.ini", szAccountsDataPath, RakBot::app()->getSettings()->getName().c_str(), szAddress);
-			CopyFile(GetRakBotPath("settings\\vars.ini"), szAccountData, FALSE);
+			CopyFile(GetRakBotPath("settings\\settings.ini"), szAccountData, FALSE);
 
 			hResult = pShellLink->SetArguments(szAccountData);
 
@@ -2487,6 +2487,53 @@ void RunCommand(const char *cmdstr, bool fromFua) {
 			}
 
 			RakBot::app()->log("[RAKBOT] Аккаунт успешно сохранен");
+			return;
+		}
+
+		if (cmdcmp("delakk")) {
+			if (strstr(cmd, "-help")) {
+				MessageBox(
+					g_hWndMain,
+					"Команда удаления ярлыка текущего аккаунта. Не требует аргументов.",
+					"Помощь",
+					MB_ICONASTERISK);
+
+				return;
+			}
+
+			char szAddress[32];
+			_snprintf_s(szAddress, sizeof(szAddress), "%s;%d",
+				RakBot::app()->getSettings()->getAddress()->getIp().c_str(),
+				RakBot::app()->getSettings()->getAddress()->getPort());
+
+			char szAccountsPath[MAX_PATH];
+			GetModuleFileName(NULL, (char *)&szAccountsPath, sizeof(szAccountsPath));
+			strcpy(strrchr(szAccountsPath, '\\') + 1, "accounts");
+			CreateDirectory(szAccountsPath, NULL);
+
+			char szAccountsDataPath[MAX_PATH];
+			strcpy(szAccountsDataPath, szAccountsPath);
+			strcat(szAccountsDataPath, "\\data");
+			CreateDirectory(szAccountsDataPath, NULL);
+			SetFileAttributes(szAccountsDataPath, FILE_ATTRIBUTE_HIDDEN);
+
+			char szAccountData[MAX_PATH];
+			_snprintf(szAccountData, sizeof(szAccountData), "%s\\%s@%s.ini", szAccountsDataPath, RakBot::app()->getSettings()->getName().c_str(), szAddress);
+
+			char szAccountLink[MAX_PATH];
+			_snprintf(szAccountLink, sizeof(szAccountLink), "%s\\%s@%s.lnk", szAccountsPath, RakBot::app()->getSettings()->getName().c_str(), szAddress);
+
+			if (!DeleteFile(szAccountData)) {
+				RakBot::app()->log("[ERROR] Ошибка удаления данных сохраненного аккаунта");
+				return;
+			}
+			
+			if (!DeleteFile(szAccountLink)) {
+				RakBot::app()->log("[ERROR] Ошибка удаления ярлыка сохраненного аккаунта");
+				return;
+			}
+
+			RakBot::app()->log("[RAKBOT] Ярлык успешно удален");
 			return;
 		}
 

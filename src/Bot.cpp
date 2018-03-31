@@ -471,7 +471,7 @@ bool Bot::pickUpPickup(Pickup *pickup, bool checkDist) {
 	}
 
 	if (distanceTo(pickup) >= 50.0f && checkDist) {
-		RakBot::app()->log("[ERROR] Поднятие пикапа: расстояние до пикапа %d(model: %d) больше 50 метров!", pickup->getPickupId(), pickup->getModel());
+		RakBot::app()->log("[ERROR] Поднятие пикапа: расстояние до пикапа %d (модель: %d) больше 50 метров!", pickup->getPickupId(), pickup->getModel());
 		return false;
 	}
 
@@ -483,7 +483,7 @@ bool Bot::pickUpPickup(Pickup *pickup, bool checkDist) {
 	RakNet::BitStream bsSend;
 	bsSend.Write<int>(pickup->getPickupId());
 	rakClient->RPC(&RPC_PickedUpPickup, &bsSend, HIGH_PRIORITY, RELIABLE_ORDERED, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
-	RakBot::app()->log("[RAKBOT] Поднят пикап с ID %d(model: %d)", pickup->getPickupId(), pickup->getModel());
+	RakBot::app()->log("[RAKBOT] Поднят пикап с ID %d (модель: %d)", pickup->getPickupId(), pickup->getModel());
 	return true;
 }
 

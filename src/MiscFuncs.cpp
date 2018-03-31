@@ -124,7 +124,7 @@ Player *FindPlayerByName(std::string name) {
 }
 
 
-char *GenRandom(char *s, const int len) {
+const char *GenRandom(char *s, const int len) {
 	static const char alphanum[] =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -135,14 +135,14 @@ char *GenRandom(char *s, const int len) {
 	return s;
 }
 
-char *GetRakBotPath() {
+const char *GetRakBotPath() {
 	static char path[MAX_PATH];
 	GetModuleFileName(NULL, path, sizeof(path));
 	*(strrchr(path, '\\')) = 0;
 	return path;
 }
 
-char *GetRakBotPath(char *append) {
+const char *GetRakBotPath(const char *append) {
 	static char path[MAX_PATH];
 	GetModuleFileName(NULL, path, sizeof(path));
 

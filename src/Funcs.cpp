@@ -295,11 +295,11 @@ void BotLoader() {
 	}
 
 	if (LoaderStep == BOTLOADER_STEP_TAKEBAG) {
-		/* if ((BagCount >= vars.botLoaderCount) && (BagCount % vars.botLoaderCount == 0)) {
+		if ((BagCount >= vars.botLoaderCount) && (BagCount % vars.botLoaderCount == 0)) {
 			bot->sync(2160.f, -2265.f, 14.08f);
 			LoaderStep = BOTLOADER_STEP_GETPAY;
 			return;
-		} */
+		}
 
 		if (BotWithBag) {
 			LoaderStep = BOTLOADER_STEP_WAITING;
@@ -343,18 +343,18 @@ void BotLoader() {
 		return;
 	}
 
-	/* if (LoaderStep == BOTLOADER_STEP_GETPAY) {
-		int pickupId = FindNearestPickup(1274);
-		if (pickupId == PICKUP_ID_NONE)
+	if (LoaderStep == BOTLOADER_STEP_GETPAY) {
+		Pickup *pickup = FindNearestPickup(1274);
+		if (pickup == nullptr)
 			return;
 
 		RakBot::app()->log("[RAKBOT] Получение ЗП грузчика...");
-		SampRpFuncs::pickUpPickup(pickupId);
+		SampRpFuncs::pickUpPickup(pickup);
 		bot->sync(2160.f, -2265.f, 14.08f);
 		LoaderStep = BOTLOADER_STEP_STARTWORK;
 		BagCount = 0;
 		return;
-	} */
+	}
 
 	/* int iPickupID = ;
 	if (iPickupID != -1) {

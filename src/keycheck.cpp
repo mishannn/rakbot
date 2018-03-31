@@ -335,7 +335,7 @@ void HandleCheckKey() {
 }
 
 void CheckKey() {
-	char *keyPath = GetRakBotPath("settings\\license.key");
+	const char *keyPath = GetRakBotPath("settings\\license.key");
 	std::fstream keyFile(keyPath, std::ios::in | std::ios::binary);
 
 	if (keyFile.is_open()) {

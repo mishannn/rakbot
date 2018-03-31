@@ -750,6 +750,31 @@ void Script::luaRegisterFunctions() {
 		CURLcode code = OpenURL(safeUrl);
 		return std::make_tuple(CurlBuffer, static_cast<int>(code));
 	});
+	_scriptState.set_function("downloadFile", [this](std::string url, std::string file) {
+		return static_cast<int>(URLDownloadToFile(NULL, url.c_str(), file.c_str(), NULL, NULL));
+	});
+	_scriptState.set_function("getRakBotPath", [this](sol::optional<std::string> maybe_path) {
+		if (maybe_path) {
+			std::string &path = maybe_path.value();
+			const char *buf = GetRakBotPath(path.c_str());
+			std::string result = std::string(buf);
+			return result;
+		}
+		const char *buf = GetRakBotPath();
+		std::string result = std::string(buf);
+		return result;
+	});
+	_scriptState.set_function("getIniString", [this](std::string file, std::string section, std::string key) {
+		char buf[256];
+		GetPrivateProfileString(section.c_str(), key.c_str(), "nil", buf, sizeof(buf), file.c_str());
+		std::string result = std::string(buf);
+		if (result == "nil")
+			return sol::make_object(_scriptState, sol::nil);
+		return sol::make_object(_scriptState, result);
+	});
+	_scriptState.set_function("setIniString", [this](std::string file, std::string section, std::string key, std::string value) {
+		return WritePrivateProfileString(section.c_str(), key.c_str(), value.c_str(), file.c_str());
+	});
 
 	// CHECKPOINT
 	_scriptState.set_function("getCheckpoint", [this]() {

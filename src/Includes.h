@@ -61,6 +61,7 @@
 #pragma comment(lib, "libcurl.lib")
 #pragma comment(lib, "wldap32.lib")
 #pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "urlmon.lib")
 
 #pragma comment(linker, "/manifestdependency:\"type='win32' \
                         name='Microsoft.Windows.Common-Controls' \

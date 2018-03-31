@@ -7,7 +7,9 @@
 #include "Settings.h"
 
 void LoadCustom() {
-	char szBuf[512], *szAppName, *szPath = GetRakBotPath("settings\\custom.ini");
+	char szBuf[512];
+	char *szAppName = nullptr;
+	const char *szPath = GetRakBotPath("settings\\custom.ini");
 
 	FILE *fdCustomSetings = fopen(szPath, "r");
 	if (fdCustomSetings) {
@@ -121,7 +123,9 @@ void LoadConfig() {
 	ZeroMemory(&vars, sizeof(Vars));
 	CreateDirectory(GetRakBotPath("settings"), NULL);
 
-	char szBuf[64], *szAppName, *szPath = GetRakBotPath("settings\\settings.ini");
+	char szBuf[64];
+	char *szAppName = nullptr;
+	const char *szPath = GetRakBotPath("settings\\settings.ini");
 	FILE *fdSetings = fopen(szPath, "r");
 	if (fdSetings) {
 		fclose(fdSetings);

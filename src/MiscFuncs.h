@@ -4,9 +4,9 @@ class Player *FindNearestPlayer(int skin = -1);
 class Player *FindPlayerByName(std::string name);
 void DoCoordMaster(bool state, float x = 0.f, float y = 0.f, float z = 0.f);
 
-char *GenRandom(char *s, const int len);
-char *GetRakBotPath();
-char *GetRakBotPath(char *path);
+const char *GenRandom(char *s, const int len);
+const char *GetRakBotPath();
+const char *GetRakBotPath(const char *path);
 
 std::string UrlEncode(const std::string &s);
 
