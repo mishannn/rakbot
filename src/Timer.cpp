@@ -16,7 +16,7 @@ void Timer::setTimer(uint32_t timer) {
 	_timer = timer;
 }
 
-uint32_t Timer::getElapsed() {
+uint32_t Timer::getElapsed(uint32_t fromTime = 0) {
 	if (_timer > GetTickCount())
 		return 0;
 
@@ -24,19 +24,19 @@ uint32_t Timer::getElapsed() {
 }
 
 bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
-	if (_timer > GetTickCount())
+	if (_timer >= GetTickCount())
 		return false;
 
 	if ((GetTickCount() - _timer) < ms)
 		return false;
 
 	if (resetIfTrue)
-		reset();
+		setTimerFromCurrentTime();
 
 	return true;
 }
 
-void Timer::reset() {
+void Timer::setTimerFromCurrentTime() {
 	lock();
 	_timer = GetTickCount();
 	unlock();

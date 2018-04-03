@@ -757,6 +757,12 @@ void Script::luaRegisterFunctions() {
 
 	// MISC
 	_scriptState.set_function("setTimeout", [this](int delay, std::string funcName) {
+		if (delay < 1)
+			return false;
+
+		if (funcName.empty())
+			return false;
+
 		DefCall defCall;
 		defCall.startTime = GetTickCount();
 		defCall.callDelay = delay;
@@ -766,6 +772,12 @@ void Script::luaRegisterFunctions() {
 		return true;
 	});
 	_scriptState.set_function("setInterval", [this](int delay, std::string funcName) {
+		if (delay < 1)
+			return false;
+
+		if (funcName.empty())
+			return false;
+
 		DefCall defCall;
 		defCall.startTime = GetTickCount();
 		defCall.callDelay = delay;
@@ -1003,11 +1015,11 @@ void Script::luaRegisterFunctions() {
 	});
 
 	// ADMINS
-	_scriptState.set_function("add", [this](std::string admin) {
+	_scriptState.set_function("adminsAdd", [this](std::string admin) {
 		vars.admins.push_back(admin);
 		return true;
 	});
-	_scriptState.set_function("clear", [this]() {
+	_scriptState.set_function("adminsClear", [this]() {
 		vars.admins.clear();
 		return true;
 	});
@@ -1100,22 +1112,20 @@ void Script::luaUpdate() {
 		std::vector<DefCall>::iterator it = _defCalls.begin();
 		std::vector<DefCall>::iterator end = _defCalls.end();
 
-		for ( ; it != end; ) {
-			DefCall& defCall = *it;
+		while (it != end) {
+			DefCall *defCall = it._Ptr;
 
 			static Timer timer;
-			timer.setTimer(defCall.startTime);
-
-			if (!timer.isElapsed(defCall.callDelay, false))
+			timer.setTimer(defCall->startTime);
+			if (!timer.isElapsed(defCall->callDelay, false)) {
+				it++;
 				continue;
+			}
 
-			if (defCall.funcName.empty())
-				continue;
+			luaCallback(defCall->funcName);
 
-			luaCallback(defCall.funcName);
-
-			if (defCall.repeat) {
-				defCall.startTime = GetTickCount();
+			if (defCall->repeat) {
+				defCall->startTime = Timer::getCurrentTime();
 				it++;
 			} else {
 				it = _defCalls.erase(it);

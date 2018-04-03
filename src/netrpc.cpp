@@ -1124,30 +1124,6 @@ void ScrApplyAnimation(RPCParameters *rpcParams) {
 	player->getAnimation()->setAnimFlags(animId);
 }
 
-/*void GiveTakeDamage(RPCParameters *rpcParams)
-{
-if (g_settings.bGodMode)
-return;
-
-uint8_t bTakeDamage;
-uint16_t wPlayerID;
-FLOAT fAmountDamage;
-INT iWeaponID;
-
-RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
-bsData.Read(bTakeDamage);
-bsData.Read(wPlayerID);
-bsData.Read(fAmountDamage);
-bsData.Read(iWeaponID);
-
-g_Players[g_sLocalPlayerID].onfootData.byteHealth -= fAmountDamage;
-
-char szBuf[256];
-snprintf(szBuf, sizeof(szBuf), "[RAKBOT] Игрок %s(%d) %s %0.2f урона оружием %d",
-getPlayerName(wPlayerID), wPlayerID, bTakeDamage ? "получил от вас" : "нанес вам", fAmountDamage, iWeaponID);
-RakBot::app()->log(szBuf);
-}*/
-
 void SetPlayerSkin(RPCParameters *rpcParams) {
 	Bot *bot = RakBot::app()->getBot();
 
@@ -1437,7 +1413,7 @@ void Create3DTextLabel(RPCParameters *rpcParams) {
 	RakBot::app()->getEvents()->onTextLabelShow(labelId, labelPosition[0], labelPosition[1], labelPosition[2], std::string(labelTextBuf));
 }
 
-void Update3DTextLabel(RPCParameters *rpcParams) {
+/* void Update3DTextLabel(RPCParameters *rpcParams) {
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
 	std::string dump = std::string(DumpMem(bsData.GetData(), bsData.GetNumberOfBytesUsed()));
@@ -1445,7 +1421,7 @@ void Update3DTextLabel(RPCParameters *rpcParams) {
 	for (std::string line : dumpLines) {
 		RakBot::app()->log(line.c_str());
 	}
-}
+} */
 
 void RegisterRPCs() {
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
@@ -1463,7 +1439,6 @@ void RegisterRPCs() {
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerHealth, SetHealth);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrInitGame, InitGame);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrWorldPlayerAdd, WorldPlayerAdd);
-	//g_RakClient->RegisterAsRemoteProcedureCall(&RPC_GiveTakeDamage, GiveTakeDamage);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrWorldPlayerDeath, WorldPlayerDeath);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrWorldPlayerRemove, WorldPlayerRemove);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrWorldVehicleAdd, WorldVehicleAdd);

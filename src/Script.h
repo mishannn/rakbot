@@ -26,7 +26,7 @@ private:
 	std::string _scriptName;
 	sol::state _scriptState;
 
-	DataStructures::List<DefCall> _defCalls;
+	std::vector<DefCall> _defCalls;
 
 	Script(std::string scriptName);
 	~Script();

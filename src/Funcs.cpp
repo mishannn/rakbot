@@ -100,7 +100,7 @@ void CheckChangePos() {
 			if (vars.mapWindowOpened)
 				UpdateMapWindow();
 
-			vars.lastChangePos.reset();
+			vars.lastChangePos.setTimerFromCurrentTime();
 			for (int i = 0; i < 3; i++)
 				fOldPos[i] = bot->getPosition(i);
 			break;
@@ -326,7 +326,7 @@ void BotLoader() {
 
 		if (BotWithBag && (BotTakenBagTimer.getTimer() == UINT32_MAX)) {
 			bot->teleport(2231.10f, -2285.39f, 11.88f);
-			BotTakenBagTimer.reset();
+			BotTakenBagTimer.setTimerFromCurrentTime();
 			return;
 		}
 
@@ -360,7 +360,7 @@ void BotLoader() {
 		bot->teleport(2231.10f, -2285.39f, 11.88f);
 		LoaderStep = BOTLOADER_STEP_TAKEBAG;
 		BagCount = 0;
-		afterGetPayTimer.reset();
+		afterGetPayTimer.setTimerFromCurrentTime();
 		return;
 	}
 
@@ -549,7 +549,7 @@ void FarmerBot() {
 					ChangeFarm = 1;
 				} else if (notFoundCarsTimer.isElapsed(8000, true)) {
 					RakBot::app()->log("[RAKBOT] Не удается найти машины!");
-					notFoundCarsTimer.reset();
+					notFoundCarsTimer.setTimerFromCurrentTime();
 				}
 				return;
 			}
