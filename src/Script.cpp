@@ -39,6 +39,7 @@ void LuaPanic(sol::optional<std::string> maybe_msg) {
 Script::Script(std::string scriptName) : _scriptName(scriptName) {
 	try {
 		_funcExecuting = false;
+		_scriptClosing = false;
 
 		std::string scriptPath = std::string(GetRakBotPath("scripts")) + "\\" + _scriptName;
 
@@ -66,6 +67,9 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 		sol::protected_function_result result = script.get<sol::protected_function>()();
 		if (!result.valid())
 			throw result.get<sol::error>();
+
+		_scriptUpdateThread = std::thread(&Script::luaUpdate, this);
+
 		std::string s = "[LUA] Скрипт \"" + _scriptName + "\" успешно загружен";
 		RakBot::app()->log(s.c_str());
 	} catch (const char *e) {
@@ -83,7 +87,12 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 	luaOnScriptStart();
 }
 
-Script::~Script() {}
+Script::~Script() {
+	_scriptClosing = true;
+
+	if (_scriptUpdateThread.joinable())
+		_scriptUpdateThread.join();
+}
 
 Script *Script::load(std::string scriptName) {
 	try {
@@ -247,8 +256,64 @@ void Script::luaOnAttachObjectToPlayer(uint16_t playerId, uint32_t slotId, bool 
 	luaCallback("onAttachObjectToPlayer", playerId, slotId, attach);
 }
 
+bool Script::luaOnTakeCheckpoint(float positionX, float positionY, float positionZ) {
+	return luaCallback("onTakeCheckpoint", positionX, positionY, positionZ);
+}
+
+bool Script::luaOnPickUpPickup(uint16_t pickupId) {
+	return luaCallback("onPickUpPickup", pickupId);
+}
+
+bool Script::luaOnTextDrawClick(uint16_t textDrawId) {
+	return luaCallback("onTextDrawClick", textDrawId);
+}
+
+void Script::luaOnApplyAnimation(uint16_t playerId, uint16_t animId) {
+	luaCallback("onApplyAnimation", playerId, animId);
+}
+
+bool Script::luaOnDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput) {
+	return luaCallback("onDialogResponse", dialogId, dialogButton, dialogItem, dialogInput);
+}
+
+bool Script::luaOnSpawn() {
+	return luaCallback("onSpawn");
+}
+
+bool Script::luaOnSendInput(std::string input) {
+	return luaCallback("onSendInput", input);
+}
+
+bool Script::luaOnSync() {
+	return luaCallback("onSync");
+}
+
+void Script::luaOnTextLabelShow(uint16_t labelId, float positionX, float positionY, float positionZ, std::string labelString) {
+	luaCallback("onTextLabelShow", labelId, positionX, positionY, positionZ, labelString);
+}
+
+bool Script::luaOnTeleport(float positionX, float positionY, float positionZ) {
+	return luaCallback("onTeleport", positionX, positionY, positionZ);
+}
+
+bool Script::luaOnCoordMasterStart(float targetX, float targetY, float targetZ) {
+	return luaCallback("onCoordMasterStart", targetX, targetY, targetZ);
+}
+
+bool Script::luaOnCoordMasterStop() {
+	return luaCallback("onCoordMasterStop");
+}
+
+void Script::luaOnCoordMasterComplete() {
+	luaCallback("onCoordMasterComplete");
+}
+
 bool Script::luaOnSetHealth(uint8_t health) {
 	return luaCallback("onSetHealth", health);
+}
+
+bool Script::luaOnSetArmour(uint8_t armour) {
+	return luaCallback("onSetArmour", armour);
 }
 
 void Script::luaOnSetMoney(int money) {
@@ -483,6 +548,24 @@ void Script::luaRegisterFunctions() {
 		bot->clickTextdraw(textdrawId);
 		return true;
 	});
+	_scriptState.set_function("teleport", [this](float x, float y, float z) {
+		Bot *bot = RakBot::app()->getBot();
+		bot->setPosition(0, x);
+		bot->setPosition(1, y);
+		bot->setPosition(2, z);
+		bot->sync();
+		return true;
+	});
+	_scriptState.set_function("coordMasterStart", [this](float x, float y, float z) {
+		Bot *bot = RakBot::app()->getBot();
+		DoCoordMaster(true, x, y, z);
+		return true;
+	});
+	_scriptState.set_function("coordMasterStop", [this]() {
+		Bot *bot = RakBot::app()->getBot();
+		DoCoordMaster(false);
+		return true;
+	});
 
 	// RAKNET
 	_scriptState.set_function("sendPacket", [this](int bsPtr) {
@@ -673,6 +756,32 @@ void Script::luaRegisterFunctions() {
 	});
 
 	// MISC
+	_scriptState.set_function("setTimeout", [this](int delay, std::string funcName) {
+		DefCall defCall;
+		defCall.startTime = GetTickCount();
+		defCall.callDelay = delay;
+		defCall.funcName = funcName;
+		defCall.repeat = false;
+		_defCalls.push_back(defCall);
+		return true;
+	});
+	_scriptState.set_function("setInterval", [this](int delay, std::string funcName) {
+		DefCall defCall;
+		defCall.startTime = GetTickCount();
+		defCall.callDelay = delay;
+		defCall.funcName = funcName;
+		defCall.repeat = true;
+		_defCalls.push_back(defCall);
+		return true;
+	});
+	/* _scriptState.set_function("sleep", [this](int ms) {
+		_funcExecuting = false;
+		luaUnlock();
+		Sleep(ms);
+		luaLock();
+		_funcExecuting = true;
+		return true;
+	}); */
 	_scriptState.set_function("printLog", [this](std::string log) {
 		std::vector<std::string> lines = Split(log, '\n');
 		if (lines.size() < 1)
@@ -690,10 +799,6 @@ void Script::luaRegisterFunctions() {
 		for each (std::string line in lines) {
 			RunCommand(line.c_str());
 		}
-		return true;
-	});
-	_scriptState.set_function("sleep", [this](int ms) {
-		Sleep(ms);
 		return true;
 	});
 	_scriptState.set_function("exit", [this]() {
@@ -990,6 +1095,39 @@ void Script::luaError(std::string error) {
 	}
 }
 
+void Script::luaUpdate() {
+	while (!vars.botOff && !_scriptClosing) {
+		std::vector<DefCall>::iterator it = _defCalls.begin();
+		std::vector<DefCall>::iterator end = _defCalls.end();
+
+		for ( ; it != end; ) {
+			DefCall& defCall = *it;
+
+			static Timer timer;
+			timer.setTimer(defCall.startTime);
+
+			if (!timer.isElapsed(defCall.callDelay, false))
+				continue;
+
+			if (defCall.funcName.empty())
+				continue;
+
+			luaCallback(defCall.funcName);
+
+			if (defCall.repeat) {
+				defCall.startTime = GetTickCount();
+				it++;
+			} else {
+				it = _defCalls.erase(it);
+				end = _defCalls.end();
+			}
+		}
+
+		luaOnScriptUpdate();
+		Sleep(vars.luaUpdateDelay);
+	}
+}
+
 void LoadScripts() {
 	CreateDirectory(GetRakBotPath("scripts"), NULL);
 	CreateDirectory(GetRakBotPath("scripts\\libs"), NULL);
@@ -1021,6 +1159,9 @@ template<typename ...Args>
 bool Script::luaCallback(std::string funcName, Args && ...args) {
 	try {
 		Lock lock(*this);
+
+		if (_scriptClosing)
+			return false;
 
 		if (_funcExecuting)
 			return false;

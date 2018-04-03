@@ -987,8 +987,9 @@ void ScrSetSpawnInfo(RPCParameters *rpcParams) {
 	RakBot::app()->getEvents()->onSetSpawnPos(spawnInfo.position[0], spawnInfo.position[1], spawnInfo.position[2]);
 }
 
-void ScrSetHP(RPCParameters *rpcParams) {
+void SetHealth(RPCParameters *rpcParams) {
 	Bot *bot = RakBot::app()->getBot();
+
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
 	float fHealth;
@@ -996,7 +997,8 @@ void ScrSetHP(RPCParameters *rpcParams) {
 
 	uint8_t byteHealth = static_cast<uint8_t>(fHealth);
 
-	RakBot::app()->getEvents()->onSetHealth(byteHealth);
+	if (RakBot::app()->getEvents()->onSetHealth(byteHealth))
+		return;
 
 	if (fHealth <= 0.0f && !vars.antiDeath) {
 		bot->kill();
@@ -1011,6 +1013,26 @@ void ScrSetHP(RPCParameters *rpcParams) {
 
 	char szBuf[256];
 	snprintf(szBuf, 256, "[RAKBOT] Ваш уровень здоровья изменен на %d", bot->getHealth());
+	RakBot::app()->log(szBuf);
+}
+
+void SetPlayerArmour(RPCParameters *rpcParams) {
+	Bot *bot = RakBot::app()->getBot();
+
+	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
+
+	float fArmour;
+	bsData.Read(fArmour);
+	uint8_t byteArmour = static_cast<uint8_t>(fArmour);
+
+	if (RakBot::app()->getEvents()->onSetArmour(byteArmour))
+		return;
+
+	bot->setHealth(byteArmour);
+	bot->sync();
+
+	char szBuf[256];
+	snprintf(szBuf, 256, "[RAKBOT] Ваш уровень брони изменен на %d", bot->getArmour());
 	RakBot::app()->log(szBuf);
 }
 
@@ -1384,6 +1406,47 @@ void SetPlayerFacingAngle(RPCParameters *rpcParams) {
 	bot->setQuaternion(0, 1.f * sinf((vars.faceAngle / 2.f) * M_PI / 180.f));
 }
 
+void Create3DTextLabel(RPCParameters *rpcParams) {
+	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
+
+	uint8_t hideBehindWalls;
+	uint16_t labelId;
+	uint16_t labelPlayerId;
+	uint16_t labelVehicleId;
+	uint32_t labelColor;
+	float labelPosition[3];
+	float labelDrawDistance;
+
+	bsData.Read(labelId);
+	bsData.Read(labelColor);
+	bsData.Read(labelPosition[0]);
+	bsData.Read(labelPosition[1]);
+	bsData.Read(labelPosition[2]);
+	bsData.Read(labelDrawDistance);
+	bsData.Read(hideBehindWalls);
+	bsData.Read(labelPlayerId);
+	bsData.Read(labelVehicleId);
+
+	char labelTextBuf[2049];
+	ZeroMemory(labelTextBuf, sizeof(labelTextBuf));
+	stringCompressor->DecodeString(labelTextBuf, sizeof(labelTextBuf) - 1, &bsData);
+
+	RakBot::app()->log("[RAKBOT] Показана 3D метка с ID %d (X: %.2f; Y: %.2f; Z: %.2f; текст: %s)",
+		labelId, labelPosition[0], labelPosition[1], labelPosition[2], labelTextBuf);
+
+	RakBot::app()->getEvents()->onTextLabelShow(labelId, labelPosition[0], labelPosition[1], labelPosition[2], std::string(labelTextBuf));
+}
+
+void Update3DTextLabel(RPCParameters *rpcParams) {
+	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
+
+	std::string dump = std::string(DumpMem(bsData.GetData(), bsData.GetNumberOfBytesUsed()));
+	std::vector<std::string> dumpLines = Split(dump, '\n');
+	for (std::string line : dumpLines) {
+		RakBot::app()->log(line.c_str());
+	}
+}
+
 void RegisterRPCs() {
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_RequestSpawn, RequestSpawn);
@@ -1397,7 +1460,7 @@ void RegisterRPCs() {
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetRaceCheckpoint, ScrSetRaceCheckpoint);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrDisableRaceCheckpoint, ScrDisableRaceCheckpoint);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrRemovePlayerFromVehicle, ScrRemovePlayerFromVehicle);
-	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerHealth, ScrSetHP);
+	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerHealth, SetHealth);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrInitGame, InitGame);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrWorldPlayerAdd, WorldPlayerAdd);
 	//g_RakClient->RegisterAsRemoteProcedureCall(&RPC_GiveTakeDamage, GiveTakeDamage);
@@ -1431,4 +1494,6 @@ void RegisterRPCs() {
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrTextDrawSetString, TextDrawSetString);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrTogglePlayerSpectating, TogglePlayerSpectating);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerFacingAngle, SetPlayerFacingAngle);
+	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrCreate3DTextLabel, Create3DTextLabel);
+	// rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrUpdate3DTextLabel, Update3DTextLabel);
 }

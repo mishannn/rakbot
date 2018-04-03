@@ -34,7 +34,7 @@ public:
 	void exitVehicle();
 
 	void sync();
-	void sync(float fPosX, float fPosY, float fPosZ);
+	void teleport(float fPosX, float fPosY, float fPosZ);
 	void follow(uint16_t playerId);
 
 	void connect(std::string address, uint16_t port);

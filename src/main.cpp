@@ -121,11 +121,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			FuncsLoop();
 			UpdateNetwork();
 
-			for each (Script *script in scripts) {
-				if (script != nullptr)
-					script->luaOnScriptUpdate();
-			}
-
 			Sleep(vars.mainDelay);
 		}
 

@@ -9,6 +9,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <forward_list>
 #include <cstdlib>
 #include <cstddef>
 #include <cstdint>

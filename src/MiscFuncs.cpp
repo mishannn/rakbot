@@ -8,6 +8,7 @@
 #include "Settings.h"
 #include "Pickup.h"
 #include "Vehicle.h"
+#include "Events.h"
 
 #include "VehicleStuff.h"
 #include "MiscFuncs.h"
@@ -205,6 +206,9 @@ std::vector<std::string> Split(const std::string &s, char delim) {
 
 void DoCoordMaster(bool state, float x, float y, float z) {
 	if (state) {
+		if (RakBot::app()->getEvents()->onCoordMasterStart(x, y, z))
+			return;
+
 		vars.coordMasterTarget[0] = x;
 		vars.coordMasterTarget[1] = y;
 		vars.coordMasterTarget[2] = z;
@@ -215,6 +219,9 @@ void DoCoordMaster(bool state, float x, float y, float z) {
 		vars.coordMasterEnabled = true;
 		RakBot::app()->log("[RAKBOT] CoordMaster: телепорт на координаты (%.2f; %.2f; %.2f)", x, y, z);
 	} else {
+		if (RakBot::app()->getEvents()->onCoordMasterStop())
+			return;
+
 		vars.coordMasterTarget[0] = 0.f;
 		vars.coordMasterTarget[1] = 0.f;
 		vars.coordMasterTarget[2] = 0.f;

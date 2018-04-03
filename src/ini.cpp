@@ -23,6 +23,9 @@ void LoadCustom() {
 		GetPrivateProfileString(szAppName, "MainDelay", "50", szBuf, sizeof(szBuf), szPath);
 		vars.mainDelay = std::strtoul(szBuf, nullptr, 10);
 
+		GetPrivateProfileString(szAppName, "LuaUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
+		vars.luaUpdateDelay = std::strtoul(szBuf, nullptr, 10);
+
 		GetPrivateProfileString(szAppName, "UpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
 		vars.updateDelay = std::strtoul(szBuf, nullptr, 10);
 
@@ -59,6 +62,10 @@ void LoadCustom() {
 		GetPrivateProfileString(szAppName, "SetStringLog", "0", szBuf, sizeof(szBuf), szPath);
 		vars.textDrawSetStringLogging = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
 
+		szAppName = "3DTextLabel";
+		GetPrivateProfileString(szAppName, "CreateLog", "1", szBuf, sizeof(szBuf), szPath);
+		vars.textLabelCreateLogging = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
+
 		szAppName = "NetworkAdapter";
 		GetPrivateProfileString(szAppName, "Address", "0.0.0.0", szBuf, sizeof(szBuf), szPath);
 		vars.adapterAddress = std::string(szBuf);
@@ -68,6 +75,7 @@ void LoadCustom() {
 
 		szAppName = "Bot";
 		WritePrivateProfileString(szAppName, "MainDelay", "50", szPath);
+		WritePrivateProfileString(szAppName, "LuaUpdateDelay", "50", szPath);
 		WritePrivateProfileString(szAppName, "UpdateDelay", "50", szPath);
 		WritePrivateProfileString(szAppName, "SpawnDelay", "500", szPath);
 		WritePrivateProfileString(szAppName, "DialogResponseDelay", "500", szPath);
@@ -85,6 +93,9 @@ void LoadCustom() {
 		WritePrivateProfileString(szAppName, "CreateLog", "1", szPath);
 		WritePrivateProfileString(szAppName, "HideLog", "0", szPath);
 		WritePrivateProfileString(szAppName, "SetStringLog", "0", szPath);
+
+		szAppName = "3DTextLabel";
+		WritePrivateProfileString(szAppName, "CreateLog", "1", szPath);
 
 		szAppName = "NetworkAdapter";
 		WritePrivateProfileString(szAppName, "Address", "0.0.0.0", szPath);

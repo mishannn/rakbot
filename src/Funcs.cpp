@@ -9,6 +9,7 @@
 #include "Pickup.h"
 #include "Vehicle.h"
 #include "Timer.h"
+#include "Events.h"
 
 #include "MiscFuncs.h"
 #include "MathStuff.h"
@@ -271,7 +272,7 @@ Timer BotTakenBagTimer = UINT32_MAX;
 
 void BotLoader() {
 	static Timer afterGetPayTimer(0);
-	if (!afterGetPayTimer.isElapsed(3000, false))
+	if (!afterGetPayTimer.isElapsed(10000, false))
 		return;
 
 	Bot *bot = RakBot::app()->getBot();
@@ -285,7 +286,7 @@ void BotLoader() {
 	if (LoaderStep == BOTLOADER_STEP_STARTWORK) {
 		if (bot->getSkin() == 260 || bot->getSkin() == 16 || bot->getSkin() == 27) {
 			LoaderStep = BOTLOADER_STEP_TAKEBAG;
-			bot->sync(2231.10f, -2285.39f, 11.88f);
+			bot->teleport(2231.10f, -2285.39f, 11.88f);
 			return;
 		}
 
@@ -299,13 +300,13 @@ void BotLoader() {
 	}
 
 	if (LoaderStep == BOTLOADER_STEP_TAKEBAG) {
-		/* if (vars.botLoaderCount > 0) {
+		if (vars.botLoaderCount > 0) {
 			if ((BagCount >= vars.botLoaderCount) && (BagCount % vars.botLoaderCount == 0)) {
-				bot->sync(2160.f, -2265.f, 14.08f);
+				bot->teleport(2160.f, -2265.f, 14.08f);
 				LoaderStep = BOTLOADER_STEP_GETPAY;
 				return;
 			}
-		} */
+		}
 
 		if (BotWithBag) {
 			LoaderStep = BOTLOADER_STEP_WAITING;
@@ -324,7 +325,7 @@ void BotLoader() {
 		}
 
 		if (BotWithBag && (BotTakenBagTimer.getTimer() == UINT32_MAX)) {
-			bot->sync(2231.10f, -2285.39f, 11.88f);
+			bot->teleport(2231.10f, -2285.39f, 11.88f);
 			BotTakenBagTimer.reset();
 			return;
 		}
@@ -340,7 +341,7 @@ void BotLoader() {
 	if (LoaderStep == BOTLOADER_STEP_PUTBAG) {
 		if (!BotWithBag) {
 			LoaderStep = BOTLOADER_STEP_TAKEBAG;
-			bot->sync(2231.10f, -2285.39f, 11.88f);
+			bot->teleport(2231.10f, -2285.39f, 11.88f);
 			return;
 		}
 
@@ -349,19 +350,19 @@ void BotLoader() {
 		return;
 	}
 
-	/* if (LoaderStep == BOTLOADER_STEP_GETPAY) {
+	if (LoaderStep == BOTLOADER_STEP_GETPAY) {
 		Pickup *pickup = FindNearestPickup(1274);
 		if (pickup == nullptr)
 			return;
 
 		RakBot::app()->log("[RAKBOT] Получение ЗП грузчика...");
 		SampRpFuncs::pickUpPickup(pickup);
-		bot->sync(2231.10f, -2285.39f, 11.88f);
+		bot->teleport(2231.10f, -2285.39f, 11.88f);
 		LoaderStep = BOTLOADER_STEP_TAKEBAG;
 		BagCount = 0;
 		afterGetPayTimer.reset();
 		return;
-	} */
+	}
 
 	/* int iPickupID = ;
 	if (iPickupID != -1) {
@@ -640,6 +641,7 @@ void CoordMaster() {
 			Sleep(vars.coordMasterDelay);
 			vars.coordMasterEnabled = false;
 			RakBot::app()->log("[RAKBOT] Коордмастер завершил работу");
+			RakBot::app()->getEvents()->onCoordMasterComplete();
 		});
 		coordMasterOffThread.detach();
 	}

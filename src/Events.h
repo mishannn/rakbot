@@ -18,12 +18,12 @@ public:
 	void onDeath();
 	void onSetSpawnPos(float positionX, float positionY, float positionZ);
 	bool onSetPosition(float positionX, float positionY, float positionZ);
-	bool onChangePosition(float positionX, float positionY, float positionZ);
 	bool onSetHealth(uint8_t health);
+	bool onSetArmour(uint8_t armour);
 	bool onServerMessage(std::string message);
 	bool onChatMessage(uint16_t playerId, std::string message);
 	bool onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string dialogTitle, std::string okButtonText, std::string cancelButtonText, std::string dialogText);
-	bool onDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint8_t dialogItem, std::string dialogInput);
+	bool onDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput);
 	void onSetSkin(uint16_t playerid, uint16_t skinId);
 	void onApplyAnimation(uint16_t playerId, uint16_t animId);
 	void onConnect(uint16_t playerId);
@@ -57,6 +57,9 @@ public:
 	void onTextDrawSetString(uint16_t textDrawId, std::string string);
 	bool onTextDrawClick(uint16_t textDrawId);
 
+	// 3D TEXT
+	void onTextLabelShow(uint16_t labelId, float positionX, float positionY, float positionZ, std::string labelString);
+
 	// SPECTATING
 	void onToggleSpectating(bool state);
 
@@ -78,4 +81,12 @@ public:
 
 	// ...
 	bool onTakeCheckpoint(float positionX, float positionY, float positionZ);
+
+	// TELEPORT
+	bool onTeleport(float positionX, float positionY, float positionZ);
+
+	// COORD MASTER
+	bool onCoordMasterStart(float targetX, float targetY, float targetZ);
+	bool onCoordMasterStop();
+	void onCoordMasterComplete();
 };

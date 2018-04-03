@@ -8,11 +8,25 @@
 #define SOL_CHECK_ARGUMENTS 1
 #include <sol.hpp>
 
+class Timer;
+
+struct DefCall {
+	bool repeat;
+	uint32_t startTime;
+	uint32_t callDelay;
+	std::string funcName;
+};
+
 class Script : private Mutex {
 private:
 	bool _funcExecuting;
+	bool _scriptClosing;
+
+	std::thread _scriptUpdateThread;
 	std::string _scriptName;
 	sol::state _scriptState;
+
+	DataStructures::List<DefCall> _defCalls;
 
 	Script(std::string scriptName);
 	~Script();
@@ -24,6 +38,7 @@ public:
 	// LUA CALLBACKS
 	void luaOnReset(uint8_t restart, uint32_t reconnectTime);
 	bool luaOnSetHealth(uint8_t health);
+	bool luaOnSetArmour(uint8_t armour);
 	void luaOnSetMoney(int money);
 	void luaOnPlayerQuit(uint16_t playerId, uint8_t reasonId);
 	void luaOnPlayerJoin(uint16_t playerId, std::string playerName);
@@ -68,6 +83,19 @@ public:
 	void luaOnCreateObject(uint16_t objectId);
 	void luaOnDestroyObject(uint16_t objectId);
 	void luaOnAttachObjectToPlayer(uint16_t playerId, uint32_t slotId, bool attach);
+	bool luaOnTakeCheckpoint(float positionX, float positionY, float positionZ);
+	bool luaOnPickUpPickup(uint16_t pickupId);
+	bool luaOnTextDrawClick(uint16_t textDrawId);
+	void luaOnApplyAnimation(uint16_t playerId, uint16_t animId);
+	bool luaOnDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput);
+	bool luaOnSpawn();
+	bool luaOnSendInput(std::string input);
+	bool luaOnSync();
+	void luaOnTextLabelShow(uint16_t labelId, float positionX, float positionY, float positionZ, std::string labelString);
+	bool luaOnTeleport(float positionX, float positionY, float positionZ);
+	bool luaOnCoordMasterStart(float targetX, float targetY, float targetZ);
+	bool luaOnCoordMasterStop();
+	void luaOnCoordMasterComplete();
 
 	// LUA STUFF
 	std::string getScriptName() { return _scriptName; }
@@ -79,6 +107,7 @@ public:
 	void luaError(std::string funcName);
 	void luaLock() { lock(); }
 	void luaUnlock() { unlock(); }
+	void luaUpdate();
 
 	template <typename... Args>
 	bool luaCallback(std::string funcName, Args&&... args);

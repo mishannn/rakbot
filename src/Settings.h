@@ -140,6 +140,8 @@ struct Vars {
 	bool textDrawHideLogging;
 	bool textDrawSetStringLogging;
 
+	bool textLabelCreateLogging;
+
 	bool sendBadSync;
 	bool smartInvis;
 
@@ -147,6 +149,7 @@ struct Vars {
 	std::string adapterAddress;
 
 	int mainDelay;
+	int luaUpdateDelay;
 	int updateDelay;
 	int spawnDelay;
 	int dialogResponseDelay;

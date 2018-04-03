@@ -292,12 +292,13 @@ bool Events::onSetPosition(float positionX, float positionY, float positionZ) {
 	return false;
 }
 
-bool Events::onChangePosition(float positionX, float positionY, float positionZ) {
+bool Events::onSetHealth(uint8_t health) {
 	bool luaResult = false;
 	for each (Script *script in scripts) {
-		if (script != nullptr)
-			if (script->luaOnChangePosition(positionX, positionY, positionZ))
+		if (script != nullptr) {
+			if (script->luaOnSetHealth(health))
 				luaResult = true;
+		}
 	}
 	if (luaResult)
 		return true;
@@ -305,11 +306,11 @@ bool Events::onChangePosition(float positionX, float positionY, float positionZ)
 	return false;
 }
 
-bool Events::onSetHealth(uint8_t health) {
+bool Events::onSetArmour(uint8_t armour) {
 	bool luaResult = false;
 	for each (Script *script in scripts) {
 		if (script != nullptr) {
-			if (script->luaOnSetHealth(health))
+			if (script->luaOnSetArmour(armour))
 				luaResult = true;
 		}
 	}
@@ -594,7 +595,7 @@ bool Events::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string di
 	return false;
 }
 
-bool Events::onDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint8_t dialogItem, std::string dialogInput) {
+bool Events::onDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput) {
 	bool luaResult = false;
 	for each (Script *script in scripts) {
 		if (script != nullptr)
@@ -748,6 +749,13 @@ bool Events::onTextDrawClick(uint16_t textDrawId) {
 	return false;
 }
 
+void Events::onTextLabelShow(uint16_t labelId, float positionX, float positionY, float positionZ, std::string labelString) {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnTextLabelShow(labelId, positionX, positionY, positionZ, labelString);
+	}
+}
+
 void Events::onToggleSpectating(bool state) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
@@ -890,4 +898,50 @@ bool Events::onTakeCheckpoint(float positionX, float positionY, float positionZ)
 		return true;
 
 	return false;
+}
+
+bool Events::onTeleport(float positionX, float positionY, float positionZ) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnTeleport(positionX, positionY, positionZ))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
+bool Events::onCoordMasterStart(float targetX, float targetY, float targetZ) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnCoordMasterStart(targetX, targetY, targetZ))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
+bool Events::onCoordMasterStop() {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnCoordMasterStop())
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
+void Events::onCoordMasterComplete() {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnCoordMasterComplete();
+	}
 }

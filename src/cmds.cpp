@@ -323,10 +323,7 @@ void RunCommand(const char *cmdstr) {
 				return;
 			}
 
-			for (int i = 0; i < 3; i++)
-				bot->setPosition(i, position[i]);
-
-			bot->sync();
+			bot->teleport(position[0], position[1], position[2]);
 
 			char buf[512];
 			sprintf(buf, "[RAKBOT] Бот телепортирован на координаты (%0.2f; %0.2f; %0.2f)", position[0], position[1], position[2]);

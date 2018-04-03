@@ -322,7 +322,10 @@ void Bot::onfootSync() {
 	aimSync();
 }
 
-void Bot::sync(float positionX, float positionY, float positionZ) {
+void Bot::teleport(float positionX, float positionY, float positionZ) {
+	if (RakBot::app()->getEvents()->onTeleport(positionX, positionY, positionZ))
+		return;
+
 	setPosition(0, positionX);
 	setPosition(1, positionY);
 	setPosition(2, positionZ);
@@ -500,7 +503,7 @@ bool Bot::takeCheckpoint() {
 	float *position = checkpoint.active ? checkpoint.position : raceCheckpoint.position;
 
 	if (RakBot::app()->getEvents()->onTakeCheckpoint(position[0], position[1], position[2]))
-		return;
+		return false;
 
 	for (int i = 0; i < 3; i++)
 		setPosition(i, position[i]);
@@ -672,7 +675,6 @@ void Bot::spawn() {
 	setPlayerState(PLAYER_STATE_ONFOOT);
 	for (int i = 0; i < 3; i++)
 		setPosition(i, spawnInfo.position[i]);
-	setPosition(2, getPosition(2) + 1.f);
 	setHealth(100);
 	setQuaternion(0, -cosf((spawnInfo.rotation / 2.f) * M_PI / 180.f));
 	setQuaternion(1, 0.f);
