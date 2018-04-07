@@ -2,11 +2,14 @@
 
 #include <Windows.h>
 
+#include "Mutex.h"
 
 class Timer {
 private:
 	uint32_t _timer;
 	uint32_t _lastTickCount;
+
+	Mutex _timerMutex;
 
 public:
 	Timer();

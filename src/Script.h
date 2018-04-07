@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Mutex.h"
 
 #include <lua.hpp>
 #pragma comment(lib, "lua51.lib")
@@ -28,13 +29,15 @@ private:
 	sol::state _scriptState;
 
 	DefCall *_defCalls[LUA_MAXDEFCALLS];
-	Mutex _defCallsMutex;
 
 	Script(std::string scriptName);
 	~Script();
 
 	Script(Script const&);
 	Script& operator=(Script const&);
+
+	Mutex _scriptMutex;
+	Mutex _defCallMutex;
 
 public:
 	// LUA CALLBACKS
@@ -107,8 +110,6 @@ public:
 
 	void luaRegisterFunctions();
 	void luaError(std::string funcName);
-	void luaLock() { lock(); }
-	void luaUnlock() { unlock(); }
 	void luaUpdate();
 
 	template <typename... Args>

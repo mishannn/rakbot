@@ -25,7 +25,7 @@ SampRpFuncs::SampRpFuncs() {}
 SampRpFuncs::~SampRpFuncs() {}
 
 void SampRpFuncs::takeCheckpoint() {
-	static Mutex mutex;
+	static bool takeCheckpointReady = true;
 
 	if (!checkpoint.active && !raceCheckpoint.active)
 		return;
@@ -38,7 +38,10 @@ void SampRpFuncs::takeCheckpoint() {
 		return;
 	}
 
-	mutex.lock();
+	while (!takeCheckpointReady)
+		return;
+	takeCheckpointReady = false;
+
 	_botSuspended = true;
 	bot->setPosition(0, position[0]);
 	bot->setPosition(1, position[1]);
@@ -49,12 +52,14 @@ void SampRpFuncs::takeCheckpoint() {
 		Sleep(1500);
 		bot->takeCheckpoint();
 		_botSuspended = false;
-		mutex.unlock();
+		takeCheckpointReady = true;
 	});
 	takeCheckpointThread.detach();
 }
 
 void SampRpFuncs::pickUpPickup(Pickup *pickup) {
+	static bool pickUpReady = true;
+
 	if (pickup == nullptr)
 		return;
 
@@ -65,9 +70,8 @@ void SampRpFuncs::pickUpPickup(Pickup *pickup) {
 		return;
 	}
 
-	static bool pickUpReady = true;
 	while (!pickUpReady)
-		Sleep(10);
+		return;
 	pickUpReady = false;
 
 	_botSuspended = true;

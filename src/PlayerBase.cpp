@@ -1,19 +1,24 @@
 #include "StdAfx.h"
+
 #include "MathStuff.h"
 #include "Pickup.h"
 #include "Vehicle.h"
 
 #include "PlayerBase.h"
 
-PlayerBase::PlayerBase() : Mutex() {}
+PlayerBase::PlayerBase() {}
 
 PlayerBase::~PlayerBase() {}
 
 float PlayerBase::distanceTo(float position[3]) {
+	Lock lock(&_playerBaseMutex);
+
 	return vect3_dist(_position, position);
 }
 
 float PlayerBase::distanceTo(PlayerBase * player) {
+	Lock lock(&_playerBaseMutex);
+
 	if (player == nullptr)
 		return 0.f;
 
@@ -25,6 +30,8 @@ float PlayerBase::distanceTo(PlayerBase * player) {
 }
 
 float PlayerBase::distanceTo(Pickup * pickup) {
+	Lock lock(&_playerBaseMutex);
+
 	if (pickup == nullptr)
 		return 0.f;
 
@@ -36,6 +43,8 @@ float PlayerBase::distanceTo(Pickup * pickup) {
 }
 
 float PlayerBase::distanceTo(Vehicle * vehicle) {
+	Lock lock(&_playerBaseMutex);
+
 	if (vehicle == nullptr)
 		return 0.f;
 
@@ -47,6 +56,8 @@ float PlayerBase::distanceTo(Vehicle * vehicle) {
 }
 
 std::string PlayerBase::getPlayerStateName() {
+	Lock lock(&_playerBaseMutex);
+
 	std::string playerStateName;
 
 	switch (_playerState) {
@@ -75,7 +86,8 @@ std::string PlayerBase::getPlayerStateName() {
 }
 
 void PlayerBase::reset() {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_playerState = PLAYER_STATE_NONE;
 	_playerId = PLAYER_ID_NONE;
 	_health = 0;
@@ -95,7 +107,6 @@ void PlayerBase::reset() {
 
 	_vehicleSeat = 0;
 	_vehicle = nullptr;
-	unlock();
 
 	getInfo()->reset();
 	getAnimation()->reset();
@@ -106,92 +117,108 @@ void PlayerBase::reset() {
 
 // PLAYER STATE
 void PlayerBase::setPlayerState(uint8_t playerState) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_playerState = playerState;
-	unlock();
 }
 
 uint8_t PlayerBase::getPlayerState() {
+	Lock lock(&_playerBaseMutex);
+
 	return _playerState;
 }
 
 // HEALTH
 void PlayerBase::setHealth(uint8_t playerState) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_health = playerState;
-	unlock();
 }
 
 uint8_t PlayerBase::getHealth() {
+	Lock lock(&_playerBaseMutex);
+
 	return _health;
 }
 
 // ARMOUR
 void PlayerBase::setArmour(uint8_t armour) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_armour = armour;
-	unlock();
 }
 
 uint8_t PlayerBase::getArmour() {
+	Lock lock(&_playerBaseMutex);
+
 	return _armour;
 }
 
 // WEAPON
 void PlayerBase::setWeapon(uint8_t weapon) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_weapon = weapon;
-	unlock();
 }
 
 uint8_t PlayerBase::getWeapon() {
+	Lock lock(&_playerBaseMutex);
+
 	return _weapon;
 }
 
 // SPECIAL ACTION
 void PlayerBase::setSpecialAction(uint8_t specialAction) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_specialAction = specialAction;
-	unlock();
 }
 
 uint8_t PlayerBase::getSpecialAction() {
+	Lock lock(&_playerBaseMutex);
+
 	return _specialAction;
 }
 
 // PLAYER ID
 void PlayerBase::setPlayerId(uint16_t playerId) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_playerId = playerId;
-	unlock();
 }
 
 uint16_t PlayerBase::getPlayerId() {
+	Lock lock(&_playerBaseMutex);
+
 	return _playerId;
 }
 
 // SKIN
 void PlayerBase::setSkin(int skin) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_skin = skin;
-	unlock();
 }
 
 int PlayerBase::getSkin() {
+	Lock lock(&_playerBaseMutex);
+
 	return _skin;
 }
 
 // POSITION
 void PlayerBase::setPosition(int n, float val) {
+	Lock lock(&_playerBaseMutex);
+
 	if (n < 0 || n > 2)
 		return;
 
-	lock();
 	_position[n] = val;
-	unlock();
 }
 
 float PlayerBase::getPosition(int n) {
+	Lock lock(&_playerBaseMutex);
+
 	if (n < 0 || n > 2)
 		return 0.f;
 
@@ -200,15 +227,17 @@ float PlayerBase::getPosition(int n) {
 
 // QUATERNION
 void PlayerBase::setQuaternion(int n, float val) {
+	Lock lock(&_playerBaseMutex);
+
 	if (n < 0 || n > 3)
 		return;
 
-	lock();
 	_quaternion[n] = val;
-	unlock();
 }
 
 float PlayerBase::getQuaternion(int n) {
+	Lock lock(&_playerBaseMutex);
+
 	if (n < 0 || n > 3)
 		return 0.f;
 
@@ -217,15 +246,17 @@ float PlayerBase::getQuaternion(int n) {
 
 // SPEED
 void PlayerBase::setSpeed(int n, float val) {
+	Lock lock(&_playerBaseMutex);
+
 	if (n < 0 || n > 2)
 		return;
 
-	lock();
 	_speed[n] = val;
-	unlock();
 }
 
 float PlayerBase::getSpeed(int n) {
+	Lock lock(&_playerBaseMutex);
+
 	if (n < 0 || n > 2)
 		return 0.f;
 
@@ -234,33 +265,39 @@ float PlayerBase::getSpeed(int n) {
 
 // NAME
 void PlayerBase::setName(std::string name) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_name = name;
-	unlock();
 }
 
 std::string PlayerBase::getName() {
+	Lock lock(&_playerBaseMutex);
+
 	return _name;
 }
 
 // VEHICLE SEAT
 void PlayerBase::setVehicleSeat(uint8_t vehicleSeat) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_vehicleSeat = vehicleSeat;
-	unlock();
 }
 
 uint8_t PlayerBase::getVehicleSeat() {
+	Lock lock(&_playerBaseMutex);
+
 	return _vehicleSeat;
 }
 
 // VEHICLE
 void PlayerBase::setVehicle(Vehicle *vehicle) {
-	lock();
+	Lock lock(&_playerBaseMutex);
+
 	_vehicle = vehicle;
-	unlock();
 }
 
 Vehicle *PlayerBase::getVehicle() {
+	Lock lock(&_playerBaseMutex);
+
 	return _vehicle;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Mutex.h"
 
 class Player;
 
@@ -31,6 +32,8 @@ private:
 
 	Player *_driver;
 	Player **_passenger;
+
+	Mutex _vehicleMutex;
 
 	void loadModelData();
 

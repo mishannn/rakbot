@@ -7,79 +7,93 @@ SAMPDialog::SAMPDialog() {}
 SAMPDialog::~SAMPDialog() {}
 
 void SAMPDialog::reset() {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_dialogActive = false;
 	_dialogStyle = 0;
 	_dialogId = 0;
-	unlock();
 }
 
 void SAMPDialog::setDialogActive(bool dialogActive) {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_dialogActive = dialogActive;
-	unlock();
 }
 
 bool SAMPDialog::isDialogActive() {
+	Lock lock(&_sampDialogMutex);
+
 	return _dialogActive;
 }
 
 void SAMPDialog::setDialogStyle(uint8_t dialogStyle) {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_dialogStyle = dialogStyle;
-	unlock();
 }
 
 uint8_t SAMPDialog::getDialogStyle() {
+	Lock lock(&_sampDialogMutex);
+
 	return _dialogStyle;
 }
 
 void SAMPDialog::setDialogId(uint16_t dialogId) {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_dialogId = dialogId;
-	unlock();
 }
 
 uint16_t SAMPDialog::getDialogId() {
+	Lock lock(&_sampDialogMutex);
+
 	return _dialogId;
 }
 
 void SAMPDialog::setDialogTitle(std::string dialogTitle) {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_dialogTitle = dialogTitle;
-	unlock();
 }
 
 std::string SAMPDialog::getDialogTitle() {
+	Lock lock(&_sampDialogMutex);
+
 	return _dialogTitle;
 }
 
 void SAMPDialog::setOkButtonText(std::string okButtonText) {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_okButtonText = okButtonText;
-	unlock();
 }
 
 std::string SAMPDialog::getOkButtonText() {
+	Lock lock(&_sampDialogMutex);
+
 	return _okButtonText;
 }
 
 void SAMPDialog::setCancelButtonText(std::string cancelButtonText) {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_cancelButtonText = cancelButtonText;
-	unlock();
 }
 
 std::string SAMPDialog::getCancelButtonText() {
+	Lock lock(&_sampDialogMutex);
+
 	return _cancelButtonText;
 }
 
 void SAMPDialog::setDialogText(std::string dialogText) {
-	lock();
+	Lock lock(&_sampDialogMutex);
+
 	_dialogText = dialogText;
-	unlock();
 }
 
 std::string SAMPDialog::getDialogText() {
+	Lock lock(&_sampDialogMutex);
+
 	return _dialogText;
 }

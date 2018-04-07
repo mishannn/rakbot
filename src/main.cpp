@@ -20,6 +20,7 @@
 #include "netgame.h"
 #include "resource.h"
 #include "servinfo.h"
+#include "mapwnd.h"
 
 #include "main.h"
 
@@ -46,7 +47,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		setlocale(LC_TIME, locale);
 		setlocale(LC_CTYPE, locale);
 
-		RunCommand("!debug");
+		// RunCommand("!debug");
 		OrigExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
 
 		LoadConfig();
@@ -67,7 +68,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		std::thread mainWindowThread = std::thread(MainWindow);
 		while (!vars.windowOpened)
-			Sleep(10);
+			SwitchToThread();
 
 		SYSTEMTIME time;
 		GetLocalTime(&time);
@@ -127,6 +128,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		bot->disconnect(false);
 
 		UnloadScripts();
+
+		CloseMapWindow();
 
 		if (mainWindowThread.joinable())
 			mainWindowThread.join();

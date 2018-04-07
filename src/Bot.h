@@ -14,6 +14,8 @@ private:
 	void driverSync();
 	void spectateSync();
 
+	Mutex _botMutex;
+
 public:
 	Bot();
 	~Bot();

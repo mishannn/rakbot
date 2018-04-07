@@ -4,6 +4,7 @@
 #include "Defines.h"
 #include "Structs.h"
 
+#include "Mutex.h"
 #include "Timer.h"
 
 struct Vars {
@@ -156,7 +157,6 @@ struct Vars {
 	int afterSpawnDelay;
 	int enterVehicleDelay;
 
-	Mutex logMutex;
 	FILE *logFile;
 	std::string logFileMode;
 
@@ -171,35 +171,36 @@ private:
 	std::string _ip;
 	uint16_t _port;
 
+	Mutex _addressMutex;
+
 public:
-	Address() : Mutex() {
+	Address() {
 
 	}
 
 	void reset() {
-		lock();
+		Lock lock(&_addressMutex);
 		_ip = "127.0.0.1";
 		_port = 7777;
-		unlock();
 	}
 
 	void setIp(std::string ip) {
-		lock();
+		Lock lock(&_addressMutex);
 		_ip = ip;
-		unlock();
 	}
 
 	std::string getIp() {
+		Lock lock(&_addressMutex);
 		return _ip;
 	}
 
 	void setPort(uint16_t port) {
-		lock();
+		Lock lock(&_addressMutex);
 		_port = port;
-		unlock();
 	}
 
 	uint16_t getPort() {
+		Lock lock(&_addressMutex);
 		return _port;
 	}
 };
@@ -210,6 +211,8 @@ private:
 	std::string _name;
 	std::string _serverPassword;
 	std::string _loginPassword;
+
+	Mutex _settingsMutex;
 
 public:
 	Settings();

@@ -11,14 +11,24 @@
 #include "Events.h"
 #include "SAMPDialog.h"
 #include "Vehicle.h"
+#include "Mutex.h"
 
 #include "window.h"
 
 #include "RakBot.h"
 
-RakBot::RakBot() : Mutex() {
+RakBot::RakBot() {
+	for (int i = 0; i < MutexesAmount; i++)
+		_mutexes[i] = new Mutex;
+
 	for (int i = 0; i < MAX_PLAYERS; i++)
 		_players[i] = nullptr;
+
+	for (int i = 0; i < MAX_VEHICLES; i++)
+		_vehicles[i] = nullptr;
+
+	for (int i = 0; i < MAX_PICKUPS; i++)
+		_pickups[i] = nullptr;
 
 	_bot = new Bot();
 	_bot->reset(true);
@@ -70,10 +80,31 @@ RakBot::~RakBot() {
 		_bot = nullptr;
 	}
 
+	for (int i = 0; i < MAX_VEHICLES; i++) {
+		if (_vehicles[i] != nullptr) {
+			delete _vehicles[i];
+			_vehicles[i] = nullptr;
+		}
+	}
+
+	for (int i = 0; i < MAX_PICKUPS; i++) {
+		if (_pickups[i] != nullptr) {
+			delete _pickups[i];
+			_pickups[i] = nullptr;
+		}
+	}
+
 	for (int i = 0; i < MAX_PLAYERS; i++) {
 		if (_players[i] != nullptr) {
 			delete _players[i];
 			_players[i] = nullptr;
+		}
+	}
+
+	for (int i = 0; i < MutexesAmount; i++) {
+		if (_mutexes[i] != nullptr) {
+			delete _mutexes[i];
+			_mutexes[i] = nullptr;
 		}
 	}
 }
@@ -222,49 +253,60 @@ SAMPDialog *RakBot::getSampDialog() {
 	return _sampDialog;
 }
 
+Mutex *RakBot::getMutex(int mutexIndex) {
+	if (mutexIndex < 0 || mutexIndex >= MutexesAmount)
+		return nullptr;
+
+	return _mutexes[mutexIndex];
+}
+
 void RakBot::log(const char *format, ...) {
+	Mutex *mutex = RakBot::app()->getMutex(MUTEX_LOG);
+	Lock lock(mutex);
+
 	if (format == nullptr)
 		return;
 
 	if (strlen(format) < 1)
 		return;
 
-	Lock lock(vars.logMutex);
-
 	char *buf = new char[MAX_LOGLEN + 1];
-
 	std::va_list args;
 	va_start(args, format);
 	int bufLen = vsnprintf(buf, MAX_LOGLEN, format, args);
 	buf[bufLen] = 0;
 	va_end(args);
 
-	if (RakBot::app()->getEvents()->onPrintLog(std::string(buf)))
+	if (RakBot::app()->getEvents()->onPrintLog(std::string(buf))) {
+		delete[] buf;
 		return;
+	}
 
 	logToFile(std::string(buf));
 
-	if (vars.timeStamp) {
-		SYSTEMTIME time;
-		GetLocalTime(&time);
+	if (g_hWndMain) {
+		if (vars.timeStamp) {
+			SYSTEMTIME time;
+			GetLocalTime(&time);
 
-		char tempBuf[MAX_LOGLEN + 64];
-		int bufLen = snprintf(tempBuf, MAX_LOGLEN, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
-		strncpy(buf, tempBuf, bufLen);
-		buf[bufLen] = 0;
+			char tempBuf[MAX_LOGLEN + 64];
+			int bufLen = snprintf(tempBuf, MAX_LOGLEN, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
+			strncpy(buf, tempBuf, bufLen);
+			buf[bufLen] = 0;
+		}
+
+		int lbCount = SendMessage(g_hWndLog, LB_GETCOUNT, 0, 0);
+		if (lbCount >= MAX_LOGLINES)
+			SendMessage(g_hWndLog, LB_DELETESTRING, 0, 0);
+
+		WPARAM idx = SendMessage(g_hWndLog, LB_ADDSTRING, 0, (LPARAM)buf);
+		SendMessage(g_hWndLog, LB_SETTOPINDEX, idx, 0);
 	}
-
-	int lbCount = SendMessage(g_hWndLog, LB_GETCOUNT, 0, 0);
-	if (lbCount >= MAX_LOGLINES)
-		SendMessage(g_hWndLog, LB_DELETESTRING, 0, 0);
-
-	WPARAM idx = SendMessage(g_hWndLog, LB_ADDSTRING, 0, (LPARAM)buf);
-	SendMessage(g_hWndLog, LB_SETTOPINDEX, idx, 0);
 }
 
 void RakBot::logToFile(std::string line) {
-	static Mutex logToFileMutex;
-	Lock lock(logToFileMutex);
+	Mutex *mutex = RakBot::app()->getMutex(MUTEX_LOGTOFILE);
+	Lock lock(mutex);
 
 	if (vars.logFile == nullptr) {
 		Settings *settings = RakBot::app()->getSettings();

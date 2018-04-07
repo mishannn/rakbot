@@ -2,23 +2,26 @@
 
 #include "Timer.h"
 
-Timer::Timer() : Mutex() {
+Timer::Timer() {
 	_timer = GetTickCount();
 }
 
-Timer::Timer(uint32_t timer) : Mutex() {
+Timer::Timer(uint32_t timer) {
 	_timer = timer;
 }
 
-Timer::~Timer() {}
+Timer::~Timer() {
+}
 
 void Timer::setTimer(uint32_t timer) {
-	// lock();
+	Lock lock(&_timerMutex);
+
 	_timer = timer;
-	// unlock();
 }
 
 uint32_t Timer::getElapsed() {
+	Lock lock(&_timerMutex);
+
 	if (_timer > GetTickCount())
 		return 0;
 
@@ -26,6 +29,8 @@ uint32_t Timer::getElapsed() {
 }
 
 bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
+	Lock lock(&_timerMutex);
+
 	if (_timer >= GetTickCount())
 		return false;
 
@@ -33,13 +38,13 @@ bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
 		return false;
 
 	if (resetIfTrue)
-		setTimerFromCurrentTime();
+		_timer = GetTickCount();
 
 	return true;
 }
 
 void Timer::setTimerFromCurrentTime() {
-	lock();
+	Lock lock(&_timerMutex);
+
 	_timer = GetTickCount();
-	unlock();
 }

@@ -2,6 +2,8 @@
 
 #include "Defines.h"
 
+#include "Mutex.h"
+
 #include <string>
 
 class Pickup;
@@ -21,46 +23,47 @@ private:
 	uint16_t _upDownKey;
 	uint16_t _keys;
 
+	Mutex _playerKeysMutex;
+
 public:
-	PlayerKeys() : Mutex() {
+	PlayerKeys() {
 		// reset();
 	}
 
 	void reset() {
-		lock();
+		Lock lock(&_playerKeysMutex);
 		_leftRightKey = 0;
 		_upDownKey = 0;
 		_keys = 0;
-		unlock();
 	}
 
 	void setLeftRightKey(uint16_t leftRightKey) {
-		lock();
+		Lock lock(&_playerKeysMutex);
 		_leftRightKey = leftRightKey;
-		unlock();
 	}
 
 	uint16_t getLeftRightKey() {
+		Lock lock(&_playerKeysMutex);
 		return _leftRightKey;
 	}
 
 	void setUpDownKey(uint16_t upDownKey) {
-		lock();
+		Lock lock(&_playerKeysMutex);
 		_upDownKey = upDownKey;
-		unlock();
 	}
 
 	uint16_t getUpDownKey() {
+		Lock lock(&_playerKeysMutex);
 		return _upDownKey;
 	}
 
 	void setKeys(uint16_t keys) {
-		lock();
+		Lock lock(&_playerKeysMutex);
 		_keys = keys;
-		unlock();
 	}
 
 	uint16_t getKeys() {
+		Lock lock(&_playerKeysMutex);
 		return _keys;
 	}
 };
@@ -70,35 +73,36 @@ private:
 	uint16_t _animId;
 	uint16_t _animFlags;
 
+	Mutex _playerAnimMutex;
+
 public:
-	PlayerAnimation() : Mutex() {
+	PlayerAnimation() {
 		// reset();
 	}
 
 	void reset() {
-		lock();
+		Lock lock(&_playerAnimMutex);
 		_animId = 1189;
 		_animFlags = 33000;
-		unlock();
 	}
 
 	void setAnimId(uint16_t animId) {
-		lock();
+		Lock lock(&_playerAnimMutex);
 		_animId = animId;
-		unlock();
 	}
 
 	uint16_t getAnimId() {
+		Lock lock(&_playerAnimMutex);
 		return _animId;
 	}
 
 	void setAnimFlags(uint16_t animFlags) {
-		lock();
+		Lock lock(&_playerAnimMutex);
 		_animFlags = animFlags;
-		unlock();
 	}
 
 	uint16_t getAnimFlags() {
+		Lock lock(&_playerAnimMutex);
 		return _animFlags;
 	}
 };
@@ -108,35 +112,36 @@ private:
 	int _score;
 	int _ping;
 
+	Mutex _playerInfoMutex;
+
 public:
-	PlayerInfo() : Mutex() {
+	PlayerInfo() {
 		// reset();
 	}
 
 	void reset() {
-		lock();
+		Lock lock(&_playerInfoMutex);
 		_score = 0;
 		_ping = 0;
-		unlock();
 	}
 
 	void setScore(int score) {
-		lock();
+		Lock lock(&_playerInfoMutex);
 		_score = score;
-		unlock();
 	}
 
 	int getScore() {
+		Lock lock(&_playerInfoMutex);
 		return _score;
 	}
 
 	void setPing(int ping) {
-		lock();
+		Lock lock(&_playerInfoMutex);
 		_ping = ping;
-		unlock();
 	}
 
 	int getPing() {
+		Lock lock(&_playerInfoMutex);
 		return _ping;
 	}
 };
@@ -146,40 +151,44 @@ private:
 	uint16_t _vehicleId;
 	float _surfOffsets[3];
 
+	Mutex _playerSurfingMutex;
+
 public:
-	PlayerSurfing() : Mutex() {
+	PlayerSurfing() {
 		// reset();
 	}
 
 	void reset() {
-		lock();
+		Lock lock(&_playerSurfingMutex);
+
 		_vehicleId = 0;
-		unlock();
 
 		for (int i = 0; i < 3; i++)
 			_surfOffsets[i] = 0.f;
 	}
 
 	void setVehicleId(uint16_t vehicleId) {
-		lock();
+		Lock lock(&_playerSurfingMutex);
 		_vehicleId = vehicleId;
-		unlock();
 	}
 
 	uint16_t getVehicleId() {
+		Lock lock(&_playerSurfingMutex);
 		return _vehicleId;
 	}
 
 	void setOffsets(int n, float val) {
+		Lock lock(&_playerSurfingMutex);
+
 		if (n < 0 || n > 2)
 			return;
 
-		lock();
 		_surfOffsets[n] = val;
-		unlock();
 	}
 
 	float getOffset(int n) {
+		Lock lock(&_playerSurfingMutex);
+
 		if (n < 0 || n > 2)
 			return 0.f;
 
@@ -187,45 +196,46 @@ public:
 	}
 };
 
-class PlayerPassenger : protected Mutex {
+class PlayerPassenger {
 private:
 	uint8_t	_seatId;
 	uint16_t _vehicleId;
+	
+	Mutex _playerPassengerMutex;
 
 public:
-	PlayerPassenger() : Mutex() {
+	PlayerPassenger() {
 		// reset();
 	}
 
 	void reset() {
-		lock();
+		Lock lock(&_playerPassengerMutex);
 		_seatId = 0;
 		_vehicleId = VEHICLE_ID_NONE;
-		unlock();
 	}
 
 	void setSeatId(uint8_t seatId) {
-		lock();
+		Lock lock(&_playerPassengerMutex);
 		_seatId = seatId;
-		lock();
 	}
 
 	uint8_t getSeatId() {
+		Lock lock(&_playerPassengerMutex);
 		return _seatId;
 	}
 
 	void setVehicleId(uint16_t vehicleId) {
-		lock();
+		Lock lock(&_playerPassengerMutex);
 		_vehicleId = vehicleId;
-		lock();
 	}
 
 	uint16_t getVehicleId() {
+		Lock lock(&_playerPassengerMutex);
 		return _vehicleId;
 	}
 };
 
-class PlayerBase : public Mutex {
+class PlayerBase {
 private:
 	uint8_t _playerState;
 	uint8_t _health;
@@ -246,6 +256,8 @@ private:
 	PlayerAnimation _anim;
 	PlayerInfo _info;
 	PlayerSurfing _surfing;
+
+	Mutex _playerBaseMutex;
 
 	PlayerBase(PlayerBase const&);
 	PlayerBase& operator= (PlayerBase const&);

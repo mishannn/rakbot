@@ -101,7 +101,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <CompileAs>CompileAsCpp</CompileAs>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExceptionHandling>Async</ExceptionHandling>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <ConformanceMode>false</ConformanceMode>
     </ClCompile>
@@ -125,6 +125,7 @@
     <ClInclude Include="cmds.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="Includes.h" />
+    <ClInclude Include="Mutex.h" />
     <ClInclude Include="SAMPDialog.h" />
     <ClInclude Include="SampRpFuncs.h" />
     <ClInclude Include="StdAfx.h" />
@@ -259,6 +260,7 @@
     <ClCompile Include="Bot.cpp" />
     <ClCompile Include="cmds.cpp" />
     <ClCompile Include="Events.cpp" />
+    <ClCompile Include="Mutex.cpp" />
     <ClCompile Include="SAMPDialog.cpp" />
     <ClCompile Include="SampRpFuncs.cpp" />
     <ClCompile Include="Timer.cpp" />

@@ -7,16 +7,16 @@ Server::Server() {}
 Server::~Server() {}
 
 void Server::reset() {
-	lock();
-	unlock();
 }
 
 void Server::setServerName(std::string serverName) {
-	lock();
+	Lock lock(&_serverMutex);
+
 	_serverName = serverName;
-	unlock();
 }
 
 std::string Server::getServerName() {
+	Lock lock(&_serverMutex);
+
 	return _serverName;
 }

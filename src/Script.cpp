@@ -11,6 +11,7 @@
 #include "Pickup.h"
 #include "Vehicle.h"
 #include "Events.h"
+#include "Mutex.h"
 
 #include "MiscFuncs.h"
 
@@ -42,7 +43,7 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++)
 			_defCalls[i] = nullptr;
-
+		
 		std::string scriptPath = std::string(GetRakBotPath("scripts")) + "\\" + _scriptName;
 
 		// LOAD FILE
@@ -563,6 +564,9 @@ void Script::luaRegisterFunctions() {
 		bot->sync();
 		return true;
 	});
+	_scriptState.set_function("coordMasterState", [this]() {
+		return vars.coordMasterEnabled;
+	});
 	_scriptState.set_function("coordMasterStart", [this](float x, float y, float z) {
 		Bot *bot = RakBot::app()->getBot();
 		DoCoordMaster(true, x, y, z);
@@ -780,16 +784,15 @@ void Script::luaRegisterFunctions() {
 		strncpy(defCall->funcName, funcName.c_str(), funcNameLen);
 		defCall->funcName[funcNameLen] = 0;
 
-		_defCallsMutex.lock();
+		_defCallMutex.lock();
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
 			if (_defCalls[i] == nullptr) {
 				_defCalls[i] = defCall;
-				printf("defCallAdded - %s\n", defCall->funcName);
-				_defCallsMutex.unlock();
+				_defCallMutex.unlock();
 				return sol::make_object(_scriptState, reinterpret_cast<int>(defCall));
 			}
 		}
-		_defCallsMutex.unlock();
+		_defCallMutex.unlock();
 
 		delete defCall;
 		return sol::make_object(_scriptState, sol::nil);
@@ -797,25 +800,25 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("defCallDelete", [this](int id) {
 		DefCall *defCall = reinterpret_cast<DefCall *>(id);
 
-		_defCallsMutex.lock();
+		_defCallMutex.lock();
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
 			if (_defCalls[i] == defCall) {
 				delete[] _defCalls[i]->funcName;
 				_defCalls[i]->funcName = nullptr;
 				delete _defCalls[i];
 				_defCalls[i] = nullptr;
-				_defCallsMutex.unlock();
+				_defCallMutex.unlock();
 				return true;
 			}
 		}
-		_defCallsMutex.unlock();
+		_defCallMutex.unlock();
 		return false;
 	});
 	_scriptState.set_function("sleep", [this](int ms) {
 		_funcExecuting = false;
-		luaUnlock();
+		_scriptMutex.unlock();
 		Sleep(ms);
-		luaLock();
+		_scriptMutex.lock();
 		_funcExecuting = true;
 		return true;
 	});
@@ -1134,8 +1137,7 @@ void Script::luaError(std::string error) {
 
 void Script::luaUpdate() {
 	while (!vars.botOff && !_scriptClosing) {
-		_defCallsMutex.lock();
-
+		_defCallMutex.lock();
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
 			DefCall *defCall = _defCalls[i];
 
@@ -1157,7 +1159,7 @@ void Script::luaUpdate() {
 				_defCalls[i] = nullptr;
 			}
 		}
-		_defCallsMutex.unlock();
+		_defCallMutex.unlock();
 
 		luaOnScriptUpdate();
 		Sleep(vars.luaUpdateDelay);
@@ -1194,7 +1196,7 @@ void UnloadScripts() {
 template<typename ...Args>
 bool Script::luaCallback(std::string funcName, Args && ...args) {
 	try {
-		Lock lock(*this);
+		Lock lock(&_scriptMutex);
 
 		if (_scriptClosing)
 			return false;

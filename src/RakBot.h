@@ -13,10 +13,18 @@ class Server;
 class Events;
 class SAMPDialog;
 class Vehicle;
+class Mutex;
+
+enum MutexEnum {
+	MUTEX_RUNCOMMAND,
+	MUTEX_LOG,
+	MUTEX_LOGTOFILE,
+	MutexesAmount
+};
 
 class RakBot {
 private:
-	RakClientInterface * _rakClient;
+	RakClientInterface *_rakClient;
 	Player *_players[MAX_PLAYERS];
 	Pickup *_pickups[MAX_PICKUPS];
 	Vehicle *_vehicles[MAX_VEHICLES];
@@ -25,6 +33,7 @@ private:
 	Server *_server;
 	Events *_events;
 	SAMPDialog *_sampDialog;
+	Mutex *_mutexes[MutexesAmount];
 
 	RakBot();
 	~RakBot();
@@ -56,6 +65,8 @@ public:
 	Server *getServer();
 	Events *getEvents();
 	SAMPDialog *getSampDialog();
+
+	Mutex *getMutex(int mutexIndex);
 
 	void log(const char *format, ...);
 	void logToFile(std::string line);

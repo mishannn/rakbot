@@ -7,57 +7,64 @@ Pickup::Pickup() {}
 Pickup::~Pickup() {}
 
 void Pickup::reset() {
-	lock();
+	Lock lock(&_pickupMutex);
+
 	_pickupId = 0;
 	_model = 0;
 	_type = 0;
 
 	for (int i = 0; i < 3; i++)
 		_position[i] = 0.f;
-
-	unlock();
 }
 
 void Pickup::setPickupId(int pickupId) {
-	lock();
+	Lock lock(&_pickupMutex);
+
 	_pickupId = pickupId;
-	unlock();
 }
 
 int Pickup::getPickupId() {
+	Lock lock(&_pickupMutex);
+
 	return _pickupId;
 }
 
 void Pickup::setModel(int model) {
-	lock();
+	Lock lock(&_pickupMutex);
+
 	_model = model;
-	unlock();
 }
 
 int Pickup::getModel() {
+	Lock lock(&_pickupMutex);
+
 	return _model;
 }
 
 void Pickup::setType(int type) {
-	lock();
+	Lock lock(&_pickupMutex);
+
 	_type = type;
-	unlock();
 }
 
 int Pickup::getType() {
+	Lock lock(&_pickupMutex);
+
 	return _type;
 }
 
 void Pickup::setPosition(int n, float val) {
+	Lock lock(&_pickupMutex);
+
 	if (n < 0 || n > 3)
 		return;
 
-	lock();
 	_position[n] = val;
-	unlock();
 }
 
 float Pickup::getPosition(int n) {
+	Lock lock(&_pickupMutex);
+
 	if (n < 0 || n > 3)
 		return 0.f;
 

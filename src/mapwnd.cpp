@@ -163,8 +163,12 @@ void ShowMapWindow() {
 }
 
 void CloseMapWindow() {
-	if (vars.mapWindowOpened)
+	if (vars.mapWindowOpened) {
 		SendMessage(MapWindow, WM_DESTROY, 0, 0);
+
+		if (vars.mapWindowThread.joinable())
+			vars.mapWindowThread.join();
+	}
 }
 
 void UpdateMapWindow() {

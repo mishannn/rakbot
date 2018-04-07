@@ -9,15 +9,13 @@ void Vehicle::loadModelData() {
 		if (VehicleList[i].id != _model)
 			continue;
 
-		lock();
-		_vehicleClass = VehicleList[i].classId;
+			_vehicleClass = VehicleList[i].classId;
 		_seatAmount = VehicleList[i].passengers + 1;
 		_name = std::string(VehicleList[i].name);
 		_passenger = new Player *[_seatAmount];
 		for (int i = 0; i < _seatAmount; i++)
 			_passenger[i] = nullptr;
-		unlock();
-	}
+		}
 }
 
 Vehicle::Vehicle() {}
@@ -28,7 +26,8 @@ Vehicle::~Vehicle() {
 }
 
 void Vehicle::reset() {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_doorsOpened = false;
 	_engineEnabled = false;
 	_lightsEnabled = false;
@@ -48,100 +47,121 @@ void Vehicle::reset() {
 	_carHealth = 0.f;
 	_driver = nullptr;
 	_passenger = nullptr;
-	unlock();
 }
 
 void Vehicle::setDoorsOpened(bool doorsOpened) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_doorsOpened = doorsOpened;
-	unlock();
 }
 
 bool Vehicle::isDoorsOpened() {
+	Lock lock(&_vehicleMutex);
+
 	return _doorsOpened;
 }
 
 void Vehicle::setEngineEnabled(bool engineEnabled) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_engineEnabled = engineEnabled;
-	unlock();
 }
 
 bool Vehicle::isEngineEnabled() {
+	Lock lock(&_vehicleMutex);
+
 	return _engineEnabled;
 }
 
 void Vehicle::setLightsEnabled(bool lightsEnabled) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_lightsEnabled = lightsEnabled;
-	unlock();
 }
 
 bool Vehicle::isLightsEnabled() {
+	Lock lock(&_vehicleMutex);
+
 	return _lightsEnabled;
 }
 
 void Vehicle::setSirenEnabled(bool sirenEnabled) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_sirenEnabled = sirenEnabled;
-	unlock();
 }
 
 bool Vehicle::isSirenEnabled() {
+	Lock lock(&_vehicleMutex);
+
 	return _sirenEnabled;
 }
 
 void Vehicle::setFirstColor(uint8_t firstColor) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_firstColor = firstColor;
-	unlock();
 }
 
 uint8_t Vehicle::getFirstColor() {
+	Lock lock(&_vehicleMutex);
+
 	return _firstColor;
 }
 
 void Vehicle::setSecondColor(uint8_t secondColor) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_secondColor = secondColor;
-	unlock();
 }
 
 uint8_t Vehicle::getSecondColor() {
+	Lock lock(&_vehicleMutex);
+
 	return _secondColor;
 }
 
 uint8_t Vehicle::getSeatAmount() {
+	Lock lock(&_vehicleMutex);
+
 	return _seatAmount;
 }
 
 void Vehicle::setVehicleId(uint16_t vehicleId) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_vehicleId = vehicleId;
-	unlock();
 }
 
 uint16_t Vehicle::getVehicleId() {
+	Lock lock(&_vehicleMutex);
+
 	return _vehicleId;
 }
 
 void Vehicle::setModel(int model) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_model = model;
-	unlock();
 
 	loadModelData();
 }
 
 int Vehicle::getModel() {
+	Lock lock(&_vehicleMutex);
+
 	return _model;
 }
 
 int Vehicle::getVehicleClass() {
+	Lock lock(&_vehicleMutex);
+
 	return _vehicleClass;
 }
 
 int Vehicle::getPassengerAmount() {
+	Lock lock(&_vehicleMutex);
+
 	int passengerCount = 0;
 	for (int i = 0; i < _seatAmount; i++) {
 		if (_passenger[i] != nullptr)
@@ -151,15 +171,17 @@ int Vehicle::getPassengerAmount() {
 }
 
 void Vehicle::setPosition(int n, float position) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n >= 3)
 		return;
 
-	lock();
 	_position[n] = position;
-	unlock();
 }
 
 float Vehicle::getPosition(int n) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n >= 3)
 		return 0.f;
 
@@ -167,15 +189,17 @@ float Vehicle::getPosition(int n) {
 }
 
 void Vehicle::setSpeed(int n, float speed) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n >= 3)
 		return;
 
-	lock();
 	_speed[n] = speed;
-	unlock();
 }
 
 float Vehicle::getSpeed(int n) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n >= 3)
 		return 0.f;
 
@@ -183,15 +207,17 @@ float Vehicle::getSpeed(int n) {
 }
 
 void Vehicle::setQuaternion(int n, float quaternion) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n >= 4)
 		return;
 
-	lock();
 	_quaternion[n] = quaternion;
-	unlock();
 }
 
 float Vehicle::getQuaternion(int n) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n >= 4)
 		return 0.f;
 
@@ -199,39 +225,47 @@ float Vehicle::getQuaternion(int n) {
 }
 
 void Vehicle::setCarHealth(float carHealth) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_carHealth = carHealth;
-	unlock();
 }
 
 float Vehicle::getCarHealth() {
+	Lock lock(&_vehicleMutex);
+
 	return _carHealth;
 }
 
 std::string Vehicle::getName() {
+	Lock lock(&_vehicleMutex);
+
 	return _name;
 }
 
 void Vehicle::setDriver(Player *driver) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_driver = driver;
-	unlock();
 }
 
 Player *Vehicle::getDriver() {
+	Lock lock(&_vehicleMutex);
+
 	return _driver;
 }
 
 void Vehicle::setPassenger(int n, Player *passenger) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n > 5)
 		return;
 
-	lock();
 	_passenger[n] = passenger;
-	unlock();
 }
 
 Player *Vehicle::getPassenger(int n) {
+	Lock lock(&_vehicleMutex);
+
 	if (n < 0 || n >= _seatAmount)
 		return nullptr;
 
@@ -240,33 +274,39 @@ Player *Vehicle::getPassenger(int n) {
 
 // GEAR STATE
 void Vehicle::setGearState(uint8_t gearState) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_gearState = gearState;
-	unlock();
 }
 
 uint8_t Vehicle::getGearState() {
+	Lock lock(&_vehicleMutex);
+
 	return _gearState;
 }
 
 // TRAILER ID
 void Vehicle::setTrailerId(uint16_t trailerId) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_trailerId = trailerId;
-	unlock();
 }
 
 uint16_t Vehicle::getTrailerId() {
+	Lock lock(&_vehicleMutex);
+
 	return _trailerId;
 }
 
 // TRAIN SPEED
 void Vehicle::setTrainSpeed(float trainSpeed) {
-	lock();
+	Lock lock(&_vehicleMutex);
+
 	_trainSpeed = trainSpeed;
-	unlock();
 }
 
 float Vehicle::getTrainSpeed() {
+	Lock lock(&_vehicleMutex);
+
 	return _trainSpeed;
 }

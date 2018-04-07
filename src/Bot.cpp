@@ -30,6 +30,8 @@ Bot::~Bot() {
 }
 
 void Bot::reset(bool reconnect) {
+	Lock lock(&_botMutex);
+
 	uint16_t playerId;
 	bool connected;
 
@@ -38,11 +40,9 @@ void Bot::reset(bool reconnect) {
 		connected = isConnected();
 	}
 
-	lock();
 	_connected = false;
 	_spawned = false;
 	_money = 0;
-	unlock();
 
 	PlayerBase::reset();
 
@@ -55,6 +55,8 @@ void Bot::reset(bool reconnect) {
 }
 
 void Bot::reconnect(int reconnectDelay) {
+	Lock lock(&_botMutex);
+
 	reset(true);
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
@@ -84,39 +86,47 @@ void Bot::reconnect(int reconnectDelay) {
 
 // Connected
 void Bot::setConnected(bool connected) {
-	lock();
+	Lock lock(&_botMutex);
+
 	_connected = connected;
-	unlock();
 }
 
 bool Bot::isConnected() {
+	Lock lock(&_botMutex);
+
 	return _connected;
 }
 
 // Spawned
 void Bot::setSpawned(bool spawned) {
-	lock();
+	Lock lock(&_botMutex);
+
 	_spawned = spawned;
-	unlock();
 }
 
 bool Bot::isSpawned() {
+	Lock lock(&_botMutex);
+
 	return _spawned;
 }
 
 // Money
 void Bot::setMoney(int money) {
-	lock();
+	Lock lock(&_botMutex);
+
 	_money = money;
-	unlock();
 }
 
 int Bot::getMoney() {
+	Lock lock(&_botMutex);
+
 	return _money;
 }
 
 // FUNCS
 void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
+	Lock lock(&_botMutex);
+
 	static bool enterVehicleReady = true;
 
 	if (getPlayerState() != PLAYER_STATE_ONFOOT) {
@@ -169,6 +179,8 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 }
 
 void Bot::exitVehicle() {
+	Lock lock(&_botMutex);
+
 	if (getPlayerState() != PLAYER_STATE_PASSENGER && getPlayerState() != PLAYER_STATE_DRIVER) {
 		RakBot::app()->log("[ERROR] Выход из транспорта: бот должен быть водителем или пассажиром!");
 		return;
@@ -195,6 +207,8 @@ void Bot::exitVehicle() {
 }
 
 void Bot::sync() {
+	Lock lock(&_botMutex);
+
 	if (RakBot::app()->getEvents()->onSync())
 		return;
 
@@ -322,6 +336,8 @@ void Bot::onfootSync() {
 }
 
 void Bot::teleport(float positionX, float positionY, float positionZ) {
+	Lock lock(&_botMutex);
+
 	if (RakBot::app()->getEvents()->onTeleport(positionX, positionY, positionZ))
 		return;
 
@@ -332,6 +348,8 @@ void Bot::teleport(float positionX, float positionY, float positionZ) {
 }
 
 void Bot::follow(uint16_t playerId) {
+	Lock lock(&_botMutex);
+
 	if (getPlayerState() != PLAYER_STATE_ONFOOT)
 		return;
 
@@ -369,6 +387,8 @@ void Bot::follow(uint16_t playerId) {
 }
 
 void Bot::connect(std::string address, uint16_t port) {
+	Lock lock(&_botMutex);
+
 	if (isConnected())
 		return;
 
@@ -385,6 +405,8 @@ void Bot::connect(std::string address, uint16_t port) {
 }
 
 void Bot::disconnect(bool timeOut) {
+	Lock lock(&_botMutex);
+
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	if (!isConnected()) {
@@ -426,6 +448,8 @@ void Bot::disconnect(bool timeOut) {
 }
 
 void Bot::sendInput(std::string input) {
+	Lock lock(&_botMutex);
+
 	if (RakBot::app()->getEvents()->onSendInput(input))
 		return;
 
@@ -446,6 +470,8 @@ void Bot::sendInput(std::string input) {
 }
 
 void Bot::requestClass(int classId) {
+	Lock lock(&_botMutex);
+
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	RakNet::BitStream bsSend;
@@ -456,6 +482,8 @@ void Bot::requestClass(int classId) {
 }
 
 void Bot::requestSpawn() {
+	Lock lock(&_botMutex);
+
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	BitStream bsData;
@@ -465,6 +493,8 @@ void Bot::requestSpawn() {
 }
 
 bool Bot::pickUpPickup(Pickup *pickup, bool checkDist) {
+	Lock lock(&_botMutex);
+
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	if (getPlayerState() != PLAYER_STATE_ONFOOT)
@@ -496,6 +526,8 @@ bool Bot::pickUpPickup(Pickup *pickup, bool checkDist) {
 }
 
 bool Bot::takeCheckpoint() {
+	Lock lock(&_botMutex);
+
 	if (!checkpoint.active && !raceCheckpoint.active)
 		return false;
 
@@ -622,6 +654,8 @@ void Bot::spectateSync() {
 }
 
 void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::string input) {
+	Lock lock(&_botMutex);
+
 	if (RakBot::app()->getEvents()->onDialogResponse(dialogId, button, item, input))
 		return;
 
@@ -649,6 +683,8 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 }
 
 void Bot::spawn() {
+	Lock lock(&_botMutex);
+
 	if (RakBot::app()->getEvents()->onSpawn())
 		return;
 
@@ -697,6 +733,8 @@ void Bot::spawn() {
 }
 
 void Bot::kill() {
+	Lock lock(&_botMutex);
+
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	setHealth(0);
@@ -712,6 +750,8 @@ void Bot::kill() {
 }
 
 void Bot::clickTextdraw(uint16_t textDrawId) {
+	Lock lock(&_botMutex);
+
 	if (RakBot::app()->getEvents()->onTextDrawClick(textDrawId))
 		return;
 

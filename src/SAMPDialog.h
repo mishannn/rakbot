@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Mutex.h"
 
 class SAMPDialog {
 private:
@@ -10,6 +11,8 @@ private:
 	std::string _okButtonText;
 	std::string _cancelButtonText;
 	std::string _dialogText;
+
+	Mutex _sampDialogMutex;
 
 public:
 	SAMPDialog();

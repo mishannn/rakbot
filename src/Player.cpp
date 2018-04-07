@@ -11,32 +11,36 @@ Player::~Player() {
 }
 
 void Player::reset() {
-	lock();
+	Lock lock(&_playerMutex);
+
 	_inStream = false;
 	_admin = false;
-	unlock();
 
 	PlayerBase::reset();
 }
 
 // IN STREAM
 void Player::setInStream(bool inStream) {
-	lock();
+	Lock lock(&_playerMutex);
+
 	_inStream = inStream;
-	unlock();
 }
 
 bool Player::isInStream() {
+	Lock lock(&_playerMutex);
+
 	return _inStream;
 }
 
 // ADMIN
 void Player::setAdmin(bool admin) {
-	lock();
+	Lock lock(&_playerMutex);
+
 	_admin = admin;
-	unlock();
 }
 
 bool Player::isAdmin() {
+	Lock lock(&_playerMutex);
+
 	return _admin;
 }

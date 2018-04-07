@@ -4,40 +4,48 @@
 
 Vars vars;
 
-Settings::Settings() : Mutex() {}
+Settings::Settings() {}
 
 Settings::~Settings() {}
 
 void Settings::reset() {
+	Lock lock(&_settingsMutex);
+
 	getAddress()->reset();
 }
 
 void Settings::setName(std::string name) {
-	lock();
+	Lock lock(&_settingsMutex);
+
 	_name = name;
-	unlock();
 }
 
 std::string Settings::getName() {
+	Lock lock(&_settingsMutex);
+
 	return _name;
 }
 
 void Settings::setLoginPassword(std::string loginPassword) {
-	lock();
+	Lock lock(&_settingsMutex);
+
 	_loginPassword = loginPassword;
-	unlock();
 }
 
 std::string Settings::getLoginPassword() {
+	Lock lock(&_settingsMutex);
+
 	return _loginPassword;
 }
 
 void Settings::setServerPassword(std::string serverPassword) {
-	lock();
+	Lock lock(&_settingsMutex);
+
 	_serverPassword = serverPassword;
-	unlock();
 }
 
 std::string Settings::getServerPassword() {
+	Lock lock(&_settingsMutex);
+
 	return _serverPassword;
 }

@@ -1,9 +1,12 @@
 #pragma once
 
+#include "Mutex.h"
 
 class Server {
 private:
 	std::string _serverName;
+
+	Mutex _serverMutex;
 
 public:
 	Server();
