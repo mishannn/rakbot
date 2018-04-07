@@ -19,8 +19,6 @@
 #include "PacketEnumerations.h"
 #include "GetTime.h"
 
-#include "Mutex.h"
-#include "Lock.h"
 #include "Settings.h"
 #include "Script.h"
 
@@ -70,7 +68,7 @@ bool RakClient::Connect(const char* host, unsigned short serverPort, unsigned sh
 
 	// ignore depreciated. A pointless variable
 	return RakPeer::Connect(host, serverPort, (char*)password.GetData(), password.GetNumberOfBytesUsed());
-}
+	}
 
 void RakClient::Disconnect(unsigned int blockDuration, unsigned char orderingChannel) {
 	RakPeer::Disconnect(blockDuration, orderingChannel);
@@ -112,7 +110,7 @@ bool RakClient::Send(RakNet::BitStream * bitStream, PacketPriority priority, Pac
 
 	uint8_t *packetData = bitStream->GetData();
 	int packetSize = bitStream->GetNumberOfBytesUsed();
-	
+
 	bool skipPacket = false;
 	for each (Script *script in scripts) {
 		if (script != nullptr) {

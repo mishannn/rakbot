@@ -8,7 +8,6 @@
 #include "Script.h"
 #include "Settings.h"
 #include "Pickup.h"
-#include "Lock.h"
 #include "Vehicle.h"
 #include "Events.h"
 
@@ -29,7 +28,6 @@
 void RunCommand(const char *cmdstr) {
 	std::string command = std::string(cmdstr);
 	std::thread runCommandThread([command] {
-		static Mutex runCommandMutex;
 		Lock lock(runCommandMutex);
 
 		if (command.empty())
@@ -597,9 +595,11 @@ void RunCommand(const char *cmdstr) {
 				return;
 			}
 
-			boost::smatch match;
-			boost::regex_search(std::string(cmd), match, boost::regex("\\S+\\s+(\\d+)\\s+(\\d+)\\s+(.+)"));
-			if (match.size() != 4) {
+			std::string str = std::string(cmd);
+			std::smatch matches;
+			std::regex_search(str, matches, std::regex("\\S+\\s+(\\d+)\\s+(\\d+)\\s+(.+)"));
+
+			if (matches.size() != 4) {
 				if (!vars.floodEnabled) {
 					RakBot::app()->log("[RAKBOT] !flood 1 <задержка> <текст> - флуд в чат с указанной задержкой");
 					RakBot::app()->log("[RAKBOT] !flood 2 <задержка> <текст> - флуд в SMS с указанной задержкой");
@@ -611,9 +611,9 @@ void RunCommand(const char *cmdstr) {
 				return;
 			}
 
-			vars.floodMode = std::stoul(match[1]);
-			vars.floodDelay = std::stoul(match[2]);
-			vars.floodText = match[3];
+			vars.floodMode = std::stoul(matches[1]);
+			vars.floodDelay = std::stoul(matches[2]);
+			vars.floodText = matches[3];
 			Trim(vars.floodText);
 
 			switch (vars.floodMode) {

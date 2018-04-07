@@ -1,6 +1,5 @@
 #pragma once
-#include "Mutex.h"
-class Events : private Mutex {
+class Events {
 public:
 	Events();
 	~Events();

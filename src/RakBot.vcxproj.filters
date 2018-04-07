@@ -328,7 +328,6 @@
     <ClInclude Include="PlayerBase.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="RakNet.h" />
-    <ClInclude Include="Mutex.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Defines.h" />
@@ -338,7 +337,6 @@
     <ClInclude Include="Pickup.h" />
     <ClInclude Include="VehicleStuff.h" />
     <ClInclude Include="AnimStuff.h" />
-    <ClInclude Include="Lock.h" />
     <ClInclude Include="SampRpFuncs.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="SAMPDialog.h" />
@@ -503,7 +501,6 @@
     <ClCompile Include="Bot.cpp" />
     <ClCompile Include="PlayerBase.cpp" />
     <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Mutex.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="Funcs.cpp" />
     <ClCompile Include="Server.cpp" />
@@ -513,7 +510,6 @@
     <ClCompile Include="VehicleStuff.cpp" />
     <ClCompile Include="cmds.cpp" />
     <ClCompile Include="AnimStuff.cpp" />
-    <ClCompile Include="Lock.cpp" />
     <ClCompile Include="SampRpFuncs.cpp" />
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="SAMPDialog.cpp" />

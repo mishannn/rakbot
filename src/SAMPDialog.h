@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Mutex.h"
 
-class SAMPDialog : private Mutex {
+class SAMPDialog {
 private:
 	bool _dialogActive;
 	uint8_t _dialogStyle;

@@ -3,7 +3,6 @@
 #include "Defines.h"
 
 #include <string>
-#include "Mutex.h"
 
 class Pickup;
 class Vehicle;
@@ -16,7 +15,7 @@ enum PlayerState {
 	PLAYER_STATE_SPECTATE
 };
 
-class PlayerKeys : private Mutex {
+class PlayerKeys {
 private:
 	uint16_t _leftRightKey;
 	uint16_t _upDownKey;
@@ -66,7 +65,7 @@ public:
 	}
 };
 
-class PlayerAnimation : private Mutex {
+class PlayerAnimation {
 private:
 	uint16_t _animId;
 	uint16_t _animFlags;
@@ -104,7 +103,7 @@ public:
 	}
 };
 
-struct PlayerInfo : private Mutex {
+struct PlayerInfo {
 private:
 	int _score;
 	int _ping;
@@ -142,7 +141,7 @@ public:
 	}
 };
 
-struct PlayerSurfing : private Mutex {
+struct PlayerSurfing {
 private:
 	uint16_t _vehicleId;
 	float _surfOffsets[3];
@@ -206,7 +205,7 @@ public:
 	}
 
 	void setSeatId(uint8_t seatId) {
-		lock(); 
+		lock();
 		_seatId = seatId;
 		lock();
 	}

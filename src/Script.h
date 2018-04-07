@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Mutex.h"
 
 #include <lua.hpp>
 #pragma comment(lib, "lua51.lib")
@@ -8,16 +7,18 @@
 #define SOL_CHECK_ARGUMENTS 1
 #include <sol.hpp>
 
+#define LUA_MAXDEFCALLS 100
+
 class Timer;
 
 struct DefCall {
 	bool repeat;
 	uint32_t startTime;
 	uint32_t callDelay;
-	std::string funcName;
+	char *funcName;
 };
 
-class Script : private Mutex {
+class Script {
 private:
 	bool _funcExecuting;
 	bool _scriptClosing;
@@ -26,7 +27,8 @@ private:
 	std::string _scriptName;
 	sol::state _scriptState;
 
-	std::vector<DefCall> _defCalls;
+	DefCall *_defCalls[LUA_MAXDEFCALLS];
+	Mutex _defCallsMutex;
 
 	Script(std::string scriptName);
 	~Script();

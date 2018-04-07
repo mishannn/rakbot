@@ -20,7 +20,7 @@ void Vehicle::loadModelData() {
 	}
 }
 
-Vehicle::Vehicle() { }
+Vehicle::Vehicle() {}
 
 Vehicle::~Vehicle() {
 	if (_passenger != nullptr)

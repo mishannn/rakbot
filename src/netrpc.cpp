@@ -148,7 +148,7 @@ void InitGame(RPCParameters *rpcParams) {
 	bot->requestClass(0);
 
 	GameInited = true;
-	GameInitedTimer = GetTickCount();
+	GameInitedTimer.setTimerFromCurrentTime();
 
 	RakBot::app()->getEvents()->onGameInited(std::string(hostName));
 }
@@ -350,7 +350,7 @@ void ClientMessage(RPCParameters *rpcParams) {
 	delete[] msgBuf;
 	msgBuf = nullptr;
 
-	msg = boost::regex_replace(msg, boost::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string());
+	msg = std::regex_replace(msg, std::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string());
 
 	if (RakBot::app()->getEvents()->onServerMessage(msg))
 		return;
@@ -856,9 +856,16 @@ void ScrShowDialog(RPCParameters *rpcParams) {
 	RakBot::app()->getSampDialog()->setDialogText(std::string(dialogTextBuf));
 	delete[] dialogTextBuf;
 
-	RakBot::app()->getSampDialog()->setDialogTitle(boost::regex_replace(RakBot::app()->getSampDialog()->getDialogTitle(), boost::regex("\\{[0-9A-Fa-f]{6}\\}"), ""));
-	RakBot::app()->getSampDialog()->setDialogText(boost::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), boost::regex("\\{[0-9A-Fa-f]{6}\\}"), ""));
-	RakBot::app()->getSampDialog()->setDialogText(boost::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), boost::regex("\t"), " "));
+	std::string s;
+
+	s = std::regex_replace(RakBot::app()->getSampDialog()->getDialogTitle(), std::regex("\\{[0-9A-Fa-f]{6}\\}"), "");
+	RakBot::app()->getSampDialog()->setDialogTitle(s);
+
+	s = std::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), std::regex("\\{[0-9A-Fa-f]{6}\\}"), "");
+	RakBot::app()->getSampDialog()->setDialogText(s);
+
+	s = std::regex_replace(RakBot::app()->getSampDialog()->getDialogText(), std::regex("\t"), " ");
+	RakBot::app()->getSampDialog()->setDialogText(s);
 
 	if (RakBot::app()->getEvents()->onDialogShow(
 		RakBot::app()->getSampDialog()->getDialogId(),
@@ -915,8 +922,8 @@ void ScrGameText(RPCParameters *rpcParams) {
 	std::string gameText = std::string(textBuf);
 	delete[] textBuf;
 
-	gameText = boost::regex_replace(gameText, boost::regex("~n~"), "\n");
-	gameText = boost::regex_replace(gameText, boost::regex("~.~"), "");
+	gameText = std::regex_replace(gameText, std::regex("~n~"), "\n");
+	gameText = std::regex_replace(gameText, std::regex("~.~"), "");
 
 	if (RakBot::app()->getEvents()->onGameText(gameText))
 		return;

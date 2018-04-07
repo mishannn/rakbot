@@ -21,7 +21,7 @@
 
 SimpleMutex::SimpleMutex() {
 #ifdef _WIN32
-	//	hMutex = CreateMutex(NULL, FALSE, 0);
+	// hMutex = CreateMutex(NULL, FALSE, 0);
 	//	assert(hMutex);
 	InitializeCriticalSection(&criticalSection);
 #else
@@ -32,7 +32,7 @@ SimpleMutex::SimpleMutex() {
 
 SimpleMutex::~SimpleMutex() {
 #ifdef _WIN32
-	//	CloseHandle(hMutex);
+	// CloseHandle(hMutex);
 	DeleteCriticalSection(&criticalSection);
 #else
 	pthread_mutex_destroy(&hMutex);
@@ -47,6 +47,8 @@ SimpleMutex::~SimpleMutex() {
 
 void SimpleMutex::Lock(void) {
 #ifdef _WIN32
+	//_mutex.lock();
+	// WaitForSingleObject(hMutex, INFINITE);
 	/*
 	uint32_t d = WaitForSingleObject(hMutex, INFINITE);
 	#ifdef _DEBUG
@@ -84,7 +86,8 @@ void SimpleMutex::Lock(void) {
 
 void SimpleMutex::Unlock(void) {
 #ifdef _WIN32
-	//	ReleaseMutex(hMutex);
+	// _mutex.unlock();
+	// ReleaseMutex(hMutex);
 	LeaveCriticalSection(&criticalSection);
 #else
 	int error = pthread_mutex_unlock(&hMutex);

@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Mutex.h"
 
 class Player;
 
-class Vehicle : private Mutex {
+class Vehicle {
 private:
 	bool _doorsOpened;
 	bool _engineEnabled;

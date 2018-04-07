@@ -9,7 +9,6 @@
 #include "Funcs.h"
 #include "Server.h"
 #include "Pickup.h"
-#include "Lock.h"
 #include "Vehicle.h"
 #include "Events.h"
 
@@ -40,6 +39,9 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 	try {
 		_funcExecuting = false;
 		_scriptClosing = false;
+
+		for (int i = 0; i < LUA_MAXDEFCALLS; i++)
+			_defCalls[i] = nullptr;
 
 		std::string scriptPath = std::string(GetRakBotPath("scripts")) + "\\" + _scriptName;
 
@@ -92,6 +94,11 @@ Script::~Script() {
 
 	if (_scriptUpdateThread.joinable())
 		_scriptUpdateThread.join();
+
+	for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
+		if (_defCalls[i] != nullptr)
+			delete _defCalls[i];
+	}
 }
 
 Script *Script::load(std::string scriptName) {
@@ -756,44 +763,62 @@ void Script::luaRegisterFunctions() {
 	});
 
 	// MISC
-	_scriptState.set_function("setTimeout", [this](int delay, std::string funcName) {
+	_scriptState.set_function("defCallAdd", [this](int delay, bool repeat, std::string funcName) {
 		if (delay < 1)
-			return false;
-
+			return sol::make_object(_scriptState, sol::nil);
 		if (funcName.empty())
-			return false;
+			return sol::make_object(_scriptState, sol::nil);
+		if (funcName.length() > 256)
+			return sol::make_object(_scriptState, sol::nil);
+		DefCall *defCall = new DefCall;
+		defCall->startTime = GetTickCount();
+		defCall->callDelay = delay;
+		defCall->repeat = repeat;
 
-		DefCall defCall;
-		defCall.startTime = GetTickCount();
-		defCall.callDelay = delay;
-		defCall.funcName = funcName;
-		defCall.repeat = false;
-		_defCalls.push_back(defCall);
-		return true;
+		int funcNameLen = funcName.length();
+		defCall->funcName = new char[funcNameLen + 1];
+		strncpy(defCall->funcName, funcName.c_str(), funcNameLen);
+		defCall->funcName[funcNameLen] = 0;
+
+		_defCallsMutex.lock();
+		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
+			if (_defCalls[i] == nullptr) {
+				_defCalls[i] = defCall;
+				printf("defCallAdded - %s\n", defCall->funcName);
+				_defCallsMutex.unlock();
+				return sol::make_object(_scriptState, reinterpret_cast<int>(defCall));
+			}
+		}
+		_defCallsMutex.unlock();
+
+		delete defCall;
+		return sol::make_object(_scriptState, sol::nil);
 	});
-	_scriptState.set_function("setInterval", [this](int delay, std::string funcName) {
-		if (delay < 1)
-			return false;
+	_scriptState.set_function("defCallDelete", [this](int id) {
+		DefCall *defCall = reinterpret_cast<DefCall *>(id);
 
-		if (funcName.empty())
-			return false;
-
-		DefCall defCall;
-		defCall.startTime = GetTickCount();
-		defCall.callDelay = delay;
-		defCall.funcName = funcName;
-		defCall.repeat = true;
-		_defCalls.push_back(defCall);
-		return true;
+		_defCallsMutex.lock();
+		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
+			if (_defCalls[i] == defCall) {
+				delete[] _defCalls[i]->funcName;
+				_defCalls[i]->funcName = nullptr;
+				delete _defCalls[i];
+				_defCalls[i] = nullptr;
+				_defCallsMutex.unlock();
+				return true;
+			}
+		}
+		_defCallsMutex.unlock();
+		return false;
 	});
-	/* _scriptState.set_function("sleep", [this](int ms) {
+	_scriptState.set_function("sleep", [this](int ms) {
 		_funcExecuting = false;
 		luaUnlock();
 		Sleep(ms);
 		luaLock();
 		_funcExecuting = true;
 		return true;
-	}); */
+	});
 	_scriptState.set_function("printLog", [this](std::string log) {
 		std::vector<std::string> lines = Split(log, '\n');
 		if (lines.size() < 1)
@@ -1109,29 +1134,30 @@ void Script::luaError(std::string error) {
 
 void Script::luaUpdate() {
 	while (!vars.botOff && !_scriptClosing) {
-		std::vector<DefCall>::iterator it = _defCalls.begin();
-		std::vector<DefCall>::iterator end = _defCalls.end();
+		_defCallsMutex.lock();
 
-		while (it != end) {
-			DefCall *defCall = it._Ptr;
+		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
+			DefCall *defCall = _defCalls[i];
+
+			if (defCall == nullptr)
+				continue;
 
 			static Timer timer;
 			timer.setTimer(defCall->startTime);
-			if (!timer.isElapsed(defCall->callDelay, false)) {
-				it++;
+			if (!timer.isElapsed(defCall->callDelay, false))
 				continue;
-			}
 
-			luaCallback(defCall->funcName);
+			std::string funcName = defCall->funcName;
+			luaCallback(funcName);
 
 			if (defCall->repeat) {
 				defCall->startTime = Timer::getCurrentTime();
-				it++;
 			} else {
-				it = _defCalls.erase(it);
-				end = _defCalls.end();
+				delete _defCalls[i];
+				_defCalls[i] = nullptr;
 			}
 		}
+		_defCallsMutex.unlock();
 
 		luaOnScriptUpdate();
 		Sleep(vars.luaUpdateDelay);

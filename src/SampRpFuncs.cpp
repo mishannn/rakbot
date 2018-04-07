@@ -9,8 +9,6 @@
 #include "Pickup.h"
 #include "Script.h"
 #include "Server.h"
-#include "Mutex.h"
-#include "Lock.h"
 
 #include "AnimStuff.h"
 #include "MathStuff.h"
@@ -114,8 +112,8 @@ bool SampRpFuncs::onServerMessage(std::string msg) {
 		if (msg.find("Сдача на права стоит 500 вирт") != std::string::npos)
 			vars.botAutoSchoolActive = 0;
 
-		boost::smatch matches;
-		if (boost::regex_search(msg, matches, boost::regex("Мешков перетащено: (\\d+)"))) {
+		std::smatch matches;
+		if (std::regex_search(msg, matches, std::regex("Мешков перетащено: (\\d+)"))) {
 			BagCount = std::stoul(matches[1], nullptr, 10);
 		}
 

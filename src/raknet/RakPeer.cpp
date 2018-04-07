@@ -266,7 +266,7 @@ bool RakPeer::Initialize(unsigned short maxConnections, unsigned short localPort
 		//remoteSystemListSize = maxConnections;// * 11 / 10 + 1;
 
 		// remoteSystemList in Single thread
-		//remoteSystemList = new RemoteSystemStruct[ remoteSystemListSize ];
+		// remoteSystemList = new RemoteSystemStruct[ remoteSystemListSize ];
 		remoteSystemList = new RemoteSystemStruct[maximumNumberOfPeers];
 
 
@@ -2179,7 +2179,11 @@ void RakPeer::ApplyNetworkSimulator(double maxSendBPS, unsigned short minExtraPi
 // Returns if you previously called ApplyNetworkSimulator
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 bool RakPeer::IsNetworkSimulatorActive(void) {
+#ifndef _RELEASE
 	return _maxSendBPS > 0 || _minExtraPing > 0 || _extraPingVariance > 0;
+#else
+	return false;
+#endif // !_RELEASE
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

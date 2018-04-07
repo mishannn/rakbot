@@ -5,11 +5,9 @@
 
 #include "PlayerBase.h"
 
-PlayerBase::PlayerBase() : Mutex() {
-}
+PlayerBase::PlayerBase() : Mutex() {}
 
-PlayerBase::~PlayerBase() {
-}
+PlayerBase::~PlayerBase() {}
 
 float PlayerBase::distanceTo(float position[3]) {
 	return vect3_dist(_position, position);

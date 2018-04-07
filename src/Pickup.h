@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Mutex.h"
-
-class Pickup : private Mutex {
+class Pickup {
 private:
 	int _pickupId;
 	int _model;

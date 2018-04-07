@@ -2,11 +2,11 @@
 
 #include <Windows.h>
 
-#include "Mutex.h"
 
-class Timer : private Mutex {
+class Timer {
 private:
 	uint32_t _timer;
+	uint32_t _lastTickCount;
 
 public:
 	Timer();
@@ -17,7 +17,7 @@ public:
 	void setTimer(uint32_t timer);
 	uint32_t getTimer() { return _timer; }
 
-	uint32_t getElapsed(uint32_t fromTime = 0);
+	uint32_t getElapsed();
 	bool isElapsed(uint32_t ms, bool resetIfTrue);
 
 	static uint32_t getCurrentTime() { return GetTickCount(); }

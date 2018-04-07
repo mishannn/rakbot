@@ -74,7 +74,7 @@ void Packet_ConnectionSucceeded(Packet *p) {
 	rakClient->RPC(&RPC_ClientJoin, &bsSend, HIGH_PRIORITY, RELIABLE, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
 
 	bot->setConnected(true);
-	BotConnectedTimer = GetTickCount();
+	BotConnectedTimer.setTimerFromCurrentTime();
 }
 
 void Packet_PlayerSync(Packet *p) {
@@ -382,7 +382,7 @@ void Packet_PassengerSync(Packet *p) {
 	bsSync.Read(pd.sVehicleID);
 	bsSync.Read(pd.byteSeatID);
 	bsSync.Read(pd.byteCurrentWeapon);
-	
+
 	// HEALTH/ARMOUR (COMPRESSED INTO 1 uint8_t)
 	uint8_t byteHealthArmour;
 	uint8_t bytePlayerHealth, bytePlayerArmour;

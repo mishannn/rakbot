@@ -10,13 +10,15 @@ Timer::Timer(uint32_t timer) : Mutex() {
 	_timer = timer;
 }
 
-Timer::~Timer() { }
+Timer::~Timer() {}
 
 void Timer::setTimer(uint32_t timer) {
+	// lock();
 	_timer = timer;
+	// unlock();
 }
 
-uint32_t Timer::getElapsed(uint32_t fromTime = 0) {
+uint32_t Timer::getElapsed() {
 	if (_timer > GetTickCount())
 		return 0;
 

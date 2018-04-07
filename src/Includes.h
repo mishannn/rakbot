@@ -21,10 +21,9 @@
 #include <iomanip>
 #include <sstream>
 #include <list>
-#include <thread>
 #include <mutex>
-
-#include <boost/regex.hpp>
+#include <thread>
+#include <regex>
 
 #include <shlobj.h>
 #include <shellapi.h>

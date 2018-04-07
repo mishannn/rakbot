@@ -27,6 +27,8 @@
 #include <sys/types.h>
 #endif
 #include "Export.h"
+
+
 /// \brief An easy to use mutex.
 /// 
 /// I wrote this because the version that comes with Windows is too complicated and requires too much code to use.
@@ -47,6 +49,7 @@ public:
 	void Unlock(void);
 private:
 #ifdef _WIN32
+	// HANDLE hMutex;
 	CRITICAL_SECTION criticalSection; /// Docs say this is faster than a mutex for single process access
 #else
 	pthread_mutex_t hMutex;

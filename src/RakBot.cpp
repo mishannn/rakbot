@@ -11,7 +11,6 @@
 #include "Events.h"
 #include "SAMPDialog.h"
 #include "Vehicle.h"
-#include "Lock.h"
 
 #include "window.h"
 
@@ -248,7 +247,7 @@ void RakBot::log(const char *format, ...) {
 	if (vars.timeStamp) {
 		SYSTEMTIME time;
 		GetLocalTime(&time);
-		
+
 		char tempBuf[MAX_LOGLEN + 64];
 		int bufLen = snprintf(tempBuf, MAX_LOGLEN, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
 		strncpy(buf, tempBuf, bufLen);

@@ -9,7 +9,6 @@
 #include "Funcs.h"
 #include "Script.h"
 #include "Server.h"
-#include "Lock.h"
 #include "MiscFuncs.h"
 #include "Timer.h"
 

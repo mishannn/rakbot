@@ -4,8 +4,6 @@
 #include "Defines.h"
 #include "Structs.h"
 
-#include "Mutex.h"
-
 class RakClientInterface;
 class Bot;
 class Player;
@@ -16,9 +14,9 @@ class Events;
 class SAMPDialog;
 class Vehicle;
 
-class RakBot : private Mutex {
+class RakBot {
 private:
-	RakClientInterface *_rakClient;
+	RakClientInterface * _rakClient;
 	Player *_players[MAX_PLAYERS];
 	Pickup *_pickups[MAX_PICKUPS];
 	Vehicle *_vehicles[MAX_VEHICLES];

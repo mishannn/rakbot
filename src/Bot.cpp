@@ -9,7 +9,6 @@
 #include "Events.h"
 #include "Server.h"
 #include "Vehicle.h"
-#include "Lock.h"
 
 #include "Funcs.h"
 #include "MathStuff.h"
@@ -417,9 +416,9 @@ void Bot::disconnect(bool timeOut) {
 
 	GameInited = false;
 	ConnectRequested = true;
-	BotConnectedTimer = UINT32_MAX;
-	BotSpawnedTimer = UINT32_MAX;
-	GameInitedTimer = UINT32_MAX;
+	BotConnectedTimer.setTimer(UINT32_MAX);
+	BotSpawnedTimer.setTimer(UINT32_MAX);
+	GameInitedTimer.setTimer(UINT32_MAX);
 
 	RakBot::app()->getServer()->reset();
 	RakBot::app()->log("[RAKBOT] Бот отключен от сервера");
@@ -690,7 +689,7 @@ void Bot::spawn() {
 		setSpawned(true);
 		sync();
 		vars.syncAllowed = true;
-		BotSpawnedTimer = GetTickCount();
+		BotSpawnedTimer.setTimerFromCurrentTime();
 		RakBot::app()->getEvents()->onSpawned();
 		spawnReady = true;
 	});

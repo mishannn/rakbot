@@ -5,7 +5,6 @@
 #include "Structs.h"
 
 #include "Timer.h"
-#include "Mutex.h"
 
 struct Vars {
 	bool windowOpened;
@@ -167,14 +166,14 @@ struct Vars {
 
 extern Vars vars;
 
-class Address : private Mutex {
+class Address {
 private:
 	std::string _ip;
 	uint16_t _port;
 
 public:
 	Address() : Mutex() {
-		
+
 	}
 
 	void reset() {
@@ -205,7 +204,7 @@ public:
 	}
 };
 
-class Settings : private Mutex {
+class Settings {
 private:
 	Address _address;
 	std::string _name;

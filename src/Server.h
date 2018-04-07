@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Mutex.h"
 
-class Server : private Mutex {
+class Server {
 private:
 	std::string _serverName;
 
