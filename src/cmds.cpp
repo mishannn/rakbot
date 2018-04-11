@@ -408,9 +408,10 @@ void RunCommand(const char *cmdstr) {
 			vars.syncAllowed = true;
 			return;
 		} else if (strstr(cmd, "-resume")) {
-			if (vars.routeThread.joinable()) {
+			if (vars.routeThread != nullptr) {
 				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: ждем завершения предыдущего потока");
-				vars.routeThread.join();
+				WaitForSingleObject(vars.routeThread, INFINITE);
+				vars.routeThread = nullptr;
 			}
 
 			if (vars.routeSpeed <= 0.f) {
@@ -419,7 +420,7 @@ void RunCommand(const char *cmdstr) {
 
 			vars.routeEnabled = true;
 			vars.syncAllowed = false;
-			vars.routeThread = std::thread(RoutePlay);
+			vars.routeThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(RoutePlay), NULL, NULL, NULL);
 
 			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: запущен со скоростью %.2f", vars.routeSpeed);
 			return;
@@ -443,15 +444,16 @@ void RunCommand(const char *cmdstr) {
 				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: скорость должна быть больше 0!");
 			}
 
-			if (vars.routeThread.joinable()) {
+			if (vars.routeThread != nullptr) {
 				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: ждем завершения предыдущего потока");
-				vars.routeThread.join();
+				WaitForSingleObject(vars.routeThread, INFINITE);
+				vars.routeThread = nullptr;
 			}
 
 			vars.routeEnabled = true;
 			vars.routeSpeed = 25.f * (1.f / routeSpeed);
 			vars.syncAllowed = false;
-			vars.routeThread = std::thread(RoutePlay);
+			vars.routeThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(RoutePlay), NULL, NULL, NULL);
 
 			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: запущен со скоростью %.2f", routeSpeed);
 		} else {

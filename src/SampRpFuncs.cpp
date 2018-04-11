@@ -9,6 +9,7 @@
 #include "Pickup.h"
 #include "Script.h"
 #include "Server.h"
+#include "Events.h"
 
 #include "AnimStuff.h"
 #include "MathStuff.h"
@@ -48,13 +49,11 @@ void SampRpFuncs::takeCheckpoint() {
 	bot->setPosition(2, position[2] - 2.5f);
 	bot->sync();
 
-	std::thread takeCheckpointThread([bot]() {
-		Sleep(1500);
+	RakBot::app()->getEvents()->defCallAdd(1500, false, [bot](DefCall *) {
 		bot->takeCheckpoint();
 		_botSuspended = false;
 		takeCheckpointReady = true;
 	});
-	takeCheckpointThread.detach();
 }
 
 void SampRpFuncs::pickUpPickup(Pickup *pickup) {
@@ -80,13 +79,11 @@ void SampRpFuncs::pickUpPickup(Pickup *pickup) {
 	bot->setPosition(2, pickup->getPosition(2) - 2.5f);
 	bot->sync();
 
-	std::thread puckUpPickupThread([bot, pickup]() {
-		Sleep(1500);
+	RakBot::app()->getEvents()->defCallAdd(1500, false, [bot, pickup](DefCall *) {
 		bot->pickUpPickup(pickup);
 		_botSuspended = false;
 		pickUpReady = true;
 	});
-	puckUpPickupThread.detach();
 }
 
 bool SampRpFuncs::isSampRpServer() {

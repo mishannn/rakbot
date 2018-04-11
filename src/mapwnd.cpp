@@ -159,15 +159,14 @@ void MapWindowThread() {
 
 void ShowMapWindow() {
 	if (!vars.mapWindowOpened)
-		vars.mapWindowThread = std::thread(MapWindowThread);
+		vars.mapWindowThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(MapWindowThread), NULL, NULL, NULL);
 }
 
 void CloseMapWindow() {
 	if (vars.mapWindowOpened) {
 		SendMessage(MapWindow, WM_DESTROY, 0, 0);
-
-		if (vars.mapWindowThread.joinable())
-			vars.mapWindowThread.join();
+		WaitForSingleObject(vars.mapWindowThread, INFINITE);
+		vars.mapWindowThread = nullptr;
 	}
 }
 

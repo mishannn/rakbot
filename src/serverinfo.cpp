@@ -44,14 +44,12 @@ void ServerInfo() {
 		addr.sin_addr.s_addr = inet_addr(RakBot::app()->getSettings()->getAddress()->getIp().c_str());
 		addr.sin_port = htons(RakBot::app()->getSettings()->getAddress()->getPort());
 
-		do {
-			Sleep(500);
-			SendPacket("p4150", 5);
-			SendPacket("i", 1);
-			SendPacket("c", 1);
-			SendPacket("r", 1);
-		} while (!vars.botOff && recvfrom(s, szResponse, sizeof(szResponse), NULL, NULL, NULL) < 11);
+		SendPacket("p4150", 5);
+		SendPacket("i", 1);
+		SendPacket("c", 1);
+		SendPacket("r", 1);
 
 		closesocket(s);
+		Sleep(500);
 	}
 }

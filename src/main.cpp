@@ -11,6 +11,7 @@
 #include "Server.h"
 #include "MiscFuncs.h"
 #include "Timer.h"
+#include "Events.h"
 
 #include "cmds.h"
 #include "ini.h"
@@ -66,7 +67,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		RegisterRPCs();
 
-		std::thread mainWindowThread = std::thread(MainWindow);
+		HANDLE mainWindowThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(MainWindow), NULL, NULL, NULL);
 		while (!vars.windowOpened)
 			SwitchToThread();
 
@@ -86,12 +87,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		RakBot::app()->log("[RAKBOT] Ник игрока: %s", RakBot::app()->getSettings()->getName().c_str());
 		RakBot::app()->log("[RAKBOT] Пароль игрока: %s", RakBot::app()->getSettings()->getLoginPassword().c_str());
 
-		std::thread serverInfoThread;
-		std::thread loadAdminsThread;
+		HANDLE serverInfoThread = NULL;
+		HANDLE loadAdminsThread = NULL;
 
 		if (!vars.botOff) {
-			serverInfoThread = std::thread(ServerInfo);
-			loadAdminsThread = std::thread(LoadAdmins);
+			serverInfoThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(ServerInfo), NULL, NULL, NULL);
+			loadAdminsThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadAdmins), NULL, NULL, NULL);
 		}
 
 		srand((unsigned int)GetTickCount());
@@ -121,6 +122,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			FuncsLoop();
 			UpdateNetwork();
 
+			RakBot::app()->getEvents()->onUpdate();
+
 			Sleep(vars.mainDelay);
 		}
 
@@ -131,17 +134,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		CloseMapWindow();
 
-		if (mainWindowThread.joinable())
-			mainWindowThread.join();
-
-		if (loadAdminsThread.joinable())
-			loadAdminsThread.join();
-
-		if (serverInfoThread.joinable())
-			serverInfoThread.join();
-
-		if (vars.routeThread.joinable())
-			vars.routeThread.join();
+		WaitForSingleObject(mainWindowThread, INFINITE);
+		WaitForSingleObject(loadAdminsThread, INFINITE);
+		WaitForSingleObject(serverInfoThread, INFINITE);
+		WaitForSingleObject(vars.routeThread, INFINITE);
 
 		if (vars.logFile != nullptr) {
 			fclose(vars.logFile);

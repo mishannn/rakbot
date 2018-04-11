@@ -134,7 +134,7 @@ struct Vars {
 	float routeSpeed;
 	std::vector<OnfootData> routeData;
 	uint32_t routeIndex;
-	std::thread routeThread;
+	HANDLE routeThread;
 
 	bool textDrawCreateLogging;
 	bool textDrawHideLogging;
@@ -161,7 +161,7 @@ struct Vars {
 	std::string logFileMode;
 
 	bool mapWindowOpened;
-	std::thread mapWindowThread;
+	HANDLE mapWindowThread;
 };
 
 extern Vars vars;

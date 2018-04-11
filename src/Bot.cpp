@@ -152,9 +152,7 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 		setPosition(i, vehicle->getPosition(i));
 	sync();
 
-	std::thread enterVehicleThread([this, vehicle, seatId]() {
-		Sleep(vars.enterVehicleDelay);
-
+	RakBot::app()->getEvents()->defCallAdd(vars.enterVehicleDelay, false, [this, vehicle, seatId](DefCall *) {
 		RakClientInterface *rakClient = RakBot::app()->getRakClient();
 		RakNet::BitStream bsSend;
 		bsSend.Write<uint16_t>(vehicle->getVehicleId());
@@ -175,7 +173,6 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 		RakBot::app()->log("[RAKBOT] Бот посажен в транспорт с ID %d на место %d!", vehicle->getVehicleId(), seatId);
 		enterVehicleReady = true;
 	});
-	enterVehicleThread.detach();
 }
 
 void Bot::exitVehicle() {
@@ -664,7 +661,7 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 		Sleep(10);
 	dialogResponseReady = false;
 
-	std::thread sendThread([this, dialogId, button, item, input]() {
+	RakBot::app()->getEvents()->defCallAdd(vars.dialogResponseDelay, false, [this, dialogId, button, item, input](DefCall *) {
 		RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 		uint8_t length = static_cast<uint8_t>(input.length());
@@ -675,11 +672,9 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 		bsSend.Write(length);
 		bsSend.Write(input.c_str(), length);
 
-		Sleep(vars.dialogResponseDelay);
 		rakClient->RPC(&RPC_DialogResponse, const_cast<BitStream *>(&bsSend), HIGH_PRIORITY, RELIABLE_ORDERED, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
 		dialogResponseReady = true;
 	});
-	sendThread.detach();
 }
 
 void Bot::spawn() {
@@ -720,8 +715,7 @@ void Bot::spawn() {
 	for (int i = 0; i < 3; i++)
 		position[i] = getPosition(i);
 
-	std::thread spawnSyncThread([this]() {
-		Sleep(vars.spawnDelay);
+	RakBot::app()->getEvents()->defCallAdd(vars.spawnDelay, false, [this](DefCall *) {
 		setSpawned(true);
 		sync();
 		vars.syncAllowed = true;
@@ -729,7 +723,6 @@ void Bot::spawn() {
 		RakBot::app()->getEvents()->onSpawned();
 		spawnReady = true;
 	});
-	spawnSyncThread.detach();
 }
 
 void Bot::kill() {

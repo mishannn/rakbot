@@ -1,11 +1,28 @@
 #pragma once
+
+#define MAX_DEFCALLS 30
+
+struct DefCall {
+	bool repeat;
+	uint32_t startTime;
+	uint32_t delay;
+	std::function<void(DefCall *)> func;
+};
+
 class Events {
+private:
+	DefCall * _defCalls[MAX_DEFCALLS];
+
 public:
 	Events();
 	~Events();
 
 	void reset();
 
+	DefCall *defCallAdd(uint32_t delay, bool repeat, std::function<void(DefCall *)> func);
+	bool defCallDelete(DefCall *defCall);
+
+	void onUpdate();
 	bool onRunCommand(std::string command);
 	bool onPrintLog(std::string text);
 	bool onSendInput(std::string input);

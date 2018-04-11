@@ -21,8 +21,7 @@
 #include <iomanip>
 #include <sstream>
 #include <list>
-#include <mutex>
-#include <thread>
+#include <functional>
 #include <regex>
 
 #include <shlobj.h>

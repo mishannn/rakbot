@@ -1,5 +1,7 @@
 #pragma once
 
+#include <thread>
+
 #include "Mutex.h"
 
 #include <lua.hpp>
@@ -12,7 +14,7 @@
 
 class Timer;
 
-struct DefCall {
+struct LuaDefCall {
 	bool repeat;
 	uint32_t startTime;
 	uint32_t callDelay;
@@ -28,7 +30,7 @@ private:
 	std::string _scriptName;
 	sol::state _scriptState;
 
-	DefCall *_defCalls[LUA_MAXDEFCALLS];
+	LuaDefCall *_defCalls[LUA_MAXDEFCALLS];
 
 	Script(std::string scriptName);
 	~Script();

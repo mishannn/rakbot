@@ -636,14 +636,11 @@ void CoordMaster() {
 	} else {
 		vect3_copy(vars.coordMasterTarget, position);
 		RakBot::app()->log("[RAKBOT] Вы достигли места назначения!");
-
-		std::thread coordMasterOffThread([]() {
-			Sleep(vars.coordMasterDelay);
+		RakBot::app()->getEvents()->defCallAdd(vars.coordMasterDelay, false, [](DefCall *) {
 			vars.coordMasterEnabled = false;
 			RakBot::app()->log("[RAKBOT] Коордмастер завершил работу");
 			RakBot::app()->getEvents()->onCoordMasterComplete();
 		});
-		coordMasterOffThread.detach();
 	}
 
 	for (int i = 0; i < 3; i++)

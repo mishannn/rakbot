@@ -18,12 +18,70 @@
 
 #include "Events.h"
 
-Events::Events() {}
+Events::Events() {
+	for (int i = 0; i < MAX_DEFCALLS; i++)
+		_defCalls[i] = nullptr;
+}
 
 Events::~Events() {}
 
 void Events::reset() {
 
+}
+
+DefCall * Events::defCallAdd(uint32_t delay, bool repeat, std::function<void(DefCall *)> func) {
+	if (delay < 1)
+		return nullptr;
+
+	DefCall *defCall = new DefCall;
+	defCall->startTime = GetTickCount();
+	defCall->delay = delay;
+	defCall->repeat = repeat;
+	defCall->func = func;
+
+	for (int i = 0; i < MAX_DEFCALLS; i++) {
+		if (_defCalls[i] == nullptr) {
+			_defCalls[i] = defCall;
+			return defCall;
+		}
+	}
+
+	delete defCall;
+	return nullptr;
+}
+
+bool Events::defCallDelete(DefCall *defCall) {
+	for (int i = 0; i < MAX_DEFCALLS; i++) {
+		if (_defCalls[i] == defCall) {
+			delete _defCalls[i];
+			_defCalls[i] = nullptr;
+			return true;
+		}
+	}
+	return false;
+}
+
+void Events::onUpdate() {
+	for (int i = 0; i < MAX_DEFCALLS; i++) {
+		DefCall *defCall = _defCalls[i];
+
+		if (defCall == nullptr)
+			continue;
+
+		static Timer timer;
+		timer.setTimer(defCall->startTime);
+		if (!timer.isElapsed(defCall->delay, false))
+			continue;
+
+		defCall->func(defCall);
+
+		if (defCall->repeat) {
+			defCall->startTime = Timer::getCurrentTime();
+		} else {
+			delete _defCalls[i];
+			_defCalls[i] = nullptr;
+		}
+	}
 }
 
 bool Events::onRunCommand(std::string command) {

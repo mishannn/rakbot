@@ -774,7 +774,7 @@ void Script::luaRegisterFunctions() {
 			return sol::make_object(_scriptState, sol::nil);
 		if (funcName.length() > 256)
 			return sol::make_object(_scriptState, sol::nil);
-		DefCall *defCall = new DefCall;
+		LuaDefCall *defCall = new LuaDefCall;
 		defCall->startTime = GetTickCount();
 		defCall->callDelay = delay;
 		defCall->repeat = repeat;
@@ -798,7 +798,7 @@ void Script::luaRegisterFunctions() {
 		return sol::make_object(_scriptState, sol::nil);
 	});
 	_scriptState.set_function("defCallDelete", [this](int id) {
-		DefCall *defCall = reinterpret_cast<DefCall *>(id);
+		LuaDefCall *defCall = reinterpret_cast<LuaDefCall *>(id);
 
 		_defCallMutex.lock();
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
@@ -1139,7 +1139,7 @@ void Script::luaUpdate() {
 	while (!vars.botOff && !_scriptClosing) {
 		_defCallMutex.lock();
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
-			DefCall *defCall = _defCalls[i];
+			LuaDefCall *defCall = _defCalls[i];
 
 			if (defCall == nullptr)
 				continue;
