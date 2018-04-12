@@ -1407,9 +1407,7 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		for (int i = 0; i < 3; i++)
-			bot->setPosition(i, player->getPosition(i));
-		bot->sync();
+		bot->teleport(player->getPosition(0), player->getPosition(1), player->getPosition(2));
 
 		RakBot::app()->log("[RAKBOT] “елепорт к игроку: телепортирован к игроку %s[%d]", player->getName().c_str(), playerId);
 		return;

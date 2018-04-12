@@ -6,6 +6,7 @@ class Bot : public PlayerBase {
 private:
 	bool _connected;
 	bool _spawned;
+	bool _connectRequested;
 	int _money;
 
 	void aimSync();
@@ -20,7 +21,7 @@ public:
 	Bot();
 	~Bot();
 
-	void reset(bool reconnect);
+	void reset(bool disconnect);
 	void reconnect(int reconnectDelay);
 
 	void setConnected(bool connected);
@@ -28,6 +29,9 @@ public:
 
 	void setSpawned(bool spawned);
 	bool isSpawned();
+
+	void setConnectRequested(bool connectRequested);
+	bool isConnectRequested();
 
 	void setMoney(int money);
 	int getMoney();

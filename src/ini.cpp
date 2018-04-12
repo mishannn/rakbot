@@ -6,7 +6,9 @@
 
 #include "Settings.h"
 
-void LoadCustom() {
+bool LoadCustom() {
+	bool result = true;
+
 	char szBuf[512];
 	char *szAppName = nullptr;
 	const char *szPath = GetRakBotPath("settings\\custom.ini");
@@ -20,14 +22,14 @@ void LoadCustom() {
 		vars.logFileMode = std::string(szBuf);
 
 		szAppName = "Bot";
-		GetPrivateProfileString(szAppName, "MainDelay", "50", szBuf, sizeof(szBuf), szPath);
+		GetPrivateProfileString(szAppName, "MainUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
 		vars.mainDelay = std::strtoul(szBuf, nullptr, 10);
 
 		GetPrivateProfileString(szAppName, "LuaUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
 		vars.luaUpdateDelay = std::strtoul(szBuf, nullptr, 10);
 
-		GetPrivateProfileString(szAppName, "UpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
-		vars.updateDelay = std::strtoul(szBuf, nullptr, 10);
+		GetPrivateProfileString(szAppName, "NetworkUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
+		vars.networkDelay = std::strtoul(szBuf, nullptr, 10);
 
 		GetPrivateProfileString(szAppName, "SpawnDelay", "500", szBuf, sizeof(szBuf), szPath);
 		vars.spawnDelay = std::strtoul(szBuf, nullptr, 10);
@@ -74,9 +76,9 @@ void LoadCustom() {
 		WritePrivateProfileString(szAppName, "FileMode", "a", szPath);
 
 		szAppName = "Bot";
-		WritePrivateProfileString(szAppName, "MainDelay", "50", szPath);
+		WritePrivateProfileString(szAppName, "MainUpdateDelay", "50", szPath);
 		WritePrivateProfileString(szAppName, "LuaUpdateDelay", "50", szPath);
-		WritePrivateProfileString(szAppName, "UpdateDelay", "50", szPath);
+		WritePrivateProfileString(szAppName, "NetworkUpdateDelay", "50", szPath);
 		WritePrivateProfileString(szAppName, "SpawnDelay", "500", szPath);
 		WritePrivateProfileString(szAppName, "DialogResponseDelay", "500", szPath);
 		WritePrivateProfileString(szAppName, "NoAfkDelay", "100", szPath);
@@ -101,8 +103,10 @@ void LoadCustom() {
 		WritePrivateProfileString(szAppName, "Address", "0.0.0.0", szPath);
 
 		MessageBox(NULL, "Файл \"settings\\custom.ini\" создан! Перезапустите бота.", "Первая настройка", MB_ICONASTERISK);
-		vars.botOff = true;
+		result = false;
 	}
+
+	return result;
 }
 
 void LoadRoute(char *routeName) {
@@ -130,7 +134,9 @@ void LoadRoute(char *routeName) {
 	}
 }
 
-void LoadConfig() {
+bool LoadConfig() {
+	bool result = true;
+
 	ZeroMemory(&vars, sizeof(Vars));
 	CreateDirectory(GetRakBotPath("settings"), NULL);
 
@@ -253,10 +259,8 @@ void LoadConfig() {
 		WritePrivateProfileString(szAppName, "AntiAfkDelay", "1", szPath);
 		WritePrivateProfileString(szAppName, "AntiAfkOffset", "0.001", szPath);
 
-		LoadCustom();
-
 		MessageBox(NULL, "Файл настроек был создан, так как отсутствовал!\nПерезапустите приложение", "Предупреждение", MB_ICONASTERISK);
-		RakBot::app()->exit();
+		result = false;
 	}
 
 	if (vars.busWorkerRoute > 0 && vars.busWorkerRoute < 9)
@@ -267,5 +271,5 @@ void LoadConfig() {
 	vars.routeSpeed = 0;
 	vars.logFile = nullptr;
 
-	LoadCustom();
+	return result;
 }

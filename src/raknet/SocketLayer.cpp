@@ -83,7 +83,7 @@ SOCKET SocketLayer::CreateBoundSocket(unsigned short port, bool blockingSocket, 
 
 	if (forceHostAddress && forceHostAddress[0]) {
 		listenerSocketAddress.sin_addr.s_addr = inet_addr(forceHostAddress);
-		RakBot::app()->log("[RAKBOT] Выбран адаптер с адресом: %s (Bot)", vars.adapterAddress);
+		RakBot::app()->log("[RAKBOT] Выбран адаптер с адресом: %s (Bot)", vars.adapterAddress.c_str());
 	} else
 		listenerSocketAddress.sin_addr.s_addr = INADDR_ANY;
 

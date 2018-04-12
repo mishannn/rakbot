@@ -15,6 +15,7 @@
 
 #include "MiscFuncs.h"
 
+#include "main.h"
 #include "cmds.h"
 #include "keycheck.h"
 #include "netgame.h"
@@ -340,12 +341,20 @@ void Script::luaOnGameInited() {
 	luaCallback("onGameInited");
 }
 
+bool Script::luaOnRequestConnect() {
+	return luaCallback("onRequestConnect");
+}
+
 void Script::luaOnConnect(uint16_t playerId) {
 	luaCallback("onConnect", playerId);
 }
 
 void Script::luaOnDisconnect(uint8_t reason) {
 	luaCallback("onDisconnect", reason);
+}
+
+void Script::luaOnReconnect(int delay) {
+	luaCallback("onReconnect", delay);
 }
 
 bool Script::luaOnSetPosition(float positionX, float positionY, float positionZ) {
@@ -381,6 +390,22 @@ void Script::luaOnScriptUpdate() {
 }
 
 void Script::luaRegisterFunctions() {
+	_scriptState.set_function("isBotConnected", [this]() {
+		Bot *bot = RakBot::app()->getBot();
+		return bot->isConnected();
+	});
+	_scriptState.set_function("isBotSpawned", [this]() {
+		Bot *bot = RakBot::app()->getBot();
+		return bot->isSpawned();
+	});
+	_scriptState.set_function("isGameInited", [this]() {
+		Server *server = RakBot::app()->getServer();
+		return server->isGameInited();
+	});
+	_scriptState.set_function("isConnectRequested", [this]() {
+		Bot *bot = RakBot::app()->getBot();
+		return bot->isConnectRequested();
+	});
 	_scriptState.set_function("connect", [this]() {
 		Bot *bot = RakBot::app()->getBot();
 		return bot->connect(
@@ -845,6 +870,14 @@ void Script::luaRegisterFunctions() {
 		RakBot::app()->exit();
 		return true;
 	});
+	_scriptState.set_function("randomString", [this](int len, bool numbers) {
+		char *buf = new char[len + 1];
+		GenRandomString(buf, len, numbers);
+		buf[len] = 0;
+		std::string s = buf;
+		delete[] buf;
+		return s;
+	});
 	_scriptState.set_function("messageBox", [this](std::string message) {
 		std::thread msgBoxThread([message] {
 			MessageBox(NULL, message.c_str(), "Сообщение Lua!", MB_ICONASTERISK);
@@ -1137,6 +1170,8 @@ void Script::luaError(std::string error) {
 
 void Script::luaUpdate() {
 	while (!vars.botOff && !_scriptClosing) {
+		Sleep(vars.luaUpdateDelay);
+
 		_defCallMutex.lock();
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
 			LuaDefCall *defCall = _defCalls[i];
@@ -1162,7 +1197,6 @@ void Script::luaUpdate() {
 		_defCallMutex.unlock();
 
 		luaOnScriptUpdate();
-		Sleep(vars.luaUpdateDelay);
 	}
 }
 

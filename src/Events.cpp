@@ -84,6 +84,20 @@ void Events::onUpdate() {
 	}
 }
 
+bool Events::onRequestConnect() {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr) {
+			if (script->luaOnRequestConnect())
+				luaResult = true;
+		}
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
 bool Events::onRunCommand(std::string command) {
 	bool luaResult = false;
 	for each (Script *script in scripts) {
@@ -691,6 +705,13 @@ void Events::onDisconnect(uint8_t reason) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
 			script->luaOnDisconnect(reason);
+	}
+}
+
+void Events::onReconnect(int delay) {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnReconnect(delay);
 	}
 }
 

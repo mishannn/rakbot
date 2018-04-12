@@ -4,7 +4,7 @@ class Player *FindNearestPlayer(int skin = -1);
 class Player *FindPlayerByName(std::string name);
 void DoCoordMaster(bool state, float x = 0.f, float y = 0.f, float z = 0.f);
 
-const char *GenRandom(char *s, const int len);
+const char *GenRandomString(char *s, const int len, bool numbers = true);
 const char *GetRakBotPath();
 const char *GetRakBotPath(const char *path);
 

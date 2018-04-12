@@ -27,8 +27,6 @@
 
 TeleportPlace TeleportPlaces[300];
 
-bool ConnectRequested = false;
-bool GameInited = false;
 Timer BotConnectedTimer;
 Timer BotSpawnedTimer;
 Timer GameInitedTimer;
@@ -51,7 +49,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		// RunCommand("!debug");
 		OrigExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
 
-		LoadConfig();
+		bool configLoaded = LoadConfig();
+		bool customLoaded = LoadCustom();
+
+		if (!configLoaded || !customLoaded)
+			return 0;
 
 		BotConnectedTimer.setTimer(UINT32_MAX);
 		BotSpawnedTimer.setTimer(UINT32_MAX);
@@ -68,7 +70,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		RegisterRPCs();
 
 		HANDLE mainWindowThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(MainWindow), NULL, NULL, NULL);
-		while (!vars.windowOpened)
+		while (!vars.windowOpened || !g_hWndMain)
 			SwitchToThread();
 
 		SYSTEMTIME time;
@@ -87,30 +89,33 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		RakBot::app()->log("[RAKBOT] Ник игрока: %s", RakBot::app()->getSettings()->getName().c_str());
 		RakBot::app()->log("[RAKBOT] Пароль игрока: %s", RakBot::app()->getSettings()->getLoginPassword().c_str());
 
-		HANDLE serverInfoThread = NULL;
-		HANDLE loadAdminsThread = NULL;
-
-		if (!vars.botOff) {
-			serverInfoThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(ServerInfo), NULL, NULL, NULL);
-			loadAdminsThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadAdmins), NULL, NULL, NULL);
-		}
-
 		srand((unsigned int)GetTickCount());
 
 		Bot *bot = RakBot::app()->getBot();
 
+		HANDLE serverInfoThread = NULL;
+		HANDLE loadAdminsThread = NULL;
+		HANDLE updateNetworkThread = NULL;
+
+		if (!vars.botOff) {
+			serverInfoThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(ServerInfo), NULL, NULL, NULL);
+			loadAdminsThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadAdmins), NULL, NULL, NULL);
+			updateNetworkThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(UpdateNetwork), NULL, NULL, NULL);
+		}
+
 		while (!vars.botOff) {
+			Sleep(vars.mainDelay);
+
 			KeepOnline();
 
-			if (!ConnectRequested && ReconnectTimer.isElapsed(0, false) && !vars.keepOnlineWait) {
-				ConnectRequested = true;
+			if (!bot->isConnectRequested() && ReconnectTimer.isElapsed(0, false) && !vars.keepOnlineWait) {
 				bot->connect(RakBot::app()->getSettings()->getAddress()->getIp(), RakBot::app()->getSettings()->getAddress()->getPort());
 			}
 
 			UpdateInfo();
 			AdminChecker();
 
-			if (bot->isConnected() && GameInited) {
+			if (bot->isConnected() && RakBot::app()->getServer()->isGameInited()) {
 				NoAfk();
 
 				if (bot->isSpawned()) {
@@ -120,11 +125,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			}
 
 			FuncsLoop();
-			UpdateNetwork();
 
 			RakBot::app()->getEvents()->onUpdate();
-
-			Sleep(vars.mainDelay);
 		}
 
 		RakBot::app()->log("[RAKBOT] Завершение работы...");
@@ -136,6 +138,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		WaitForSingleObject(mainWindowThread, INFINITE);
 		WaitForSingleObject(loadAdminsThread, INFINITE);
+		WaitForSingleObject(updateNetworkThread, INFINITE);
 		WaitForSingleObject(serverInfoThread, INFINITE);
 		WaitForSingleObject(vars.routeThread, INFINITE);
 

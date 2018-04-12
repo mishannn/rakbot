@@ -39,15 +39,12 @@ void SampRpFuncs::takeCheckpoint() {
 		return;
 	}
 
-	while (!takeCheckpointReady)
+	if (!takeCheckpointReady)
 		return;
 	takeCheckpointReady = false;
 
 	_botSuspended = true;
-	bot->setPosition(0, position[0]);
-	bot->setPosition(1, position[1]);
-	bot->setPosition(2, position[2] - 2.5f);
-	bot->sync();
+	bot->teleport(position[0], position[1], position[2] - 2.5f);
 
 	RakBot::app()->getEvents()->defCallAdd(1500, false, [bot](DefCall *) {
 		bot->takeCheckpoint();
@@ -69,15 +66,12 @@ void SampRpFuncs::pickUpPickup(Pickup *pickup) {
 		return;
 	}
 
-	while (!pickUpReady)
+	if (!pickUpReady)
 		return;
 	pickUpReady = false;
 
 	_botSuspended = true;
-	bot->setPosition(0, pickup->getPosition(0));
-	bot->setPosition(1, pickup->getPosition(1));
-	bot->setPosition(2, pickup->getPosition(2) - 2.5f);
-	bot->sync();
+	bot->teleport(pickup->getPosition(0), pickup->getPosition(1), pickup->getPosition(2) - 2.5f);
 
 	RakBot::app()->getEvents()->defCallAdd(1500, false, [bot, pickup](DefCall *) {
 		bot->pickUpPickup(pickup);

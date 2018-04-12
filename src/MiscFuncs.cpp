@@ -124,13 +124,17 @@ Player *FindPlayerByName(std::string name) {
 	return nullptr;
 }
 
+const char *GenRandomString(char *s, const int len, bool numbers) {
+	char *charset = nullptr;
 
-const char *GenRandom(char *s, const int len) {
-	static const char alphanum[] =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	if (numbers) {
+		charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	} else {
+		charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	}
 
 	for (int i = 0; i < len; ++i)
-		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+		s[i] = charset[rand() % (strlen(charset) - 1)];
 
 	s[len] = 0;
 	return s;

@@ -23,6 +23,7 @@ public:
 	bool defCallDelete(DefCall *defCall);
 
 	void onUpdate();
+	bool onRequestConnect();
 	bool onRunCommand(std::string command);
 	bool onPrintLog(std::string text);
 	bool onSendInput(std::string input);
@@ -44,6 +45,7 @@ public:
 	void onApplyAnimation(uint16_t playerId, uint16_t animId);
 	void onConnect(uint16_t playerId);
 	void onDisconnect(uint8_t reason);
+	void onReconnect(int delay);
 
 	// MONEY
 	void onSetMoney(int money);

@@ -145,12 +145,12 @@ void InitGame(RPCParameters *rpcParams) {
 		RakBot::app()->getServer()->getServerName().c_str());
 	UpdateWindow(g_hWndMain);
 
-	bot->requestClass(0);
-
-	GameInited = true;
+	RakBot::app()->getServer()->setGameInited(true);
 	GameInitedTimer.setTimerFromCurrentTime();
 
 	RakBot::app()->getEvents()->onGameInited(std::string(hostName));
+
+	bot->requestClass(0);
 }
 
 void WorldPlayerAdd(RPCParameters *rpcParams) {
@@ -949,9 +949,7 @@ void ScrSetPos(RPCParameters *rpcParams) {
 	if (RakBot::app()->getEvents()->onSetPosition(position[0], position[1], position[2]))
 		return;
 
-	for (int i = 0; i < 3; i++)
-		bot->setPosition(i, position[i]);
-	bot->sync();
+	bot->teleport(position[0], position[1], position[2]);
 
 	char szBuf[256];
 	snprintf(szBuf, 256, "[RAKBOT] Ваша позиция изменена на: (%.2f; %.2f; %.2f)", position[0], position[1], position[2]);

@@ -476,10 +476,6 @@ void BusBot() {
 	if (vehicle == nullptr)
 		return;
 
-	for (int i = 0; i < 3; i++)
-		bot->setPosition(i, vehicle->getPosition(i));
-	bot->sync();
-	bot->wait(500);
 	bot->enterVehicle(vehicle, 0);
 }
 
@@ -643,9 +639,7 @@ void CoordMaster() {
 		});
 	}
 
-	for (int i = 0; i < 3; i++)
-		bot->setPosition(i, position[i]);
-	bot->sync();
+	bot->teleport(position[0], position[1], position[2]);
 }
 
 void GetBalance() {
