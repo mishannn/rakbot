@@ -60,12 +60,14 @@ void ServerJoin(RPCParameters *rpcParams) {
 
 	player->setName(std::string(name));
 
-	for each (std::string admin in vars.admins) {
-		if (admin == std::string(name)) {
+	RakBot::app()->getMutex(MUTEX_ADMINS)->lock();
+	for(int i = 0; i < vars.admins.size(); i++) {
+		if (vars.admins[i] == std::string(name)) {
 			player->setAdmin(true);
 			break;
 		}
 	}
+	RakBot::app()->getMutex(MUTEX_ADMINS)->unlock();
 
 	RakBot::app()->getEvents()->onPlayerJoin(player);
 }
@@ -1412,8 +1414,10 @@ void Create3DTextLabel(RPCParameters *rpcParams) {
 	ZeroMemory(labelTextBuf, sizeof(labelTextBuf));
 	stringCompressor->DecodeString(labelTextBuf, sizeof(labelTextBuf) - 1, &bsData);
 
-	RakBot::app()->log("[RAKBOT] Показана 3D метка с ID %d (X: %.2f; Y: %.2f; Z: %.2f; текст: %s)",
-		labelId, labelPosition[0], labelPosition[1], labelPosition[2], labelTextBuf);
+	if (vars.textLabelCreateLogging) {
+		RakBot::app()->log("[RAKBOT] Показана 3D метка с ID %d (X: %.2f; Y: %.2f; Z: %.2f; текст: %s)",
+			labelId, labelPosition[0], labelPosition[1], labelPosition[2], labelTextBuf);
+	}
 
 	RakBot::app()->getEvents()->onTextLabelShow(labelId, labelPosition[0], labelPosition[1], labelPosition[2], std::string(labelTextBuf));
 }

@@ -619,7 +619,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer(const char *buffer
 							while (count++ < size) {
 								if (orderingListAtOrderingStream->Peek()->orderingIndex == waitingForOrderedPacketReadIndex[orderingChannelCopy]) {
 									/*
-									RakNet::BitStream temp(orderingListAtOrderingStream->Peek()->data, BITS_TO_uint8_tS(orderingListAtOrderingStream->Peek()->dataBitLength), false);
+									RakNet::BitStream temp(orderingListAtOrderingStream->Peek()->data, BITS_TO_BYTES(orderingListAtOrderingStream->Peek()->dataBitLength), false);
 									temp.IgnoreBits(8);
 									unsigned int receivedPacketNumber=0;
 									temp.Read(receivedPacketNumber);
@@ -1108,7 +1108,7 @@ void ReliabilityLayer::SendBitStream(SOCKET s, PlayerID playerId, RakNet::BitStr
 
 	statistics.packetsSent++;
 	statistics.totalBitsSent += length * 8;
-	//printf("total bits=%i length=%i\n", BITS_TO_uint8_tS(statistics.totalBitsSent), length);
+	//printf("total bits=%i length=%i\n", BITS_TO_BYTES(statistics.totalBitsSent), length);
 
 	SocketLayer::Instance()->SendTo(s, (char*)bitStream->GetData(), length, playerId.binaryAddress, playerId.port);
 
@@ -1366,7 +1366,7 @@ bool ReliabilityLayer::IsSendThrottled(int MTUSize) {
 			if (resendList[i])
 				resendListDataSize+=resendList[i]->dataBitLength;
 		}
-		packetsWaiting = 1 + ((BITS_TO_uint8_tS(resendListDataSize)) / (MTUSize - UDP_HEADER_SIZE - 10)); // 10 to roughly estimate the raknet header
+		packetsWaiting = 1 + ((BITS_TO_BYTES(resendListDataSize)) / (MTUSize - UDP_HEADER_SIZE - 10)); // 10 to roughly estimate the raknet header
 
 		return packetsWaiting >= windowSize;
 		*/
@@ -1551,7 +1551,7 @@ int ReliabilityLayer::WriteToBitStreamFromInternalPacket(RakNet::BitStream *bitS
 
 	// Write how many bits the packet data is. Stored in 13 bits
 #ifdef _DEBUG
-	assert(BITS_TO_uint8_tS(internalPacket->dataBitLength) < MAXIMUM_MTU_SIZE); // I never send more than MTU_SIZE bytes
+	assert(BITS_TO_BYTES(internalPacket->dataBitLength) < MAXIMUM_MTU_SIZE); // I never send more than MTU_SIZE bytes
 
 #endif
 
@@ -1732,7 +1732,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 	internalPacket->dataBitLength = length;
 #ifdef _DEBUG
 	// 10/08/05 - Disabled assert since this hits from offline packets arriving when the sender does not know we just connected, which is an unavoidable condition sometimes
-	//	assert( internalPacket->dataBitLength > 0 && BITS_TO_uint8_tS( internalPacket->dataBitLength ) < MAXIMUM_MTU_SIZE );
+	//	assert( internalPacket->dataBitLength > 0 && BITS_TO_BYTES( internalPacket->dataBitLength ) < MAXIMUM_MTU_SIZE );
 #endif
 	if (!(internalPacket->dataBitLength > 0 && BITS_TO_BYTES(internalPacket->dataBitLength) < MAXIMUM_MTU_SIZE)) {
 		// 10/08/05 - internalPacket->data wasn't allocated yet
@@ -2005,7 +2005,7 @@ void ReliabilityLayer::InsertIntoSplitPacketList(InternalPacket * internalPacket
 		//			splitPacketChannelList[index]->splitPacketList[0]->data[0],
 		//			splitPacketChannelList[index]->splitPacketList.Size(),
 		//			internalPacket->splitPacketCount,
-		//			BITS_TO_uint8_tS(splitPacketChannelList[index]->splitPacketList[0]->dataBitLength));
+		//			BITS_TO_BYTES(splitPacketChannelList[index]->splitPacketList[0]->dataBitLength));
 
 				// Return ID_DOWNLOAD_PROGRESS
 				// Write splitPacketIndex (SplitPacketIndexType)

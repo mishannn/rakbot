@@ -79,7 +79,7 @@ void RoutePlay() {
 
 			bot->getAnimation()->setAnimFlags(vars.routeData[vars.routeIndex].animFlags);
 			bot->getAnimation()->setAnimId(vars.routeData[vars.routeIndex].animId);
-			bot->getKeys()->setKeys(vars.routeData[vars.routeIndex].keys);
+			bot->getKeys()->setKeyId(vars.routeData[vars.routeIndex].keys);
 			bot->getKeys()->setLeftRightKey(vars.routeData[vars.routeIndex].leftRightKey);
 			bot->getKeys()->setUpDownKey(vars.routeData[vars.routeIndex].upDownKey);
 			bot->sync();

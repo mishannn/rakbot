@@ -33,9 +33,9 @@ namespace RakNet {
 	 * This macro transforms a bit in byte
 	 * @param x Transform a bit to a byte
 	 */
-#define BITS_TO_uint8_tS(x) (((x)+7)>>3)
+#define BITS_TO_BYTES(x) (((x)+7)>>3)
 
-#define uint8_tS_TO_BITS(x) (x<<3)
+#define BYTES_TO_BITS(x) (x<<3)
 
 	 /**
 	  * @brief Packets encoding and decoding facilities

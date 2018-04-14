@@ -925,6 +925,11 @@ void MainWindow() {
 		}
 	}
 
+	g_hWndAdmins = NULL;
+	g_hWndTitle = NULL;
+	g_hWndLog = NULL;
+	g_hWndMain = NULL;
+
 	RakBot::app()->exit();
 	DeleteObject(g_hfText);
 }

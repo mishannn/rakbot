@@ -295,13 +295,17 @@ void RakBot::log(const char *format, ...) {
 			buf[bufLen] = 0;
 		}
 
-		int lbCount = SendMessage(g_hWndLog, LB_GETCOUNT, 0, 0);
-		if (lbCount >= MAX_LOGLINES)
-			SendMessage(g_hWndLog, LB_DELETESTRING, 0, 0);
+		if (g_hWndLog) {
+			int lbCount = SendMessage(g_hWndLog, LB_GETCOUNT, 0, 0);
+			if (lbCount >= MAX_LOGLINES)
+				SendMessage(g_hWndLog, LB_DELETESTRING, 0, 0);
 
-		WPARAM idx = SendMessage(g_hWndLog, LB_ADDSTRING, 0, (LPARAM)buf);
-		SendMessage(g_hWndLog, LB_SETTOPINDEX, idx, 0);
+			WPARAM idx = SendMessage(g_hWndLog, LB_ADDSTRING, 0, (LPARAM)buf);
+			SendMessage(g_hWndLog, LB_SETTOPINDEX, idx, 0);
+			return;
+		}
 	}
+	delete[] buf;
 }
 
 void RakBot::logToFile(std::string line) {

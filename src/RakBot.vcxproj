@@ -23,7 +23,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
-    <CLRSupport>true</CLRSupport>
+    <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -65,11 +65,11 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_RELEASE;_RAKNET_THREADSAFE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4005;4020;</DisableSpecificWarnings>
       <MinimalRebuild>false</MinimalRebuild>
-      <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBot.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBotDatabase.pdb</ProgramDataBaseFileName>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <CompileAs>CompileAsCpp</CompileAs>
       <ConformanceMode>false</ConformanceMode>
@@ -97,7 +97,7 @@
       <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>4005;4020;</DisableSpecificWarnings>
-      <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBot.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBotDatabase.pdb</ProgramDataBaseFileName>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <CompileAs>CompileAsCpp</CompileAs>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>

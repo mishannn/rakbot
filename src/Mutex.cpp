@@ -9,6 +9,7 @@ Mutex::Mutex() {
 }
 
 Mutex::~Mutex() {
+	unlock();
 	CloseHandle(_mutex);
 }
 

@@ -136,7 +136,7 @@ void BitStream::Reset(void) {
 	// is a dangerous operation (may result in leaks).
 
 	if (numberOfBitsUsed > 0) {
-		//  memset(data, 0, BITS_TO_uint8_tS(numberOfBitsUsed));
+		//  memset(data, 0, BITS_TO_BYTES(numberOfBitsUsed));
 	}
 
 	// Don't free memory here for speed efficiency
@@ -148,7 +148,7 @@ void BitStream::Reset(void) {
 
 	//data=(unsigned char*)malloc(1);
 	// if (numberOfBitsAllocated>0)
-	//  memset(data, 0, BITS_TO_uint8_tS(numberOfBitsAllocated));
+	//  memset(data, 0, BITS_TO_BYTES(numberOfBitsAllocated));
 }
 
 // Write the native types to the end of the buffer
@@ -1416,7 +1416,7 @@ void BitStream::SetData(const unsigned char* input, const int numberOfBits) {
 
 	AddBitsAndReallocate(numberOfBits);
 
-	memcpy(data, input, BITS_TO_uint8_tS(numberOfBits));
+	memcpy(data, input, BITS_TO_BYTES(numberOfBits));
 
 	numberOfBitsUsed = numberOfBits;
 }
@@ -1491,7 +1491,7 @@ bool BitStream::ReadBits(unsigned char* output,
 
 	int offset = 0;
 
-	memset(output, 0, BITS_TO_uint8_tS(numberOfBitsToRead));
+	memset(output, 0, BITS_TO_BYTES(numberOfBitsToRead));
 
 	readOffsetMod8 = readOffset % 8;
 
@@ -1606,15 +1606,15 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 
 		// Less memory efficient but saves on news and deletes
 		newNumberOfBitsAllocated = (numberOfBitsToWrite + numberOfBitsUsed) * 2;
-		//		int newByteOffset = BITS_TO_uint8_tS( numberOfBitsAllocated );
+		//		int newByteOffset = BITS_TO_BYTES( numberOfBitsAllocated );
 				// Use realloc and free so we are more efficient than delete and new for resizing
-		int amountToAllocate = BITS_TO_uint8_tS(newNumberOfBitsAllocated);
+		int amountToAllocate = BITS_TO_BYTES(newNumberOfBitsAllocated);
 		if (data == (unsigned char*)stackData) {
 			if (amountToAllocate > BITSTREAM_STACK_ALLOCATION_SIZE) {
 				data = (unsigned char*)malloc(amountToAllocate);
 
 				// need to copy the stack data over to our new memory area too
-				memcpy((void *)data, (void *)stackData, BITS_TO_uint8_tS(numberOfBitsAllocated));
+				memcpy((void *)data, (void *)stackData, BITS_TO_BYTES(numberOfBitsAllocated));
 			}
 		} else {
 			data = (unsigned char*)realloc(data, amountToAllocate);
@@ -1641,7 +1641,7 @@ void BitStream::PrintBits(void) const {
 		return;
 	}
 
-	for (int counter = 0; counter < BITS_TO_uint8_tS(numberOfBitsUsed); counter++) {
+	for (int counter = 0; counter < BITS_TO_BYTES(numberOfBitsUsed); counter++) {
 		int stop;
 
 		if (counter == (numberOfBitsUsed - 1) >> 3)
@@ -1670,8 +1670,8 @@ int BitStream::CopyData(unsigned char** _data) const {
 	assert(numberOfBitsUsed > 0);
 #endif
 
-	*_data = new unsigned char[BITS_TO_uint8_tS(numberOfBitsUsed)];
-	memcpy(*_data, data, sizeof(unsigned char) * (BITS_TO_uint8_tS(numberOfBitsUsed)));
+	*_data = new unsigned char[BITS_TO_BYTES(numberOfBitsUsed)];
+	memcpy(*_data, data, sizeof(unsigned char) * (BITS_TO_BYTES(numberOfBitsUsed)));
 	return numberOfBitsUsed;
 }
 
@@ -1692,7 +1692,7 @@ int BitStream::GetNumberOfBitsUsed(void) const {
 
 // Returns the length in bytes of the stream
 int BitStream::GetNumberOfBytesUsed(void) const {
-	return BITS_TO_uint8_tS(numberOfBitsUsed);
+	return BITS_TO_BYTES(numberOfBitsUsed);
 }
 
 // Returns the number of bits into the stream that we have read
@@ -1716,13 +1716,13 @@ void BitStream::AssertCopyData(void) {
 		copyData = true;
 
 		if (numberOfBitsAllocated > 0) {
-			unsigned char * newdata = (unsigned char*)malloc(BITS_TO_uint8_tS(numberOfBitsAllocated));
+			unsigned char * newdata = (unsigned char*)malloc(BITS_TO_BYTES(numberOfBitsAllocated));
 #ifdef _DEBUG
 
 			assert(data);
 #endif
 
-			memcpy(newdata, data, BITS_TO_uint8_tS(numberOfBitsAllocated));
+			memcpy(newdata, data, BITS_TO_BYTES(numberOfBitsAllocated));
 			data = newdata;
 		}
 

@@ -39,7 +39,7 @@ public:
 	void enterVehicle(Vehicle *vehicle, uint8_t seatId);
 	void exitVehicle();
 
-	void sync();
+	void sync(int count = 1);
 	void teleport(float fPosX, float fPosY, float fPosZ);
 	void follow(uint16_t playerId);
 

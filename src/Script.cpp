@@ -43,8 +43,8 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 		_scriptClosing = false;
 
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++)
-			_defCalls[i] = nullptr;
-		
+			_defCalls[i].active = false;
+
 		std::string scriptPath = std::string(GetRakBotPath("scripts")) + "\\" + _scriptName;
 
 		// LOAD FILE
@@ -92,15 +92,12 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 }
 
 Script::~Script() {
-	_scriptClosing = true;
+	for (int i = 0; i < LUA_MAXDEFCALLS; i++)
+		_defCalls[i].active = false;
 
+	_scriptClosing = true;
 	if (_scriptUpdateThread.joinable())
 		_scriptUpdateThread.join();
-
-	for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
-		if (_defCalls[i] != nullptr)
-			delete _defCalls[i];
-	}
 }
 
 Script *Script::load(std::string scriptName) {
@@ -559,11 +556,11 @@ void Script::luaRegisterFunctions() {
 	});
 	_scriptState.set_function("getKeys", [this]() {
 		Bot *bot = RakBot::app()->getBot();
-		return std::make_tuple(bot->getKeys()->getKeys(), bot->getKeys()->getLeftRightKey(), bot->getKeys()->getUpDownKey());
+		return std::make_tuple(bot->getKeys()->getKeyId(), bot->getKeys()->getLeftRightKey(), bot->getKeys()->getUpDownKey());
 	});
 	_scriptState.set_function("setKeys", [this](int keys, int lrAnalog, int udAnalog) {
 		Bot *bot = RakBot::app()->getBot();
-		bot->getKeys()->setKeys(keys);
+		bot->getKeys()->setKeyId(keys);
 		bot->getKeys()->setLeftRightKey(lrAnalog);
 		bot->getKeys()->setUpDownKey(udAnalog);
 		return true;
@@ -576,7 +573,7 @@ void Script::luaRegisterFunctions() {
 		Bot *bot = RakBot::app()->getBot();
 		return bot->getInfo()->getPing();
 	});
-	_scriptState.set_function("clickTextdraw", [this](int textdrawId) {
+	_scriptState.set_function("clickTextDraw", [this](int textdrawId) {
 		Bot *bot = RakBot::app()->getBot();
 		bot->clickTextdraw(textdrawId);
 		return true;
@@ -587,6 +584,11 @@ void Script::luaRegisterFunctions() {
 		bot->setPosition(1, y);
 		bot->setPosition(2, z);
 		bot->sync();
+		return true;
+	});
+	_scriptState.set_function("takeCheckpoint", [this]() {
+		Bot *bot = RakBot::app()->getBot();
+		bot->takeCheckpoint();
 		return true;
 	});
 	_scriptState.set_function("coordMasterState", [this]() {
@@ -792,60 +794,48 @@ void Script::luaRegisterFunctions() {
 	});
 
 	// MISC
-	_scriptState.set_function("defCallAdd", [this](int delay, bool repeat, std::string funcName) {
+	_scriptState.set_function("defCallAdd", [this](int delay, bool repeat, sol::protected_function func, sol::optional<sol::table> maybe_params) {
 		if (delay < 1)
 			return sol::make_object(_scriptState, sol::nil);
-		if (funcName.empty())
+		if (!func.valid())
 			return sol::make_object(_scriptState, sol::nil);
-		if (funcName.length() > 256)
-			return sol::make_object(_scriptState, sol::nil);
-		LuaDefCall *defCall = new LuaDefCall;
-		defCall->startTime = GetTickCount();
-		defCall->callDelay = delay;
-		defCall->repeat = repeat;
 
-		int funcNameLen = funcName.length();
-		defCall->funcName = new char[funcNameLen + 1];
-		strncpy(defCall->funcName, funcName.c_str(), funcNameLen);
-		defCall->funcName[funcNameLen] = 0;
+		Lock lock(&_defCallMutex);
 
-		_defCallMutex.lock();
+		int defCallIndex = -1;
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
-			if (_defCalls[i] == nullptr) {
-				_defCalls[i] = defCall;
-				_defCallMutex.unlock();
-				return sol::make_object(_scriptState, reinterpret_cast<int>(defCall));
+			if (!_defCalls[i].active) {
+				defCallIndex = i;
+				break;
 			}
 		}
-		_defCallMutex.unlock();
 
-		delete defCall;
-		return sol::make_object(_scriptState, sol::nil);
+		if (defCallIndex == -1)
+			return sol::make_object(_scriptState, sol::nil);
+
+		_defCalls[defCallIndex].active = true;
+		_defCalls[defCallIndex].startTime = GetTickCount();
+		_defCalls[defCallIndex].callDelay = delay;
+		_defCalls[defCallIndex].repeat = repeat;
+		_defCalls[defCallIndex].func = func;
+
+		if (maybe_params) {
+			_defCalls[defCallIndex].params = maybe_params.value();
+		} else {
+			_defCalls[defCallIndex].params = _scriptState.create_table();
+		}
+
+		return sol::make_object(_scriptState, (defCallIndex + 1));
 	});
-	_scriptState.set_function("defCallDelete", [this](int id) {
-		LuaDefCall *defCall = reinterpret_cast<LuaDefCall *>(id);
+	_scriptState.set_function("defCallDelete", [this](int defCallId) {
+		if (defCallId < 1 || defCallId > LUA_MAXDEFCALLS)
+			return false;
 
-		_defCallMutex.lock();
-		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
-			if (_defCalls[i] == defCall) {
-				delete[] _defCalls[i]->funcName;
-				_defCalls[i]->funcName = nullptr;
-				delete _defCalls[i];
-				_defCalls[i] = nullptr;
-				_defCallMutex.unlock();
-				return true;
-			}
-		}
+		Lock lock(&_defCallMutex);
+
+		_defCalls[defCallId - 1].active = false;
 		_defCallMutex.unlock();
 		return false;
-	});
-	_scriptState.set_function("sleep", [this](int ms) {
-		_funcExecuting = false;
-		_scriptMutex.unlock();
-		Sleep(ms);
-		_scriptMutex.lock();
-		_funcExecuting = true;
-		return true;
 	});
 	_scriptState.set_function("printLog", [this](std::string log) {
 		std::vector<std::string> lines = Split(log, '\n');
@@ -1039,7 +1029,7 @@ void Script::luaRegisterFunctions() {
 		playerInfo["score"] = player->getInfo()->getScore();
 		playerInfo["ping"] = player->getInfo()->getPing();
 		playerInfo["keys"] = _scriptState.create_table();
-		playerInfo["keys"]["keys"] = player->getKeys()->getKeys();
+		playerInfo["keys"]["keys"] = player->getKeys()->getKeyId();
 		playerInfo["keys"]["lrAnalog"] = player->getKeys()->getLeftRightKey();
 		playerInfo["keys"]["udAnalog"] = player->getKeys()->getUpDownKey();
 		playerInfo["anim"] = _scriptState.create_table();
@@ -1077,10 +1067,14 @@ void Script::luaRegisterFunctions() {
 
 	// ADMINS
 	_scriptState.set_function("adminsAdd", [this](std::string admin) {
+		Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
+		Lock lock(adminsMutex);
 		vars.admins.push_back(admin);
 		return true;
 	});
 	_scriptState.set_function("adminsClear", [this]() {
+		Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
+		Lock lock(adminsMutex);
 		vars.admins.clear();
 		return true;
 	});
@@ -1174,9 +1168,9 @@ void Script::luaUpdate() {
 
 		_defCallMutex.lock();
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
-			LuaDefCall *defCall = _defCalls[i];
+			LuaDefCall *defCall = &_defCalls[i];
 
-			if (defCall == nullptr)
+			if (!defCall->active)
 				continue;
 
 			static Timer timer;
@@ -1184,14 +1178,34 @@ void Script::luaUpdate() {
 			if (!timer.isElapsed(defCall->callDelay, false))
 				continue;
 
-			std::string funcName = defCall->funcName;
-			luaCallback(funcName);
+			try {
+				_scriptMutex.lock();
+				_funcExecuting = true;
+				sol::protected_function_result result = defCall->func(defCall->params);
+				if (!result.valid())
+					throw result.get<sol::error>();
+				_scriptMutex.unlock();
+			} catch (const char *e) {
+				std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e;
+				luaError(message);
+				_funcExecuting = false;
+				_scriptMutex.unlock();
+			} catch (const std::exception &e) {
+				std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e.what();
+				luaError(message);
+				_funcExecuting = false;
+				_scriptMutex.unlock();
+			} catch (...) {
+				std::string message = "Неизвестная ошибка скрипта \"" + _scriptName + "\"";
+				luaError(message);
+				_funcExecuting = false;
+				_scriptMutex.unlock();
+			}
 
 			if (defCall->repeat) {
 				defCall->startTime = Timer::getCurrentTime();
 			} else {
-				delete _defCalls[i];
-				_defCalls[i] = nullptr;
+				_defCalls[i].active = false;
 			}
 		}
 		_defCallMutex.unlock();
@@ -1258,17 +1272,17 @@ bool Script::luaCallback(std::string funcName, Args && ...args) {
 		_funcExecuting = false;
 		return result.get<bool>();
 	} catch (const char *e) {
-		std::string message = "Ошибка в функции \"" + funcName + "\" скрипта \"" + _scriptName + "\": " + e;
+		std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e;
 		luaError(message);
 		_funcExecuting = false;
 		return false;
 	} catch (const std::exception &e) {
-		std::string message = "Ошибка в функции \"" + funcName + "\" скрипта \"" + _scriptName + "\": " + e.what();
+		std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e.what();
 		luaError(message);
 		_funcExecuting = false;
 		return false;
 	} catch (...) {
-		std::string message = "Неизвестная ошибка в функции \"" + funcName + "\" скрипта \"" + _scriptName + "\"";
+		std::string message = "Неизвестная ошибка скрипта \"" + _scriptName + "\"";
 		luaError(message);
 		_funcExecuting = false;
 		return false;

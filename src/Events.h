@@ -3,6 +3,7 @@
 #define MAX_DEFCALLS 30
 
 struct DefCall {
+	bool active;
 	bool repeat;
 	uint32_t startTime;
 	uint32_t delay;
@@ -11,7 +12,8 @@ struct DefCall {
 
 class Events {
 private:
-	DefCall * _defCalls[MAX_DEFCALLS];
+	DefCall _defCalls[MAX_DEFCALLS];
+	Mutex _defCallMutex;
 
 public:
 	Events();
@@ -19,8 +21,8 @@ public:
 
 	void reset();
 
-	DefCall *defCallAdd(uint32_t delay, bool repeat, std::function<void(DefCall *)> func);
-	bool defCallDelete(DefCall *defCall);
+	int defCallAdd(uint32_t delay, bool repeat, std::function<void(DefCall *)> func);
+	bool defCallDelete(int defCallId);
 
 	void onUpdate();
 	bool onRequestConnect();

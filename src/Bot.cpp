@@ -72,7 +72,7 @@ void Bot::reconnect(int reconnectDelay) {
 	if (isConnected()) {
 		disconnect(false);
 	}
-	
+
 	setConnectRequested(false);
 	ReconnectTimer.setTimer(GetTickCount() + reconnectDelay);
 	RakBot::app()->getEvents()->onReconnect(reconnectDelay);
@@ -218,31 +218,33 @@ void Bot::exitVehicle() {
 	RakBot::app()->log("[RAKBOT] Бот вышел из транспорта!");
 }
 
-void Bot::sync() {
+void Bot::sync(int count) {
 	Lock lock(&_botMutex);
 
-	if (RakBot::app()->getEvents()->onSync())
-		return;
+	for (int i = 0; i < count; i++) {
+		if (RakBot::app()->getEvents()->onSync())
+			return;
 
-	switch (getPlayerState()) {
-		case PLAYER_STATE_ONFOOT:
-			onfootSync();
-			break;
+		switch (getPlayerState()) {
+			case PLAYER_STATE_ONFOOT:
+				onfootSync();
+				break;
 
-		case PLAYER_STATE_SPECTATE:
-			spectateSync();
-			break;
+			case PLAYER_STATE_SPECTATE:
+				spectateSync();
+				break;
 
-		case PLAYER_STATE_DRIVER:
-			driverSync();
-			break;
+			case PLAYER_STATE_DRIVER:
+				driverSync();
+				break;
 
-		case PLAYER_STATE_PASSENGER:
-			passengerSync();
-			break;
+			case PLAYER_STATE_PASSENGER:
+				passengerSync();
+				break;
 
-		default:
-			break;
+			default:
+				break;
+		}
 	}
 }
 
@@ -311,7 +313,7 @@ void Bot::onfootSync() {
 
 	OnfootData onfootSync;
 	ZeroMemory(&onfootSync, sizeof(OnfootData));
-	onfootSync.keys = getKeys()->getKeys();
+	onfootSync.keys = getKeys()->getKeyId();
 	onfootSync.leftRightKey = getKeys()->getLeftRightKey();
 	onfootSync.upDownKey = getKeys()->getUpDownKey();
 	onfootSync.weapon = getWeapon();
@@ -401,7 +403,7 @@ void Bot::follow(uint16_t playerId) {
 		getAnimation()->setAnimId(player->getAnimation()->getAnimId());
 	}
 
-	getKeys()->setKeys(player->getKeys()->getKeys());
+	getKeys()->setKeyId(player->getKeys()->getKeyId());
 	getKeys()->setLeftRightKey(player->getKeys()->getLeftRightKey());
 	getKeys()->setUpDownKey(player->getKeys()->getUpDownKey());
 
@@ -429,7 +431,6 @@ void Bot::connect(std::string address, uint16_t port) {
 
 	RakBot::app()->log("[RAKBOT] Подключение к %s:%d...", address.c_str(), port);
 	rakClient->Connect(address.c_str(), port, 0, 0, 5);
-	setConnectRequested(true);
 }
 
 void Bot::disconnect(bool timeOut) {
@@ -622,7 +623,7 @@ void Bot::passengerSync() {
 	passengerSync.byteArmor = getArmour();
 	passengerSync.sUpDownKeys = getKeys()->getUpDownKey();
 	passengerSync.sLeftRightKeys = getKeys()->getLeftRightKey();
-	passengerSync.sKeys = getKeys()->getKeys();
+	passengerSync.sKeys = getKeys()->getKeyId();
 	passengerSync.byteCurrentWeapon = getWeapon();
 	passengerSync.byteHealth = getHealth();
 	passengerSync.byteSeatID = getVehicleSeat();
@@ -682,7 +683,7 @@ void Bot::driverSync() {
 	driverSync.bytePlayerHealth = getHealth();
 	driverSync.bytePlayerArmour = getArmour();
 	driverSync.weapon = getWeapon();
-	driverSync.sKeys = getKeys()->getKeys();
+	driverSync.sKeys = getKeys()->getKeyId();
 	driverSync.lrAnalog = getKeys()->getLeftRightKey();
 	driverSync.udAnalog = getKeys()->getUpDownKey();
 	bsDriverSync.Write((uint8_t)ID_VEHICLE_SYNC);
@@ -707,7 +708,7 @@ void Bot::spectateSync() {
 	for (int i = 0; i < 3; i++)
 		specSync.fPosition[i] = getPosition(i);
 
-	specSync.sKeys = getKeys()->getKeys();
+	specSync.sKeys = getKeys()->getKeyId();
 	specSync.sLeftRightKeys = getKeys()->getLeftRightKey();
 	specSync.sUpDownKeys = getKeys()->getUpDownKey();
 	bsSpecSync.Write((uint8_t)ID_SPECTATOR_SYNC);
@@ -731,11 +732,6 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 	if (RakBot::app()->getEvents()->onDialogResponse(dialogId, button, item, input))
 		return;
 
-	static bool dialogResponseReady = true;
-	while (!dialogResponseReady)
-		Sleep(10);
-	dialogResponseReady = false;
-
 	RakBot::app()->getEvents()->defCallAdd(vars.dialogResponseDelay, false, [this, dialogId, button, item, input](DefCall *) {
 		RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
@@ -748,7 +744,6 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 		bsSend.Write(input.c_str(), length);
 
 		rakClient->RPC(&RPC_DialogResponse, const_cast<BitStream *>(&bsSend), HIGH_PRIORITY, RELIABLE_ORDERED, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
-		dialogResponseReady = true;
 	});
 }
 
@@ -783,30 +778,30 @@ void Bot::spawn() {
 
 	RakNet::BitStream bsSendSpawn;
 	rakClient->RPC(&RPC_Spawn, &bsSendSpawn, HIGH_PRIORITY, RELIABLE_ORDERED, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
-
 	vars.waitForRequestSpawnReply = false;
 
+	setPlayerState(PLAYER_STATE_ONFOOT);
+	for (int i = 0; i < 3; i++)
+		setPosition(i, spawnInfo.position[i]);
+	setHealth(100);
+	setQuaternion(0, -cosf((spawnInfo.rotation / 2.f) * M_PI / 180.f));
+	setQuaternion(1, 0.f);
+	setQuaternion(2, 0.f);
+	setQuaternion(3, 1.f * sinf((spawnInfo.rotation / 2.f) * M_PI / 180.f));
+
+	float position[3];
+	for (int i = 0; i < 3; i++)
+		position[i] = getPosition(i);
+
 	RakBot::app()->getEvents()->defCallAdd(vars.spawnDelay, false, [this](DefCall *) {
-		setPlayerState(PLAYER_STATE_ONFOOT);
-		for (int i = 0; i < 3; i++)
-			setPosition(i, spawnInfo.position[i]);
-		setHealth(100);
-		setQuaternion(0, -cosf((spawnInfo.rotation / 2.f) * M_PI / 180.f));
-		setQuaternion(1, 0.f);
-		setQuaternion(2, 0.f);
-		setQuaternion(3, 1.f * sinf((spawnInfo.rotation / 2.f) * M_PI / 180.f));
-
-		float position[3];
-		for (int i = 0; i < 3; i++)
-			position[i] = getPosition(i);
-
 		setSpawned(true);
-		RakBot::app()->log("[RAKBOT] Бот заспавнен");
 		sync();
-		vars.syncAllowed = true;
+
+		RakBot::app()->log("[RAKBOT] Бот заспавнен");
 		BotSpawnedTimer.setTimerFromCurrentTime();
 		RakBot::app()->getEvents()->onSpawned();
 		spawnReady = true;
+		vars.syncAllowed = true;
 	});
 }
 

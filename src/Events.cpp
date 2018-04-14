@@ -18,10 +18,7 @@
 
 #include "Events.h"
 
-Events::Events() {
-	for (int i = 0; i < MAX_DEFCALLS; i++)
-		_defCalls[i] = nullptr;
-}
+Events::Events() {}
 
 Events::~Events() {}
 
@@ -29,43 +26,47 @@ void Events::reset() {
 
 }
 
-DefCall * Events::defCallAdd(uint32_t delay, bool repeat, std::function<void(DefCall *)> func) {
+int Events::defCallAdd(uint32_t delay, bool repeat, std::function<void(DefCall *)> func) {
 	if (delay < 1)
-		return nullptr;
+		return -1;
 
-	DefCall *defCall = new DefCall;
-	defCall->startTime = GetTickCount();
-	defCall->delay = delay;
-	defCall->repeat = repeat;
-	defCall->func = func;
+	Lock lock(&_defCallMutex);
+
+	int defCallIndex = -1;
 
 	for (int i = 0; i < MAX_DEFCALLS; i++) {
-		if (_defCalls[i] == nullptr) {
-			_defCalls[i] = defCall;
-			return defCall;
+		if (!_defCalls[i].active) {
+			defCallIndex = i;
+			break;
 		}
 	}
 
-	delete defCall;
-	return nullptr;
+	if (defCallIndex == -1)
+		return -1;
+
+	_defCalls[defCallIndex].active = true;
+	_defCalls[defCallIndex].startTime = GetTickCount();
+	_defCalls[defCallIndex].delay = delay;
+	_defCalls[defCallIndex].repeat = repeat;
+	_defCalls[defCallIndex].func = func;
+	return (defCallIndex + 1);
 }
 
-bool Events::defCallDelete(DefCall *defCall) {
-	for (int i = 0; i < MAX_DEFCALLS; i++) {
-		if (_defCalls[i] == defCall) {
-			delete _defCalls[i];
-			_defCalls[i] = nullptr;
-			return true;
-		}
-	}
+bool Events::defCallDelete(int defCallIndex) {
+	if (defCallIndex < 1 || defCallIndex > MAX_DEFCALLS)
+		return false;
+
+	Lock lock(&_defCallMutex);
+
+	_defCalls[defCallIndex - 1].active = false;
 	return false;
 }
 
 void Events::onUpdate() {
 	for (int i = 0; i < MAX_DEFCALLS; i++) {
-		DefCall *defCall = _defCalls[i];
+		DefCall *defCall = &_defCalls[i];
 
-		if (defCall == nullptr)
+		if (!defCall->active)
 			continue;
 
 		static Timer timer;
@@ -78,8 +79,7 @@ void Events::onUpdate() {
 		if (defCall->repeat) {
 			defCall->startTime = Timer::getCurrentTime();
 		} else {
-			delete _defCalls[i];
-			_defCalls[i] = nullptr;
+			_defCalls[i].active = false;
 		}
 	}
 }

@@ -57,12 +57,12 @@ public:
 		return _upDownKey;
 	}
 
-	void setKeys(uint16_t keys) {
+	void setKeyId(uint16_t keys) {
 		Lock lock(&_playerKeysMutex);
 		_keys = keys;
 	}
 
-	uint16_t getKeys() {
+	uint16_t getKeyId() {
 		Lock lock(&_playerKeysMutex);
 		return _keys;
 	}

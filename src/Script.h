@@ -15,10 +15,12 @@
 class Timer;
 
 struct LuaDefCall {
+	bool active;
 	bool repeat;
 	uint32_t startTime;
 	uint32_t callDelay;
-	char *funcName;
+	sol::protected_function func;
+	sol::table params;
 };
 
 class Script {
@@ -30,7 +32,7 @@ private:
 	std::string _scriptName;
 	sol::state _scriptState;
 
-	LuaDefCall *_defCalls[LUA_MAXDEFCALLS];
+	LuaDefCall _defCalls[LUA_MAXDEFCALLS];
 
 	Script(std::string scriptName);
 	~Script();

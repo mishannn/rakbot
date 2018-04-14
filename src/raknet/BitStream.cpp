@@ -131,7 +131,7 @@ void BitStream::Reset(void) {
 	// is a dangerous operation (may result in leaks).
 
 	if (numberOfBitsUsed > 0) {
-		//  memset(data, 0, BITS_TO_uint8_tS(numberOfBitsUsed));
+		//  memset(data, 0, BITS_TO_BYTES(numberOfBitsUsed));
 	}
 
 	// Don't free memory here for speed efficiency
@@ -143,7 +143,7 @@ void BitStream::Reset(void) {
 
 	//data=(unsigned char*)malloc(1);
 	// if (numberOfBitsAllocated>0)
-	//  memset(data, 0, BITS_TO_uint8_tS(numberOfBitsAllocated));
+	//  memset(data, 0, BITS_TO_BYTES(numberOfBitsAllocated));
 }
 
 // Write an array or casted stream
@@ -535,7 +535,7 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 
 		// Less memory efficient but saves on news and deletes
 		newNumberOfBitsAllocated = (numberOfBitsToWrite + numberOfBitsUsed) * 2;
-		//		int newByteOffset = BITS_TO_uint8_tS( numberOfBitsAllocated );
+		//		int newByteOffset = BITS_TO_BYTES( numberOfBitsAllocated );
 				// Use realloc and free so we are more efficient than delete and new for resizing
 		int amountToAllocate = BITS_TO_BYTES(newNumberOfBitsAllocated);
 		if (data == (unsigned char*)stackData) {
@@ -629,7 +629,7 @@ int BitStream::GetNumberOfBitsUsed( void ) const
 // Returns the length in bytes of the stream
 int BitStream::GetNumberOfBytesUsed( void ) const
 {
-	return BITS_TO_uint8_tS( numberOfBitsUsed );
+	return BITS_TO_BYTES( numberOfBitsUsed );
 }
 
 // Returns the number of bits into the stream that we have read

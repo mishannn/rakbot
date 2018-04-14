@@ -47,6 +47,8 @@ void Packet_ConnectionSucceeded(Packet *p) {
 	bot->setPlayerId(localPlayerId);
 
 	RakBot::app()->log("[RAKBOT] Подключено. Вход в игру...");
+	bot->setConnected(true);
+	BotConnectedTimer.setTimerFromCurrentTime();
 	RakBot::app()->getEvents()->onConnect(localPlayerId);
 
 	int iVersion = NETGAME_VERSION;
@@ -72,9 +74,6 @@ void Packet_ConnectionSucceeded(Packet *p) {
 	bsSend.Write(uiClientChallengeResponse);
 
 	rakClient->RPC(&RPC_ClientJoin, &bsSend, HIGH_PRIORITY, RELIABLE, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
-
-	bot->setConnected(true);
-	BotConnectedTimer.setTimerFromCurrentTime();
 }
 
 void Packet_PlayerSync(Packet *p) {
@@ -189,7 +188,7 @@ void Packet_PlayerSync(Packet *p) {
 	PlayerKeys *keys = player->getKeys();
 	keys->setLeftRightKey(ofd.leftRightKey);
 	keys->setUpDownKey(ofd.upDownKey);
-	keys->setKeys(ofd.keys);
+	keys->setKeyId(ofd.keys);
 
 	PlayerAnimation *anim = player->getAnimation();
 	anim->setAnimId(ofd.animId);
@@ -336,7 +335,7 @@ void Packet_VehicleSync(Packet *p) {
 	PlayerKeys *keys = player->getKeys();
 	keys->setLeftRightKey(icd.lrAnalog);
 	keys->setUpDownKey(icd.udAnalog);
-	keys->setKeys(icd.sKeys);
+	keys->setKeyId(icd.sKeys);
 
 	Vehicle *vehicle = RakBot::app()->getVehicle(icd.sVehicleId);
 	if (vehicle == nullptr)
@@ -444,7 +443,7 @@ void Packet_PassengerSync(Packet *p) {
 	PlayerKeys *keys = player->getKeys();
 	keys->setLeftRightKey(pd.sLeftRightKeys);
 	keys->setUpDownKey(pd.sUpDownKeys);
-	keys->setKeys(pd.sKeys);
+	keys->setKeyId(pd.sKeys);
 
 	Vehicle *vehicle = RakBot::app()->getVehicle(pd.sVehicleID);
 	if (vehicle == nullptr)

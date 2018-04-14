@@ -987,119 +987,18 @@ void RunCommand(const char *cmdstr) {
 			}
 		}
 
-		BitStream bsKeySend;
-		switch (bot->getPlayerState()) {
-			case PLAYER_STATE_ONFOOT:
-			{
-				OnfootData onfootSync;
-				ZeroMemory(&onfootSync, sizeof(OnfootData));
-				onfootSync.keys = keys;
-				onfootSync.leftRightKey = leftRightKey;
-				onfootSync.upDownKey = upDownKey;
-				onfootSync.weapon = weapon;
-				onfootSync.health = bot->getHealth();
-				onfootSync.armour = bot->getArmour();
-				onfootSync.animId = bot->getAnimation()->getAnimId();
-				onfootSync.animFlags = bot->getAnimation()->getAnimFlags();
-				onfootSync.surfVehicleId = bot->getSurfing()->getVehicleId();
+		bot->getKeys()->setKeyId(keys);
+		bot->getKeys()->setLeftRightKey(leftRightKey);
+		bot->getKeys()->setUpDownKey(upDownKey);
 
-				for (int i = 0; i < 3; i++)
-					onfootSync.surfOffsets[i] = bot->getSurfing()->getOffset(i);
+		uint8_t currentWeapon = bot->getWeapon();
+		bot->setWeapon(weapon);
+		bot->sync(5);
 
-				for (int i = 0; i < 3; i++)
-					onfootSync.position[i] = bot->getPosition(i);
-
-				for (int i = 0; i < 3; i++)
-					onfootSync.speed[i] = bot->getSpeed(i);
-
-				for (int i = 0; i < 4; i++)
-					onfootSync.quaternion[i] = bot->getQuaternion(i);
-
-				bsKeySend.Write((uint8_t)ID_PLAYER_SYNC);
-				bsKeySend.Write((PCHAR)&onfootSync, sizeof(OnfootData));
-				break;
-			}
-
-			case PLAYER_STATE_DRIVER:
-			{
-				IncarData driverSync;
-				ZeroMemory(&driverSync, sizeof(IncarData));
-				driverSync.sVehicleId = bot->getVehicle()->getVehicleId();
-				driverSync.byteLandingGearState = bot->getVehicle()->getGearState();
-				driverSync.byteSirenOn = bot->getVehicle()->isSirenEnabled();
-				driverSync.TrailerID_or_ThrustAngle = bot->getVehicle()->getTrailerId();
-				driverSync.fCarHealth = bot->getVehicle()->getCarHealth();
-				driverSync.fTrainSpeed = bot->getVehicle()->getTrainSpeed();
-
-				for (int i = 0; i < 3; i++)
-					driverSync.position[i] = bot->getPosition(i);
-
-				for (int i = 0; i < 3; i++)
-					driverSync.vecMoveSpeed[i] = bot->getSpeed(i);
-
-				for (int i = 0; i < 4; i++)
-					driverSync.quaternion[i] = bot->getQuaternion(i);
-
-				driverSync.bytePlayerHealth = bot->getHealth();
-				driverSync.bytePlayerArmour = bot->getArmour();
-				driverSync.weapon = weapon;
-				driverSync.sKeys = keys;
-				driverSync.lrAnalog = leftRightKey;
-				driverSync.udAnalog = upDownKey;
-				bsKeySend.Write((uint8_t)ID_VEHICLE_SYNC);
-				bsKeySend.Write((PCHAR)&driverSync, sizeof(IncarData));
-				break;
-			}
-
-			case PLAYER_STATE_PASSENGER:
-			{
-				PassengerData passengerSync;
-				ZeroMemory(&passengerSync, sizeof(PassengerData));
-
-				for (int i = 0; i < 3; i++)
-					passengerSync.fPosition[i] = bot->getPosition(i);
-
-				passengerSync.byteArmor = bot->getArmour();
-				passengerSync.sUpDownKeys = upDownKey;
-				passengerSync.sLeftRightKeys = leftRightKey;
-				passengerSync.sKeys = keys;
-				passengerSync.byteCurrentWeapon = weapon;
-				passengerSync.byteHealth = bot->getHealth();
-				passengerSync.byteSeatID = bot->getVehicleSeat();
-				passengerSync.sVehicleID = bot->getVehicle()->getVehicleId();
-
-				bsKeySend.Write((uint8_t)ID_PASSENGER_SYNC);
-				bsKeySend.Write((PCHAR)&passengerSync, sizeof(PassengerData));
-				break;
-			}
-
-			case PLAYER_STATE_SPECTATE:
-			{
-				SpectatorData specSync;
-				ZeroMemory(&specSync, sizeof(SpectatorData));
-
-				for (int i = 0; i < 3; i++)
-					specSync.fPosition[i] = bot->getPosition(i);
-
-				specSync.sKeys = keys;
-				specSync.sLeftRightKeys = leftRightKey;
-				specSync.sUpDownKeys = upDownKey;
-				bsKeySend.Write((uint8_t)ID_SPECTATOR_SYNC);
-				bsKeySend.Write((PCHAR)&specSync, sizeof(SpectatorData));
-				break;
-			}
-
-			default:
-				break;
-		}
-
-
-		uint8_t playerState = bot->getPlayerState();
-		bot->setPlayerState(PLAYER_STATE_NONE);
-		Sleep(100);
-		rakClient->Send(&bsKeySend, HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0);
-		Sleep(100);
-		bot->setPlayerState(PLAYER_STATE_ONFOOT);
+		RakBot::app()->getEvents()->defCallAdd(500, false, [bot, currentWeapon](DefCall *) {
+			bot->getKeys()->reset();
+			bot->setWeapon(currentWeapon);
+		});
 
 		return;
 	}
@@ -1280,6 +1179,9 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("admins")) {
+		Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
+		Lock lock(adminsMutex);
+
 		if (strstr(cmd, "-help")) {
 			MessageBox(
 				g_hWndMain,

@@ -17,7 +17,7 @@
 #include "StdAfx.h"
 #include "RakNetStatistics.h"
 #include <stdio.h> // sprintf
-#include "BitStream.h" // BITS_TO_uint8_tS
+#include "BitStream.h" // BITS_TO_BYTES
 #include "GetTime.h"
 
 // Verbosity level currently supports 0 (low), 1 (medium), 2 (high)

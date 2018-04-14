@@ -109,6 +109,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			KeepOnline();
 
 			if (!bot->isConnectRequested() && ReconnectTimer.isElapsed(0, false) && !vars.keepOnlineWait) {
+				bot->setConnectRequested(true);
 				bot->connect(RakBot::app()->getSettings()->getAddress()->getIp(), RakBot::app()->getSettings()->getAddress()->getPort());
 			}
 
@@ -162,6 +163,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 
 void LoadAdmins() {
+	Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
+	Lock lock(adminsMutex);
+
 	vars.admins.clear();
 	std::fstream adminsFile(GetRakBotPath("admins.txt"), std::ios::in);
 

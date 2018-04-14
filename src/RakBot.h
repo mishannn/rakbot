@@ -19,6 +19,7 @@ enum MutexEnum {
 	MUTEX_RUNCOMMAND,
 	MUTEX_LOG,
 	MUTEX_LOGTOFILE,
+	MUTEX_ADMINS,
 	MutexesAmount
 };
 

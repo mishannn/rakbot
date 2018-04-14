@@ -2633,12 +2633,12 @@ bool RakPeer::HandleRPCPacket(const char *data, int length, PlayerID playerId) {
 	bs.IgnoreBits(16);
 	unsigned int numdatbits = 0;
 	bs.ReadCompressed(numdatbits);
-	unsigned char *dtt = new unsigned char[BITS_TO_uint8_tS(bs.GetNumberOfUnreadBits())];
+	unsigned char *dtt = new unsigned char[BITS_TO_BYTES(bs.GetNumberOfUnreadBits())];
 	bs.ReadBits(dtt, numdatbits, false);
 	Log("uniqueIdentifier: %d", uniqueIdentifier);
 
 	char mess[1024] = {0};
-	for (unsigned int i = 0; i < BITS_TO_uint8_tS(numdatbits); i++)
+	for (unsigned int i = 0; i < BITS_TO_BYTES(numdatbits); i++)
 	{
 	char txt_t[32] = {0};
 	sprintf_s(txt_t, sizeof(txt_t), "%c", dtt[i]);
@@ -3199,7 +3199,7 @@ char *writeTarget; // Used to hold either a block of allocated data or the exter
 strcpy(uniqueID, bcs->data); // Copy out the string because it is at the front of the data block and will be overwritten
 extraBuffer=2+(int)strlen(uniqueID)*2+3; // Exact code copied earlier in this file.  Keep these two in synch!
 userData=bcs->data+extraBuffer;
-dataBlockAllocationLength=BITS_TO_uint8_tS(bcs->numberOfBitsToSend)+extraBuffer;
+dataBlockAllocationLength=BITS_TO_BYTES(bcs->numberOfBitsToSend)+extraBuffer;
 
 sendListSize=0;
 
