@@ -60,14 +60,12 @@ void ServerJoin(RPCParameters *rpcParams) {
 
 	player->setName(std::string(name));
 
-	RakBot::app()->getMutex(MUTEX_ADMINS)->lock();
 	for(int i = 0; i < vars.admins.size(); i++) {
 		if (vars.admins[i] == std::string(name)) {
 			player->setAdmin(true);
 			break;
 		}
 	}
-	RakBot::app()->getMutex(MUTEX_ADMINS)->unlock();
 
 	RakBot::app()->getEvents()->onPlayerJoin(player);
 }
@@ -148,7 +146,7 @@ void InitGame(RPCParameters *rpcParams) {
 	UpdateWindow(g_hWndMain);
 
 	RakBot::app()->getServer()->setGameInited(true);
-	GameInitedTimer.setTimerFromCurrentTime();
+	vars.GameInitedTimer.setTimerFromCurrentTime();
 
 	RakBot::app()->getEvents()->onGameInited(std::string(hostName));
 
@@ -757,6 +755,7 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		}
 
 		case WM_DESTROY:
+			bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 0, wSelection, std::string(szResponse));
 			PostQuitMessage(0);
 			break;
 
@@ -767,7 +766,7 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	return 0;
 }
 
-void SAMPDialogBox() {
+void DialogWindowThread() {
 	WNDCLASSEX wc;
 	MSG msg;
 	HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -801,7 +800,7 @@ void SAMPDialogBox() {
 	UpdateWindow(hwndSAMPDlg);
 	SetForegroundWindow(hwndSAMPDlg);
 
-	while (GetMessage(&msg, NULL, 0, 0) > 0 && !vars.botOff) {
+	while (GetMessage(&msg, NULL, 0, 0) > 0 && !RakBot::app()->isBotOff()) {
 		if (msg.message == WM_KEYDOWN || msg.message == WM_KEYUP)
 			SendMessage(hwndSAMPDlg, msg.message, msg.wParam, msg.lParam);
 
@@ -815,6 +814,7 @@ void SAMPDialogBox() {
 	SendMessage(hwndSAMPDlg, WM_DESTROY, 0, 0);
 	DestroyWindow(hwndSAMPDlg);
 	UnregisterClass("sampDialogWindowClass", GetModuleHandle(NULL));
+	hwndSAMPDlg = NULL;
 }
 
 void ScrShowDialog(RPCParameters *rpcParams) {
@@ -891,14 +891,19 @@ void ScrShowDialog(RPCParameters *rpcParams) {
 
 	RakBot::app()->log("[RAKBOT] Получен диалог %d с заголовком \"%s\"", RakBot::app()->getSampDialog()->getDialogId(), RakBot::app()->getSampDialog()->getDialogTitle().c_str());
 
+	if (hwndSAMPDlg != NULL) {
+		SendMessage(hwndSAMPDlg, WM_DESTROY, 0, 0);
+		RakBot::app()->log("[RAKBOT] Ожидание завершения потока предыдущего диалога");
+		WaitForSingleObject(vars.dialogWindowThread, INFINITE);
+	}
+
 	switch (RakBot::app()->getSampDialog()->getDialogStyle()) {
 		case DIALOG_STYLE_MSGBOX:
 		case DIALOG_STYLE_INPUT:
 		case DIALOG_STYLE_LIST:
 			if (!RakBot::app()->getSampDialog()->isDialogActive()) {
 				RakBot::app()->getSampDialog()->setDialogActive(true);
-				std::thread sampDialogBoxThread(SAMPDialogBox);
-				sampDialogBoxThread.detach();
+				vars.dialogWindowThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(DialogWindowThread), NULL, NULL, NULL);
 			}
 			break;
 

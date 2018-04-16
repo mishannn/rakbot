@@ -4,37 +4,34 @@
 #include "Defines.h"
 #include "Structs.h"
 
-class RakClientInterface;
-class Bot;
-class Player;
-class Settings;
-class Pickup;
-class Server;
-class Events;
-class SAMPDialog;
-class Vehicle;
-class Mutex;
+#include "Bot.h"
+#include "Settings.h"
+#include "Funcs.h"
+#include "Server.h"
+#include "Events.h"
+#include "SAMPDialog.h"
+#include "ServerInfo.h"
 
-enum MutexEnum {
-	MUTEX_RUNCOMMAND,
-	MUTEX_LOG,
-	MUTEX_LOGTOFILE,
-	MUTEX_ADMINS,
-	MutexesAmount
-};
+class RakClientInterface;
+class Player;
+class Pickup;
+class Vehicle;
 
 class RakBot {
 private:
+	bool _botOff;
+
 	RakClientInterface *_rakClient;
 	Player *_players[MAX_PLAYERS];
 	Pickup *_pickups[MAX_PICKUPS];
 	Vehicle *_vehicles[MAX_VEHICLES];
-	Bot *_bot;
-	Settings *_settings;
-	Server *_server;
-	Events *_events;
-	SAMPDialog *_sampDialog;
-	Mutex *_mutexes[MutexesAmount];
+
+	Bot _bot;
+	Settings _settings;
+	Server _server;
+	Events _events;
+	SAMPDialog _sampDialog;
+	ServerInfo _serverInfo;
 
 	RakBot();
 	~RakBot();
@@ -45,6 +42,7 @@ private:
 public:
 	static RakBot *app();
 
+	bool isBotOff() { return _botOff; }
 	void exit();
 
 	Player *getPlayer(uint16_t playerId);
@@ -66,8 +64,7 @@ public:
 	Server *getServer();
 	Events *getEvents();
 	SAMPDialog *getSampDialog();
-
-	Mutex *getMutex(int mutexIndex);
+	ServerInfo *getServerInfo();
 
 	void log(const char *format, ...);
 	void logToFile(std::string line);

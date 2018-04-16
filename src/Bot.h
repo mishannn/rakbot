@@ -15,8 +15,6 @@ private:
 	void driverSync();
 	void spectateSync();
 
-	Mutex _botMutex;
-
 public:
 	Bot();
 	~Bot();
@@ -54,6 +52,5 @@ public:
 	void dialogResponse(uint16_t dialogId, uint8_t button = 1, uint16_t item = 0, std::string input = std::string());
 	void spawn();
 	void kill();
-	void wait(int ms) { Sleep(ms); }
 	void clickTextdraw(uint16_t textDrawId);
 };

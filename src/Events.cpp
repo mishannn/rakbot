@@ -16,6 +16,8 @@
 #include "netrpc.h"
 #include "Vehicle.h"
 
+#include "netgame.h"
+
 #include "Events.h"
 
 Events::Events() {}
@@ -29,8 +31,6 @@ void Events::reset() {
 int Events::defCallAdd(uint32_t delay, bool repeat, std::function<void(DefCall *)> func) {
 	if (delay < 1)
 		return -1;
-
-	Lock lock(&_defCallMutex);
 
 	int defCallIndex = -1;
 
@@ -56,8 +56,6 @@ bool Events::defCallDelete(int defCallIndex) {
 	if (defCallIndex < 1 || defCallIndex > MAX_DEFCALLS)
 		return false;
 
-	Lock lock(&_defCallMutex);
-
 	_defCalls[defCallIndex - 1].active = false;
 	return false;
 }
@@ -80,6 +78,35 @@ void Events::onUpdate() {
 			defCall->startTime = Timer::getCurrentTime();
 		} else {
 			_defCalls[i].active = false;
+		}
+	}
+
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaUpdate();
+	}
+
+	RakBot::app()->getServerInfo()->updateInfo();
+
+	Bot *bot = RakBot::app()->getBot();
+
+	KeepOnline();
+
+	if (!bot->isConnectRequested() && vars.ReconnectTimer.isElapsed(0, false) && !vars.keepOnlineWait) {
+		bot->connect(RakBot::app()->getSettings()->getAddress()->getIp(), RakBot::app()->getSettings()->getAddress()->getPort());
+	}
+
+	UpdateNetwork();
+	FuncsLoop();
+	UpdateInfo();
+	AdminChecker();
+	
+	if (bot->isConnected() && RakBot::app()->getServer()->isGameInited()) {
+		NoAfk();
+
+		if (bot->isSpawned()) {
+			CheckChangePos();
+			AntiAFK();
 		}
 	}
 }
@@ -508,7 +535,6 @@ bool Events::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string di
 		}
 
 		if (vars.botLoaderEnabled && dialogId == 128) {
-			Sleep(500);
 			bot->dialogResponse(dialogId);
 			return true;
 		}

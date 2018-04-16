@@ -14,14 +14,10 @@ Timer::~Timer() {
 }
 
 void Timer::setTimer(uint32_t timer) {
-	Lock lock(&_timerMutex);
-
 	_timer = timer;
 }
 
 uint32_t Timer::getElapsed() {
-	Lock lock(&_timerMutex);
-
 	if (_timer > GetTickCount())
 		return 0;
 
@@ -29,8 +25,6 @@ uint32_t Timer::getElapsed() {
 }
 
 bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
-	Lock lock(&_timerMutex);
-
 	if (_timer >= GetTickCount())
 		return false;
 
@@ -44,7 +38,5 @@ bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
 }
 
 void Timer::setTimerFromCurrentTime() {
-	Lock lock(&_timerMutex);
-
 	_timer = GetTickCount();
 }

@@ -1,26 +1,16 @@
 #include "StdAfx.h"
 
 #include "RakNet.h"
+#include "Pickup.h"
 #include "PlayerBase.h"
 #include "Player.h"
-#include "Bot.h"
-#include "Settings.h"
-#include "Funcs.h"
-#include "Pickup.h"
-#include "Server.h"
-#include "Events.h"
-#include "SAMPDialog.h"
 #include "Vehicle.h"
-#include "Mutex.h"
 
 #include "window.h"
 
 #include "RakBot.h"
 
 RakBot::RakBot() {
-	for (int i = 0; i < MutexesAmount; i++)
-		_mutexes[i] = new Mutex;
-
 	for (int i = 0; i < MAX_PLAYERS; i++)
 		_players[i] = nullptr;
 
@@ -30,55 +20,21 @@ RakBot::RakBot() {
 	for (int i = 0; i < MAX_PICKUPS; i++)
 		_pickups[i] = nullptr;
 
-	_bot = new Bot();
-	_bot->reset(true);
-
-	_settings = new Settings();
-	_settings->reset();
-
-	_server = new Server();
-	_server->reset();
-
-	_events = new Events();
-	_events->reset();
-
-	_sampDialog = new SAMPDialog();
-	_sampDialog->reset();
+	_bot.reset(true);
+	_settings.reset();
+	_server.reset();
+	_events.reset();
+	_sampDialog.reset();
 
 	_rakClient = RakNetworkFactory::GetRakClientInterface();
 	_rakClient->SetMTUSize(576);
+
+	_botOff = false;
 }
 
 RakBot::~RakBot() {
-	if (_rakClient != nullptr) {
+	if (_rakClient != nullptr)
 		RakNetworkFactory::DestroyRakClientInterface(_rakClient);
-		_rakClient = nullptr;
-	}
-
-	if (_sampDialog != nullptr) {
-		delete _sampDialog;
-		_sampDialog = nullptr;
-	}
-
-	if (_events != nullptr) {
-		delete _events;
-		_events = nullptr;
-	}
-
-	if (_settings != nullptr) {
-		delete _settings;
-		_settings = nullptr;
-	}
-
-	if (_server != nullptr) {
-		delete _server;
-		_server = nullptr;
-	}
-
-	if (_bot != nullptr) {
-		delete _bot;
-		_bot = nullptr;
-	}
 
 	for (int i = 0; i < MAX_VEHICLES; i++) {
 		if (_vehicles[i] != nullptr) {
@@ -100,13 +56,6 @@ RakBot::~RakBot() {
 			_players[i] = nullptr;
 		}
 	}
-
-	for (int i = 0; i < MutexesAmount; i++) {
-		if (_mutexes[i] != nullptr) {
-			delete _mutexes[i];
-			_mutexes[i] = nullptr;
-		}
-	}
 }
 
 RakBot *RakBot::app() {
@@ -115,8 +64,15 @@ RakBot *RakBot::app() {
 }
 
 void RakBot::exit() {
-	vars.botOff = true;
 	log("[RAKBOT] Выход из бота...");
+
+	Bot *bot = RakBot::app()->getBot();
+
+	if (bot->isConnected()) {
+		bot->disconnect(false);
+	}
+
+	_botOff = true;
 }
 
 Player *RakBot::getPlayer(uint16_t playerId) {
@@ -152,7 +108,7 @@ void RakBot::deletePlayer(uint16_t playerId) {
 }
 
 uint16_t RakBot::getPlayersCount() {
-	if (!_bot->isConnected())
+	if (!_bot.isConnected())
 		return 0;
 
 	uint16_t count = 1;
@@ -230,11 +186,11 @@ void RakBot::deleteVehicle(uint16_t vehicleId) {
 }
 
 Bot *RakBot::getBot() {
-	return _bot;
+	return &_bot;
 }
 
 Settings *RakBot::getSettings() {
-	return _settings;
+	return &_settings;
 }
 
 RakClientInterface *RakBot::getRakClient() {
@@ -242,28 +198,22 @@ RakClientInterface *RakBot::getRakClient() {
 }
 
 Server *RakBot::getServer() {
-	return _server;
+	return &_server;
 }
 
 Events *RakBot::getEvents() {
-	return _events;
+	return &_events;
 }
 
 SAMPDialog *RakBot::getSampDialog() {
-	return _sampDialog;
+	return &_sampDialog;
 }
 
-Mutex *RakBot::getMutex(int mutexIndex) {
-	if (mutexIndex < 0 || mutexIndex >= MutexesAmount)
-		return nullptr;
-
-	return _mutexes[mutexIndex];
+ServerInfo *RakBot::getServerInfo() {
+	return &_serverInfo;
 }
 
 void RakBot::log(const char *format, ...) {
-	Mutex *mutex = RakBot::app()->getMutex(MUTEX_LOG);
-	Lock lock(mutex);
-
 	if (format == nullptr)
 		return;
 
@@ -309,9 +259,6 @@ void RakBot::log(const char *format, ...) {
 }
 
 void RakBot::logToFile(std::string line) {
-	Mutex *mutex = RakBot::app()->getMutex(MUTEX_LOGTOFILE);
-	Lock lock(mutex);
-
 	if (vars.logFile == nullptr) {
 		Settings *settings = RakBot::app()->getSettings();
 

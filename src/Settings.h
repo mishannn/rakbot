@@ -4,7 +4,6 @@
 #include "Defines.h"
 #include "Structs.h"
 
-#include "Mutex.h"
 #include "Timer.h"
 
 struct Vars {
@@ -124,7 +123,6 @@ struct Vars {
 	int keepOnlineBegin;
 	int keepOnlineEnd;
 
-	bool botOff;
 	uint32_t dwLicenseCheckResult;
 
 	std::string resourcePath;
@@ -162,6 +160,15 @@ struct Vars {
 
 	bool mapWindowOpened;
 	HANDLE mapWindowThread;
+
+	HANDLE dialogWindowThread;
+
+	TeleportPlace TeleportPlaces[300];
+
+	Timer BotConnectedTimer;
+	Timer BotSpawnedTimer;
+	Timer GameInitedTimer;
+	Timer ReconnectTimer;
 };
 
 extern Vars vars;
@@ -171,36 +178,27 @@ private:
 	std::string _ip;
 	uint16_t _port;
 
-	Mutex _addressMutex;
-
 public:
-	Address() {
-
-	}
+	Address() { }
 
 	void reset() {
-		Lock lock(&_addressMutex);
 		_ip = "127.0.0.1";
 		_port = 7777;
 	}
 
 	void setIp(std::string ip) {
-		Lock lock(&_addressMutex);
 		_ip = ip;
 	}
 
 	std::string getIp() {
-		Lock lock(&_addressMutex);
 		return _ip;
 	}
 
 	void setPort(uint16_t port) {
-		Lock lock(&_addressMutex);
 		_port = port;
 	}
 
 	uint16_t getPort() {
-		Lock lock(&_addressMutex);
 		return _port;
 	}
 };
@@ -211,8 +209,6 @@ private:
 	std::string _name;
 	std::string _serverPassword;
 	std::string _loginPassword;
-
-	Mutex _settingsMutex;
 
 public:
 	Settings();

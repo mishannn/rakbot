@@ -74,7 +74,16 @@ enum BotMenu {
 
 // Globals
 HICON g_hIcon = NULL;
-HWND g_hWndMain, g_hWndTitle, g_hWndLog, g_hWndInput, g_hWndChangeLayout, g_hWndSend, g_hWndAdmins, g_hWndAdminsArea, g_hWndCoordX, g_hWndCoordY, g_hWndCoordZ, g_hWndPickupID, g_hWndPlayerID, g_hWndLoader;
+
+HWND g_hWndMain = NULL;
+HWND g_hWndTitle = NULL;
+HWND g_hWndLog = NULL;
+HWND g_hWndInput = NULL;
+HWND g_hWndAdmins = NULL, g_hWndAdminsTitle = NULL;
+HWND g_hWndCoordX = NULL, g_hWndCoordY = NULL, g_hWndCoordZ = NULL;
+HWND g_hWndPickupID = NULL;
+HWND g_hWndPlayerID = NULL;
+
 HINSTANCE g_hInst;
 HFONT g_hfText, g_hfListBoxText;
 NOTIFYICONDATA notifyIconData;
@@ -196,70 +205,78 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			SendMessage(g_hWndMain, WM_SETICON, ICON_BIG, (LPARAM)g_hIcon);
 			SendMessage(g_hWndMain, WM_SETICON, ICON_SMALL, (LPARAM)g_hIcon);
 
-			g_hWndAdminsArea = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTON, "Админы онлайн",
+			hWndTemp = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTON, "Админы онлайн",
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
 				573, 208, 205, 185, hWnd, NULL, g_hInst, NULL);
-			SendMessage(g_hWndAdminsArea, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			g_hWndAdminsTitle = g_hWndAdminsTitle;
 
-			g_hWndAdmins = CreateWindowEx(0, WC_STATIC, "Загрузка игроков...",
+			hWndTemp = CreateWindowEx(0, WC_STATIC, "Загрузка игроков...",
 				WS_CHILD | WS_VISIBLE,
 				583, 228, 185, 155, hWnd, NULL, g_hInst, NULL);
-			SendMessage(g_hWndAdmins, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
+			g_hWndAdmins = hWndTemp;
 
 			hWndTemp = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTON, "Информация",
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
 				573, 2, 205, 205, hWnd, NULL, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
-			g_hWndTitle = CreateWindowEx(0, WC_STATIC, "RakBot " RAKBOT_VERSION "\nАвтор: MishaN",
+			hWndTemp = CreateWindowEx(0, WC_STATIC, "RakBot " RAKBOT_VERSION "\nАвтор: MishaN",
 				WS_CHILD | WS_VISIBLE,
 				583, 20, 185, 180, hWnd, NULL, g_hInst, NULL);
-			SendMessage(g_hWndTitle, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
+			g_hWndTitle = hWndTemp;
 
-			g_hWndLog = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTBOX, "",
+			hWndTemp = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTBOX, "",
 				LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED |
 				WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
 				5, 10, 560, 310, hWnd, (HMENU)(IDC_LSTCUSTOM), g_hInst, NULL);
-			SendMessage(g_hWndLog, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
-			SendMessage(g_hWndLog, LB_SETITEMHEIGHT, NULL, 14);
-			SendMessage(g_hWndLog, LB_SETHORIZONTALEXTENT, (WPARAM)1600, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
+			SendMessage(hWndTemp, LB_SETITEMHEIGHT, NULL, 14);
+			SendMessage(hWndTemp, LB_SETHORIZONTALEXTENT, (WPARAM)1600, FALSE);
+			g_hWndLog = hWndTemp;
 
-			g_hWndInput = CreateWindowEx(0, WC_EDIT, NULL,
+			hWndTemp = CreateWindowEx(0, WC_EDIT, NULL,
 				WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
 				5, 325, 430, 20, hWnd, (HMENU)IDC_INPUTBOX, g_hInst, NULL);
-			SendMessage(g_hWndInput, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
 			commandHistory.push_back("");
 			currentCommand = 0;
+			g_hWndInput = hWndTemp;
 
-			g_hWndChangeLayout = CreateWindowEx(0, WC_BUTTON, "L",
+			hWndTemp = CreateWindowEx(0, WC_BUTTON, "L",
 				BS_TEXT | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
 				440, 324, 22, 22, hWnd, (HMENU)IDC_CHANGELAYOUT_BTN, g_hInst, NULL);
-			SendMessage(g_hWndChangeLayout, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
-			g_hWndSend = CreateWindowEx(0, WC_BUTTON, "Отправить",
+			hWndTemp = CreateWindowEx(0, WC_BUTTON, "Отправить",
 				BS_TEXT | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
 				464, 324, 102, 22, hWnd, (HMENU)IDC_SENDBTN, g_hInst, NULL);
-			SendMessage(g_hWndSend, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
 			hWndTemp = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTONA, "Телепорт",
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
 				5, 350, 196, 96, hWnd, NULL, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
-			g_hWndCoordX = CreateWindowEx(0, WC_EDIT, "0,00",
+			hWndTemp = CreateWindowEx(0, WC_EDIT, "0,00",
 				WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_BORDER | SS_CENTER | ES_AUTOHSCROLL,
 				15, 370, 55, 20, hWnd, (HMENU)IDC_INPUTBOX, g_hInst, NULL);
-			SendMessage(g_hWndCoordX, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			g_hWndCoordX = hWndTemp;
 
-			g_hWndCoordY = CreateWindowEx(0, WC_EDIT, "0,00",
+			hWndTemp = CreateWindowEx(0, WC_EDIT, "0,00",
 				WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_BORDER | SS_CENTER | ES_AUTOHSCROLL,
 				75, 370, 55, 20, hWnd, (HMENU)IDC_INPUTBOX, g_hInst, NULL);
-			SendMessage(g_hWndCoordY, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			g_hWndCoordY = hWndTemp;
 
-			g_hWndCoordZ = CreateWindowEx(0, WC_EDIT, "0,00",
+			hWndTemp = CreateWindowEx(0, WC_EDIT, "0,00",
 				WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_BORDER | SS_CENTER | ES_AUTOHSCROLL,
 				135, 370, 55, 20, hWnd, (HMENU)IDC_INPUTBOX, g_hInst, NULL);
-			SendMessage(g_hWndCoordZ, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			g_hWndCoordZ = hWndTemp;
 
 			hWndTemp = CreateWindowEx(0, WC_BUTTON, "Телепорт",
 				BS_TEXT | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
@@ -325,10 +342,11 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				5, 446, 120, 50, hWnd, NULL, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
-			g_hWndPickupID = CreateWindowEx(0, WC_EDIT, "ID",
+			hWndTemp = CreateWindowEx(0, WC_EDIT, "ID",
 				WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_BORDER | SS_CENTER | ES_AUTOHSCROLL,
 				15, 466, 45, 20, hWnd, NULL, g_hInst, NULL);
-			SendMessage(g_hWndPickupID, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			g_hWndPickupID = hWndTemp;
 
 			hWndTemp = CreateWindowEx(0, WC_BUTTON, ">>>",
 				BS_TEXT | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
@@ -340,10 +358,11 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				130, 446, 290, 50, hWnd, NULL, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
-			g_hWndPlayerID = CreateWindowEx(0, WC_EDIT, "ID",
+			hWndTemp = CreateWindowEx(0, WC_EDIT, "ID",
 				WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_BORDER | SS_CENTER,
 				140, 466, 40, 20, hWnd, NULL, g_hInst, NULL);
-			SendMessage(g_hWndPlayerID, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
+			g_hWndPlayerID = hWndTemp;
 
 			hWndTemp = CreateWindowEx(0, WC_BUTTON, "Cледить",
 				BS_TEXT | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
@@ -721,14 +740,12 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					break;
 
 				case IDC_FLOODBTN:
-				{
 					RakBot::app()->log("[RAKBOT] !flood 1 <задержка> <текст> - флуд в чат с указанной задержкой");
 					RakBot::app()->log("[RAKBOT] !flood 2 <задержка> <текст> - флуд в SMS с указанной задержкой");
 					RakBot::app()->log("[RAKBOT] !flood 3 <задержка> <текст> - флуд в репорт с указанной задержкой");
 					RakBot::app()->log("[RAKBOT] !flood 4 <задержка> <текст> - флуд в саппорт с указанной задержкой");
 					RakBot::app()->log("[RAKBOT] !flood - отключить флудер");
 					break;
-				}
 
 				case IDC_IGNOREMSGSBTN:
 					RunCommand("!skipmsg");
@@ -743,25 +760,20 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					break;
 
 				case MENU_DEBUG:
-				{
 					RunCommand("!debug");
 					break;
-				}
 
 				case MENU_OPENLOG:
-				{
 					RunCommand("!openlog");
 					break;
-				}
 
 				case MENU_TRAY:
 					FlipToTray(g_hWndMain, g_hIcon, FALSE);
 					break;
 
-					// СПРАВКА
-
+				// СПРАВКА
 				case MENU_EXIT:
-					vars.botOff = 1;
+					RakBot::app()->exit();
 					break;
 
 				case MENU_INFO:
@@ -833,6 +845,9 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				if (!strncmp(&lpText[11], "[ERROR] ", 8) || !strncmp(lpText, "[ERROR] ", 8))
 					textColor = RGB(130, 0, 0);
 
+				if (!strncmp(&lpText[11], "[WARNING] ", 10) || !strncmp(lpText, "[WARNING] ", 10))
+					textColor = RGB(204, 85, 0);
+
 				if (!strncmp(&lpText[11], "[LUA] ", 6) || !strncmp(lpText, "[LUA] ", 6))
 					textColor = RGB(0, 130, 130);
 
@@ -886,9 +901,8 @@ void MainWindow() {
 	cWndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 	//cWndClass.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
 
-	if (!RegisterClassEx(&cWndClass)) {
+	if (!RegisterClassEx(&cWndClass))
 		return;
-	}
 
 	// Create a font we can later use on our controls. We use MulDiv and GetDeviceCaps to convert
 	// our point size to match the users DPI setting.
@@ -914,7 +928,7 @@ void MainWindow() {
 		ShowWindow(g_hWndMain, SW_SHOW);
 		UpdateWindow(g_hWndMain);
 
-		while (GetMessage(&msg, NULL, 0, 0) && !vars.botOff) {
+		while (GetMessage(&msg, NULL, 0, 0) && !RakBot::app()->isBotOff()) {
 			if (msg.message == WM_KEYDOWN || msg.message == WM_KEYUP)
 				SendMessage(g_hWndMain, msg.message, msg.wParam, msg.lParam);
 

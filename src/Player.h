@@ -7,8 +7,6 @@ private:
 	bool _inStream;
 	bool _admin;
 
-	Mutex _playerMutex;
-
 public:
 	Player();
 	~Player();

@@ -15,6 +15,7 @@
 #include "MathStuff.h"
 #include "SampRpFuncs.h"
 
+#include "cmds.h"
 #include "main.h"
 #include "mapwnd.h"
 #include "netgame.h"
@@ -34,7 +35,7 @@ void NoAfk() {
 	if (vars.stickEnabled || vars.followEnabled)
 		return;
 
-	if (!BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
+	if (!vars.BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
 		return;
 
 	static Timer timer;
@@ -48,7 +49,7 @@ void NoAfk() {
 void RoutePlay() {
 	vars.routeIndex = 0;
 
-	while (vars.routeEnabled && !vars.botOff) {
+	while (vars.routeEnabled && !RakBot::app()->isBotOff()) {
 		Sleep(static_cast<uint32_t>(vars.routeSpeed));
 
 		Bot *bot = RakBot::app()->getBot();
@@ -161,7 +162,7 @@ void CheckOnlineAndId() {
 			}
 		}
 
-		if (!GameInitedTimer.isElapsed(5000, false))
+		if (!vars.GameInitedTimer.isElapsed(5000, false))
 			return;
 
 		if (vars.checkOnlineEnabled) {
@@ -195,10 +196,14 @@ void AdminChecker() {
 	if (!timer.isElapsed(500, true))
 		return;
 
+	if (g_hWndAdmins == NULL || !g_hWndAdminsTitle == NULL)
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
+
 	if (!bot->isConnected()) {
 		SetWindowText(g_hWndAdmins, "Загрузка игроков...");
-		SetWindowText(g_hWndAdminsArea, "Админы онлайн");
+		SetWindowText(g_hWndAdminsTitle, "Админы онлайн");
 		return;
 	}
 
@@ -255,13 +260,14 @@ void AdminChecker() {
 			iCount++;
 		}
 	}
+
 	if (iCount == 0) {
 		SetWindowText(g_hWndAdmins, "Нет админов онлайн");
-		SetWindowText(g_hWndAdminsArea, "Админы онлайн (0/0)");
+		SetWindowText(g_hWndAdminsTitle, "Админы онлайн (0/0)");
 	} else {
 		SetWindowText(g_hWndAdmins, szAdminList);
 		sprintf_s(szAdminList, sizeof(szAdminList), "Админы онлайн (%d/%d)", iCountNear, iCount);
-		SetWindowText(g_hWndAdminsArea, szAdminList);
+		SetWindowText(g_hWndAdminsTitle, szAdminList);
 	}
 }
 
@@ -586,7 +592,7 @@ void CoordMaster() {
 
 	Bot *bot = RakBot::app()->getBot();
 
-	if (!BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
+	if (!vars.BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
 		return;
 
 	if (!bot->isSpawned())
@@ -632,7 +638,10 @@ void CoordMaster() {
 	} else {
 		vect3_copy(vars.coordMasterTarget, position);
 		RakBot::app()->log("[RAKBOT] Вы достигли места назначения!");
-		RakBot::app()->getEvents()->defCallAdd(vars.coordMasterDelay, false, [](DefCall *) {
+		RakBot::app()->getEvents()->defCallAdd(vars.coordMasterDelay, false, [bot](DefCall *) {
+			if (!bot->isSpawned())
+				return;
+
 			vars.coordMasterEnabled = false;
 			RakBot::app()->log("[RAKBOT] Коордмастер завершил работу");
 			RakBot::app()->getEvents()->onCoordMasterComplete();
@@ -770,7 +779,7 @@ void Flood() {
 		static int id = 0;
 		switch (vars.floodMode) {
 			case 1:
-				bot->sendInput(std::string(vars.floodText));
+				RunCommand(vars.floodText.c_str());
 				break;
 
 			case 2:

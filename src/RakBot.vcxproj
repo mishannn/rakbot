@@ -125,7 +125,6 @@
     <ClInclude Include="cmds.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="Includes.h" />
-    <ClInclude Include="Mutex.h" />
     <ClInclude Include="SAMPDialog.h" />
     <ClInclude Include="SampRpFuncs.h" />
     <ClInclude Include="StdAfx.h" />
@@ -250,7 +249,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="Server.h" />
-    <ClInclude Include="servinfo.h" />
+    <ClInclude Include="ServerInfo.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Structs.h" />
     <ClInclude Include="window.h" />
@@ -260,7 +259,6 @@
     <ClCompile Include="Bot.cpp" />
     <ClCompile Include="cmds.cpp" />
     <ClCompile Include="Events.cpp" />
-    <ClCompile Include="Mutex.cpp" />
     <ClCompile Include="SAMPDialog.cpp" />
     <ClCompile Include="SampRpFuncs.cpp" />
     <ClCompile Include="Timer.cpp" />
@@ -329,7 +327,7 @@
     <ClCompile Include="raknet\_findfirst.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="Server.cpp" />
-    <ClCompile Include="serverinfo.cpp" />
+    <ClCompile Include="ServerInfo.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>

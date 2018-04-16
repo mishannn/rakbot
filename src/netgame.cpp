@@ -48,7 +48,7 @@ void Packet_ConnectionSucceeded(Packet *p) {
 
 	RakBot::app()->log("[RAKBOT] Подключено. Вход в игру...");
 	bot->setConnected(true);
-	BotConnectedTimer.setTimerFromCurrentTime();
+	vars.BotConnectedTimer.setTimerFromCurrentTime();
 	RakBot::app()->getEvents()->onConnect(localPlayerId);
 
 	int iVersion = NETGAME_VERSION;
@@ -509,75 +509,71 @@ void UpdatePlayerScoresAndPings(int iWait, int iMS) {
 }
 
 void UpdateNetwork() {
-	while (!vars.botOff) {
-		Sleep(vars.networkDelay);
+	Bot *bot = RakBot::app()->getBot();
+	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
-		Bot *bot = RakBot::app()->getBot();
-		RakClientInterface *rakClient = RakBot::app()->getRakClient();
+	if (rakClient == nullptr)
+		return;
 
-		if (rakClient == nullptr)
-			continue;
+	while (Packet *pkt = rakClient->Receive()) {
+		if (pkt->data == NULL)
+			break;
 
-		while (Packet *pkt = rakClient->Receive()) {
-			if (pkt->data == NULL)
+		uint8_t packetIdentifier = pkt->data[0];
+
+		switch (packetIdentifier) {
+			case ID_DISCONNECTION_NOTIFICATION:
+				RakBot::app()->log("[RAKBOT] Сервер закрыл соединение. Переподключение через %d секунд", vars.reconnectDelay / 1000);
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_KICK);
+				bot->reconnect(vars.reconnectDelay);
 				break;
-
-			uint8_t packetIdentifier = pkt->data[0];
-
-			switch (packetIdentifier) {
-				case ID_DISCONNECTION_NOTIFICATION:
-					RakBot::app()->log("[RAKBOT] Сервер закрыл соединение. Переподключение через %d секунд", vars.reconnectDelay / 1000);
-					RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_KICK);
-					bot->reconnect(vars.reconnectDelay);
-					break;
-				case ID_CONNECTION_BANNED:
-					RakBot::app()->log("[RAKBOT] Вы забанены на этом сервере. Переподключение...");
-					RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_BANNED);
-					bot->reconnect(3000);
-					break;
-				case ID_CONNECTION_ATTEMPT_FAILED:
-					RakBot::app()->log("[RAKBOT] Не удалось подключиться к серверу. Переподключение...");
-					RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_SERVER_OFFLINE);
-					bot->reconnect(1000);
-					break;
-				case ID_NO_FREE_INCOMING_CONNECTIONS:
-					RakBot::app()->log("[RAKBOT] Сервер заполнен. Переподключение...");
-					RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_SERVER_FULL);
-					bot->reconnect(0);
-					break;
-				case ID_INVALID_PASSWORD:
-					RakBot::app()->log("[RAKBOT] Неверный пароль сервера.");
-					RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_WRONG_PASSWORD);
-					bot->disconnect(false);
-					break;
-				case ID_CONNECTION_LOST:
-					RakBot::app()->log("[RAKBOT] Соединение было потеряно. Переподключение через %d секунд", vars.reconnectDelay / 1000);
-					RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_CONNECTION_LOST);
-					bot->reconnect(vars.reconnectDelay);
-					break;
-				case ID_CONNECTION_REQUEST_ACCEPTED:
-					Packet_ConnectionSucceeded(pkt);
-					break;
-				case ID_AUTH_KEY:
-					Packet_AUTH_KEY(pkt);
-					break;
-				case ID_PLAYER_SYNC:
-					Packet_PlayerSync(pkt);
-					break;
-				case ID_VEHICLE_SYNC:
-					Packet_VehicleSync(pkt);
-					break;
-				case ID_PASSENGER_SYNC:
-					Packet_PassengerSync(pkt);
-					break;
-				case ID_UNOCCUPIED_SYNC:
-					Packet_UnoccupiedSync(pkt);
-					break;
-			}
-			rakClient->DeallocatePacket(pkt);
+			case ID_CONNECTION_BANNED:
+				RakBot::app()->log("[RAKBOT] Вы забанены на этом сервере. Переподключение...");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_BANNED);
+				bot->reconnect(3000);
+				break;
+			case ID_CONNECTION_ATTEMPT_FAILED:
+				RakBot::app()->log("[RAKBOT] Не удалось подключиться к серверу. Переподключение...");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_SERVER_OFFLINE);
+				bot->reconnect(1000);
+				break;
+			case ID_NO_FREE_INCOMING_CONNECTIONS:
+				RakBot::app()->log("[RAKBOT] Сервер заполнен. Переподключение...");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_SERVER_FULL);
+				bot->reconnect(0);
+				break;
+			case ID_INVALID_PASSWORD:
+				RakBot::app()->log("[RAKBOT] Неверный пароль сервера.");
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_WRONG_PASSWORD);
+				bot->disconnect(false);
+				break;
+			case ID_CONNECTION_LOST:
+				RakBot::app()->log("[RAKBOT] Соединение было потеряно. Переподключение через %d секунд", vars.reconnectDelay / 1000);
+				RakBot::app()->getEvents()->onDisconnect(DISCONNECT_REASON_CONNECTION_LOST);
+				bot->reconnect(vars.reconnectDelay);
+				break;
+			case ID_CONNECTION_REQUEST_ACCEPTED:
+				Packet_ConnectionSucceeded(pkt);
+				break;
+			case ID_AUTH_KEY:
+				Packet_AUTH_KEY(pkt);
+				break;
+			case ID_PLAYER_SYNC:
+				Packet_PlayerSync(pkt);
+				break;
+			case ID_VEHICLE_SYNC:
+				Packet_VehicleSync(pkt);
+				break;
+			case ID_PASSENGER_SYNC:
+				Packet_PassengerSync(pkt);
+				break;
+			case ID_UNOCCUPIED_SYNC:
+				Packet_UnoccupiedSync(pkt);
+				break;
 		}
-
-		if (bot->isConnected())
-			UpdatePlayerScoresAndPings(1, 500);
+		rakClient->DeallocatePacket(pkt);
 	}
+
+	if (bot->isConnected())
+		UpdatePlayerScoresAndPings(1, 500);
 }

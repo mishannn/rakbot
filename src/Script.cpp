@@ -11,7 +11,6 @@
 #include "Pickup.h"
 #include "Vehicle.h"
 #include "Events.h"
-#include "Mutex.h"
 
 #include "MiscFuncs.h"
 
@@ -72,8 +71,6 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 		if (!result.valid())
 			throw result.get<sol::error>();
 
-		_scriptUpdateThread = std::thread(&Script::luaUpdate, this);
-
 		std::string s = "[LUA] Скрипт \"" + _scriptName + "\" успешно загружен";
 		RakBot::app()->log(s.c_str());
 	} catch (const char *e) {
@@ -96,8 +93,6 @@ Script::~Script() {
 		_defCalls[i].active = false;
 
 	_scriptClosing = true;
-	if (_scriptUpdateThread.joinable())
-		_scriptUpdateThread.join();
 }
 
 Script *Script::load(std::string scriptName) {
@@ -800,8 +795,6 @@ void Script::luaRegisterFunctions() {
 		if (!func.valid())
 			return sol::make_object(_scriptState, sol::nil);
 
-		Lock lock(&_defCallMutex);
-
 		int defCallIndex = -1;
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
 			if (!_defCalls[i].active) {
@@ -831,10 +824,7 @@ void Script::luaRegisterFunctions() {
 		if (defCallId < 1 || defCallId > LUA_MAXDEFCALLS)
 			return false;
 
-		Lock lock(&_defCallMutex);
-
 		_defCalls[defCallId - 1].active = false;
-		_defCallMutex.unlock();
 		return false;
 	});
 	_scriptState.set_function("printLog", [this](std::string log) {
@@ -1067,14 +1057,10 @@ void Script::luaRegisterFunctions() {
 
 	// ADMINS
 	_scriptState.set_function("adminsAdd", [this](std::string admin) {
-		Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
-		Lock lock(adminsMutex);
 		vars.admins.push_back(admin);
 		return true;
 	});
 	_scriptState.set_function("adminsClear", [this]() {
-		Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
-		Lock lock(adminsMutex);
 		vars.admins.clear();
 		return true;
 	});
@@ -1090,6 +1076,15 @@ void Script::luaRegisterFunctions() {
 	});
 	_scriptState.set_function("getMail", [this]() {
 		return vars.autoRegMail;
+	});
+	_scriptState.set_function("setReconnectDelay", [this](int delay) {
+		if (delay < 0)
+			return false;
+		vars.reconnectDelay = delay;
+		return true;
+	});
+	_scriptState.set_function("getReconnectDelay", [this]() {
+		return vars.reconnectDelay;
 	});
 	_scriptState.set_function("setReferer", [this](std::string referer) {
 		vars.autoRegReferer = referer;
@@ -1151,6 +1146,11 @@ void Script::luaRegisterFunctions() {
 		RakBot::app()->getSettings()->getAddress()->setPort(port);
 		return true;
 	});
+	_scriptState.set_function("sleep", [this](int ms) {
+		RakBot::app()->log("[WARNING] Использование функции \"sleep()\" в скриптах не рекомендуется!");
+		RakBot::app()->log("[WARNING] Предпочительнее использование \"defCallAdd()\"");
+		Sleep(ms);
+	});
 }
 
 void Script::luaError(std::string error) {
@@ -1163,55 +1163,45 @@ void Script::luaError(std::string error) {
 }
 
 void Script::luaUpdate() {
-	while (!vars.botOff && !_scriptClosing) {
-		Sleep(vars.luaUpdateDelay);
+	for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
+		LuaDefCall *defCall = &_defCalls[i];
 
-		_defCallMutex.lock();
-		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
-			LuaDefCall *defCall = &_defCalls[i];
+		if (!defCall->active)
+			continue;
 
-			if (!defCall->active)
-				continue;
+		static Timer timer;
+		timer.setTimer(defCall->startTime);
+		if (!timer.isElapsed(defCall->callDelay, false))
+			continue;
 
-			static Timer timer;
-			timer.setTimer(defCall->startTime);
-			if (!timer.isElapsed(defCall->callDelay, false))
-				continue;
-
-			try {
-				_scriptMutex.lock();
-				_funcExecuting = true;
-				sol::protected_function_result result = defCall->func(defCall->params);
-				if (!result.valid())
-					throw result.get<sol::error>();
-				_scriptMutex.unlock();
-			} catch (const char *e) {
-				std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e;
-				luaError(message);
-				_funcExecuting = false;
-				_scriptMutex.unlock();
-			} catch (const std::exception &e) {
-				std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e.what();
-				luaError(message);
-				_funcExecuting = false;
-				_scriptMutex.unlock();
-			} catch (...) {
-				std::string message = "Неизвестная ошибка скрипта \"" + _scriptName + "\"";
-				luaError(message);
-				_funcExecuting = false;
-				_scriptMutex.unlock();
-			}
-
-			if (defCall->repeat) {
-				defCall->startTime = Timer::getCurrentTime();
-			} else {
-				_defCalls[i].active = false;
-			}
+		try {
+			_funcExecuting = true;
+			sol::protected_function_result result = defCall->func(defCall->params);
+			if (!result.valid())
+				throw result.get<sol::error>();
+			_funcExecuting = false;
+		} catch (const char *e) {
+			std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e;
+			luaError(message);
+			_funcExecuting = false;
+		} catch (const std::exception &e) {
+			std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e.what();
+			luaError(message);
+			_funcExecuting = false;
+		} catch (...) {
+			std::string message = "Неизвестная ошибка скрипта \"" + _scriptName + "\"";
+			luaError(message);
+			_funcExecuting = false;
 		}
-		_defCallMutex.unlock();
 
-		luaOnScriptUpdate();
+		if (defCall->repeat) {
+			defCall->startTime = Timer::getCurrentTime();
+		} else {
+			_defCalls[i].active = false;
+		}
 	}
+
+	luaOnScriptUpdate();
 }
 
 void LoadScripts() {
@@ -1244,8 +1234,6 @@ void UnloadScripts() {
 template<typename ...Args>
 bool Script::luaCallback(std::string funcName, Args && ...args) {
 	try {
-		Lock lock(&_scriptMutex);
-
 		if (_scriptClosing)
 			return false;
 

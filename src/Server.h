@@ -1,13 +1,9 @@
 #pragma once
 
-#include "Mutex.h"
-
 class Server {
 private:
 	bool _gameInited;
 	std::string _serverName;
-
-	Mutex _serverMutex;
 
 public:
 	Server();

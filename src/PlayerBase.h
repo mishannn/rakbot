@@ -2,8 +2,6 @@
 
 #include "Defines.h"
 
-#include "Mutex.h"
-
 #include <string>
 
 class Pickup;
@@ -23,47 +21,38 @@ private:
 	uint16_t _upDownKey;
 	uint16_t _keys;
 
-	Mutex _playerKeysMutex;
-
 public:
 	PlayerKeys() {
 		// reset();
 	}
 
 	void reset() {
-		Lock lock(&_playerKeysMutex);
 		_leftRightKey = 0;
 		_upDownKey = 0;
 		_keys = 0;
 	}
 
 	void setLeftRightKey(uint16_t leftRightKey) {
-		Lock lock(&_playerKeysMutex);
 		_leftRightKey = leftRightKey;
 	}
 
 	uint16_t getLeftRightKey() {
-		Lock lock(&_playerKeysMutex);
 		return _leftRightKey;
 	}
 
 	void setUpDownKey(uint16_t upDownKey) {
-		Lock lock(&_playerKeysMutex);
 		_upDownKey = upDownKey;
 	}
 
 	uint16_t getUpDownKey() {
-		Lock lock(&_playerKeysMutex);
 		return _upDownKey;
 	}
 
 	void setKeyId(uint16_t keys) {
-		Lock lock(&_playerKeysMutex);
 		_keys = keys;
 	}
 
 	uint16_t getKeyId() {
-		Lock lock(&_playerKeysMutex);
 		return _keys;
 	}
 };
@@ -73,36 +62,29 @@ private:
 	uint16_t _animId;
 	uint16_t _animFlags;
 
-	Mutex _playerAnimMutex;
-
 public:
 	PlayerAnimation() {
 		// reset();
 	}
 
 	void reset() {
-		Lock lock(&_playerAnimMutex);
 		_animId = 1189;
 		_animFlags = 33000;
 	}
 
 	void setAnimId(uint16_t animId) {
-		Lock lock(&_playerAnimMutex);
 		_animId = animId;
 	}
 
 	uint16_t getAnimId() {
-		Lock lock(&_playerAnimMutex);
 		return _animId;
 	}
 
 	void setAnimFlags(uint16_t animFlags) {
-		Lock lock(&_playerAnimMutex);
 		_animFlags = animFlags;
 	}
 
 	uint16_t getAnimFlags() {
-		Lock lock(&_playerAnimMutex);
 		return _animFlags;
 	}
 };
@@ -112,36 +94,29 @@ private:
 	int _score;
 	int _ping;
 
-	Mutex _playerInfoMutex;
-
 public:
 	PlayerInfo() {
 		// reset();
 	}
 
 	void reset() {
-		Lock lock(&_playerInfoMutex);
 		_score = 0;
 		_ping = 0;
 	}
 
 	void setScore(int score) {
-		Lock lock(&_playerInfoMutex);
 		_score = score;
 	}
 
 	int getScore() {
-		Lock lock(&_playerInfoMutex);
 		return _score;
 	}
 
 	void setPing(int ping) {
-		Lock lock(&_playerInfoMutex);
 		_ping = ping;
 	}
 
 	int getPing() {
-		Lock lock(&_playerInfoMutex);
 		return _ping;
 	}
 };
@@ -151,16 +126,12 @@ private:
 	uint16_t _vehicleId;
 	float _surfOffsets[3];
 
-	Mutex _playerSurfingMutex;
-
 public:
 	PlayerSurfing() {
 		// reset();
 	}
 
 	void reset() {
-		Lock lock(&_playerSurfingMutex);
-
 		_vehicleId = 0;
 
 		for (int i = 0; i < 3; i++)
@@ -168,18 +139,14 @@ public:
 	}
 
 	void setVehicleId(uint16_t vehicleId) {
-		Lock lock(&_playerSurfingMutex);
 		_vehicleId = vehicleId;
 	}
 
 	uint16_t getVehicleId() {
-		Lock lock(&_playerSurfingMutex);
 		return _vehicleId;
 	}
 
 	void setOffsets(int n, float val) {
-		Lock lock(&_playerSurfingMutex);
-
 		if (n < 0 || n > 2)
 			return;
 
@@ -187,8 +154,6 @@ public:
 	}
 
 	float getOffset(int n) {
-		Lock lock(&_playerSurfingMutex);
-
 		if (n < 0 || n > 2)
 			return 0.f;
 
@@ -200,8 +165,6 @@ class PlayerPassenger {
 private:
 	uint8_t	_seatId;
 	uint16_t _vehicleId;
-	
-	Mutex _playerPassengerMutex;
 
 public:
 	PlayerPassenger() {
@@ -209,28 +172,23 @@ public:
 	}
 
 	void reset() {
-		Lock lock(&_playerPassengerMutex);
 		_seatId = 0;
 		_vehicleId = VEHICLE_ID_NONE;
 	}
 
 	void setSeatId(uint8_t seatId) {
-		Lock lock(&_playerPassengerMutex);
 		_seatId = seatId;
 	}
 
 	uint8_t getSeatId() {
-		Lock lock(&_playerPassengerMutex);
 		return _seatId;
 	}
 
 	void setVehicleId(uint16_t vehicleId) {
-		Lock lock(&_playerPassengerMutex);
 		_vehicleId = vehicleId;
 	}
 
 	uint16_t getVehicleId() {
-		Lock lock(&_playerPassengerMutex);
 		return _vehicleId;
 	}
 };
@@ -256,8 +214,6 @@ private:
 	PlayerAnimation _anim;
 	PlayerInfo _info;
 	PlayerSurfing _surfing;
-
-	Mutex _playerBaseMutex;
 
 	PlayerBase(PlayerBase const&);
 	PlayerBase& operator= (PlayerBase const&);

@@ -271,5 +271,10 @@ bool LoadConfig() {
 	vars.routeSpeed = 0;
 	vars.logFile = nullptr;
 
+	vars.BotConnectedTimer.setTimer(UINT32_MAX);
+	vars.BotSpawnedTimer.setTimer(UINT32_MAX);
+	vars.GameInitedTimer.setTimer(UINT32_MAX);
+	vars.ReconnectTimer.setTimer(0);
+
 	return result;
 }

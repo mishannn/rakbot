@@ -12,6 +12,7 @@
 #include "MiscFuncs.h"
 #include "Timer.h"
 #include "Events.h"
+#include "ServerInfo.h"
 
 #include "cmds.h"
 #include "ini.h"
@@ -20,17 +21,9 @@
 #include "netrpc.h"
 #include "netgame.h"
 #include "resource.h"
-#include "servinfo.h"
 #include "mapwnd.h"
 
 #include "main.h"
-
-TeleportPlace TeleportPlaces[300];
-
-Timer BotConnectedTimer;
-Timer BotSpawnedTimer;
-Timer GameInitedTimer;
-Timer ReconnectTimer;
 
 void LoadAdmins();
 
@@ -54,11 +47,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		if (!configLoaded || !customLoaded)
 			return 0;
-
-		BotConnectedTimer.setTimer(UINT32_MAX);
-		BotSpawnedTimer.setTimer(UINT32_MAX);
-		GameInitedTimer.setTimer(UINT32_MAX);
-		ReconnectTimer.setTimer(0);
 
 		g_hInst = hInstance;
 		g_hIcon = (HICON)LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_ICON));
@@ -91,64 +79,38 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		srand((unsigned int)GetTickCount());
 
-		Bot *bot = RakBot::app()->getBot();
+		LoadAdmins();
 
-		HANDLE serverInfoThread = NULL;
-		HANDLE loadAdminsThread = NULL;
-		HANDLE updateNetworkThread = NULL;
+		RakBot::app()->getServerInfo()->socketInit();
 
-		if (!vars.botOff) {
-			serverInfoThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(ServerInfo), NULL, NULL, NULL);
-			loadAdminsThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadAdmins), NULL, NULL, NULL);
-			updateNetworkThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(UpdateNetwork), NULL, NULL, NULL);
-		}
-
-		while (!vars.botOff) {
+		while (!RakBot::app()->isBotOff()) {
 			Sleep(vars.mainDelay);
-
-			KeepOnline();
-
-			if (!bot->isConnectRequested() && ReconnectTimer.isElapsed(0, false) && !vars.keepOnlineWait) {
-				bot->setConnectRequested(true);
-				bot->connect(RakBot::app()->getSettings()->getAddress()->getIp(), RakBot::app()->getSettings()->getAddress()->getPort());
-			}
-
-			UpdateInfo();
-			AdminChecker();
-
-			if (bot->isConnected() && RakBot::app()->getServer()->isGameInited()) {
-				NoAfk();
-
-				if (bot->isSpawned()) {
-					CheckChangePos();
-					AntiAFK();
-				}
-			}
-
-			FuncsLoop();
-
 			RakBot::app()->getEvents()->onUpdate();
 		}
 
 		RakBot::app()->log("[RAKBOT] Завершение работы...");
-		bot->disconnect(false);
 
 		UnloadScripts();
 
 		CloseMapWindow();
 
+		RakBot::app()->log("[RAKBOT] Ожидание завершения потока главного окна");
 		WaitForSingleObject(mainWindowThread, INFINITE);
-		WaitForSingleObject(loadAdminsThread, INFINITE);
-		WaitForSingleObject(updateNetworkThread, INFINITE);
-		WaitForSingleObject(serverInfoThread, INFINITE);
+
+		RakBot::app()->log("[RAKBOT] Ожидание завершения потока окна карты");
+		WaitForSingleObject(vars.mapWindowThread, INFINITE);
+
+		RakBot::app()->log("[RAKBOT] Ожидание завершения потока окна диалога");
+		WaitForSingleObject(vars.dialogWindowThread, INFINITE);
+
+		RakBot::app()->log("[RAKBOT] Ожидание завершения потока маршрутов");
 		WaitForSingleObject(vars.routeThread, INFINITE);
 
-		if (vars.logFile != nullptr) {
-			fclose(vars.logFile);
-			vars.logFile = nullptr;
-		}
-
 		RakBot::app()->log("[RAKBOT] Работа завершена");
+
+		if (vars.logFile != nullptr)
+			fclose(vars.logFile);
+
 		return 0;
 	} catch (const char *e) {
 		std::cerr << "Ошибка: " << e << std::endl;
@@ -163,9 +125,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 
 void LoadAdmins() {
-	Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
-	Lock lock(adminsMutex);
-
 	vars.admins.clear();
 	std::fstream adminsFile(GetRakBotPath("admins.txt"), std::ios::in);
 
@@ -176,10 +135,12 @@ void LoadAdmins() {
 			adminsFile >> admin;
 			Trim(admin);
 
-			if (!admin.empty())
+			if (!admin.empty()) {
 				vars.admins.push_back(admin);
+			}
 		}
 		adminsFile.close();
+
 		RakBot::app()->log("[RAKBOT] Загружено %d админов из файла", vars.admins.size());
 	} else {
 		RakBot::app()->log("[RAKBOT] Загрузка админов с сервера...");
@@ -191,9 +152,14 @@ void LoadAdmins() {
 				std::string admin(pch);
 				Trim(admin);
 
-				vars.admins.push_back(admin);
+				if (!admin.empty()) {
+					// vars.adminsMutex.lock();
+					vars.admins.push_back(admin);
+					// vars.adminsMutex.unlock();
+				}
 				pch = strtok(NULL, ":");
 			}
+
 			RakBot::app()->log("[RAKBOT] Загружено %d админов с сервера", vars.admins.size());
 		} else {
 			RakBot::app()->log("[RAKBOT] Ошибка #%d при загрузке админов с сервера", curlCode);

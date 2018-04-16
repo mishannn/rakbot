@@ -30,19 +30,19 @@ Bot::~Bot() {
 }
 
 void Bot::setConnectRequested(bool connectRequested) {
-	Lock lock(&_botMutex);
+	
 
 	_connectRequested = connectRequested;
 }
 
 bool Bot::isConnectRequested() {
-	Lock lock(&_botMutex);
+	
 
 	return _connectRequested;
 }
 
 void Bot::reset(bool disconnect) {
-	Lock lock(&_botMutex);
+	
 
 	uint16_t playerId;
 	bool connected;
@@ -67,52 +67,52 @@ void Bot::reset(bool disconnect) {
 }
 
 void Bot::reconnect(int reconnectDelay) {
-	Lock lock(&_botMutex);
+	
 
 	if (isConnected()) {
 		disconnect(false);
 	}
 
 	setConnectRequested(false);
-	ReconnectTimer.setTimer(GetTickCount() + reconnectDelay);
+	vars.ReconnectTimer.setTimer(GetTickCount() + reconnectDelay);
 	RakBot::app()->getEvents()->onReconnect(reconnectDelay);
 }
 
 // Connected
 void Bot::setConnected(bool connected) {
-	Lock lock(&_botMutex);
+	
 
 	_connected = connected;
 }
 
 bool Bot::isConnected() {
-	Lock lock(&_botMutex);
+	
 
 	return _connected;
 }
 
 // Spawned
 void Bot::setSpawned(bool spawned) {
-	Lock lock(&_botMutex);
+	
 
 	_spawned = spawned;
 }
 
 bool Bot::isSpawned() {
-	Lock lock(&_botMutex);
+	
 
 	return _spawned;
 }
 
 // Money
 void Bot::setMoney(int money) {
-	Lock lock(&_botMutex);
+	
 
 	_money = money;
 }
 
 int Bot::getMoney() {
-	Lock lock(&_botMutex);
+	
 
 	return _money;
 }
@@ -120,8 +120,6 @@ int Bot::getMoney() {
 // FUNCS
 void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 	static bool enterVehicleReady = true;
-
-	Lock lock(&_botMutex);
 
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Посадка в транспорт: бот должен быть подключен к серверу!");
@@ -158,6 +156,26 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 	teleport(vehicle->getPosition(0), vehicle->getPosition(1), vehicle->getPosition(2));
 
 	RakBot::app()->getEvents()->defCallAdd(vars.enterVehicleDelay, false, [this, vehicle, seatId](DefCall *) {
+		if (!isConnected()) {
+			RakBot::app()->log("[WARNING] Завершение посадки в транспорт: бот должен быть подключен к серверу!");
+			return;
+		}
+
+		if (!isSpawned()) {
+			RakBot::app()->log("[WARNING] Завершение посадки в транспорт: бот должен быть заспавнен!");
+			return;
+		}
+
+		if (getPlayerState() != PLAYER_STATE_ONFOOT) {
+			RakBot::app()->log("[WARNING] Завершение посадки в транспорт: бот должен быть пешеходом!");
+			return;
+		}
+
+		if (vehicle == nullptr) {
+			RakBot::app()->log("[WARNING] Завершение посадки в транспорт: транспорт недоступен!");
+			return;
+		}
+
 		RakClientInterface *rakClient = RakBot::app()->getRakClient();
 		RakNet::BitStream bsSend;
 		bsSend.Write<uint16_t>(vehicle->getVehicleId());
@@ -181,8 +199,6 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 }
 
 void Bot::exitVehicle() {
-	Lock lock(&_botMutex);
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Выход из транспорта: бот должен быть подключен к серверу!");
 		return;
@@ -219,8 +235,6 @@ void Bot::exitVehicle() {
 }
 
 void Bot::sync(int count) {
-	Lock lock(&_botMutex);
-
 	for (int i = 0; i < count; i++) {
 		if (RakBot::app()->getEvents()->onSync())
 			return;
@@ -350,8 +364,6 @@ void Bot::onfootSync() {
 }
 
 void Bot::teleport(float positionX, float positionY, float positionZ) {
-	Lock lock(&_botMutex);
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Телепорт: бот должен быть подключен к серверу");
 		return;
@@ -372,8 +384,6 @@ void Bot::teleport(float positionX, float positionY, float positionZ) {
 }
 
 void Bot::follow(uint16_t playerId) {
-	Lock lock(&_botMutex);
-
 	if (!isSpawned())
 		return;
 
@@ -411,10 +421,8 @@ void Bot::follow(uint16_t playerId) {
 }
 
 void Bot::connect(std::string address, uint16_t port) {
-	Lock lock(&_botMutex);
-
 	if (isConnected()) {
-		RakBot::app()->log("[ERROR] Подключение к серверу: бот уже подключен к серверу");
+		RakBot::app()->log("[WARNING] Подключение к серверу: бот уже подключен к серверу");
 		return;
 	}
 
@@ -431,15 +439,16 @@ void Bot::connect(std::string address, uint16_t port) {
 
 	RakBot::app()->log("[RAKBOT] Подключение к %s:%d...", address.c_str(), port);
 	rakClient->Connect(address.c_str(), port, 0, 0, 5);
+
+	Bot *bot = RakBot::app()->getBot();
+	bot->setConnectRequested(true);
 }
 
 void Bot::disconnect(bool timeOut) {
-	Lock lock(&_botMutex);
-
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 	if (!isConnected()) {
-		RakBot::app()->log("[RAKBOT] Бот не подключен к серверу");
+		RakBot::app()->log("[WARNING] Отключение от сервера: бот не подключен к серверу");
 		return;
 	}
 
@@ -466,9 +475,9 @@ void Bot::disconnect(bool timeOut) {
 	ZeroMemory(&gtaMenu, sizeof(GTAMenu));
 
 	setConnectRequested(true);
-	BotConnectedTimer.setTimer(UINT32_MAX);
-	BotSpawnedTimer.setTimer(UINT32_MAX);
-	GameInitedTimer.setTimer(UINT32_MAX);
+	vars.BotConnectedTimer.setTimer(UINT32_MAX);
+	vars.BotSpawnedTimer.setTimer(UINT32_MAX);
+	vars.GameInitedTimer.setTimer(UINT32_MAX);
 
 	RakBot::app()->getServer()->reset();
 	RakBot::app()->log("[RAKBOT] Бот отключен от сервера");
@@ -476,8 +485,6 @@ void Bot::disconnect(bool timeOut) {
 }
 
 void Bot::sendInput(std::string input) {
-	Lock lock(&_botMutex);
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Отправка ввода: бот должен быть подключен к серверу");
 		return;
@@ -508,8 +515,6 @@ void Bot::sendInput(std::string input) {
 }
 
 void Bot::requestClass(int classId) {
-	Lock lock(&_botMutex);
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Запрос класса: бот должен быть подключен к серверу");
 		return;
@@ -530,8 +535,6 @@ void Bot::requestClass(int classId) {
 }
 
 void Bot::requestSpawn() {
-	Lock lock(&_botMutex);
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Запрос спавна: бот должен быть подключен к серверу");
 		return;
@@ -551,8 +554,6 @@ void Bot::requestSpawn() {
 }
 
 bool Bot::pickUpPickup(Pickup *pickup, bool checkDist) {
-	Lock lock(&_botMutex);
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Поднятие пикапа: бот должен быть подключен к серверу");
 		return false;
@@ -591,8 +592,6 @@ bool Bot::pickUpPickup(Pickup *pickup, bool checkDist) {
 }
 
 bool Bot::takeCheckpoint() {
-	Lock lock(&_botMutex);
-
 	if (!checkpoint.active && !raceCheckpoint.active)
 		return false;
 
@@ -717,7 +716,7 @@ void Bot::spectateSync() {
 }
 
 void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::string input) {
-	Lock lock(&_botMutex);
+	
 
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Отправка диалога: бот должен быть подключен к серверу");
@@ -733,6 +732,16 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 		return;
 
 	RakBot::app()->getEvents()->defCallAdd(vars.dialogResponseDelay, false, [this, dialogId, button, item, input](DefCall *) {
+		if (!isConnected()) {
+			RakBot::app()->log("[WARNING] Завершение отправки диалога: бот должен быть подключен к серверу");
+			return;
+		}
+
+		if (!RakBot::app()->getServer()->isGameInited()) {
+			RakBot::app()->log("[WARNING] Завершение отправки диалога: игра должна быть инициализирована");
+			return;
+		}
+
 		RakClientInterface *rakClient = RakBot::app()->getRakClient();
 
 		uint8_t length = static_cast<uint8_t>(input.length());
@@ -750,7 +759,7 @@ void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::
 void Bot::spawn() {
 	static bool spawnReady = true;
 
-	Lock lock(&_botMutex);
+	
 
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Спавн бота: бот должен быть подключен к серверу");
@@ -794,11 +803,26 @@ void Bot::spawn() {
 		position[i] = getPosition(i);
 
 	RakBot::app()->getEvents()->defCallAdd(vars.spawnDelay, false, [this](DefCall *) {
+		if (isSpawned()) {
+			RakBot::app()->log("[WARNING] Завершение спавна бота: бот уже заспавнен");
+			return;
+		}
+
+		if (!isConnected()) {
+			RakBot::app()->log("[WARNING] Завершение спавна бота: бот должен быть подключен к серверу");
+			return;
+		}
+
+		if (!RakBot::app()->getServer()->isGameInited()) {
+			RakBot::app()->log("[WARNING] Завершение спавна бота: игра должна быть инициализирована");
+			return;
+		}
+
 		setSpawned(true);
 		sync();
 
 		RakBot::app()->log("[RAKBOT] Бот заспавнен");
-		BotSpawnedTimer.setTimerFromCurrentTime();
+		vars.BotSpawnedTimer.setTimerFromCurrentTime();
 		RakBot::app()->getEvents()->onSpawned();
 		spawnReady = true;
 		vars.syncAllowed = true;
@@ -806,7 +830,7 @@ void Bot::spawn() {
 }
 
 void Bot::kill() {
-	Lock lock(&_botMutex);
+	
 
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Убийство бота: бот должен быть подключен к серверу");
@@ -833,15 +857,10 @@ void Bot::kill() {
 }
 
 void Bot::clickTextdraw(uint16_t textDrawId) {
-	Lock lock(&_botMutex);
+	
 
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Клик по текстдраву: бот должен быть подключен к серверу");
-		return;
-	}
-
-	if (!RakBot::app()->getServer()->isGameInited()) {
-		RakBot::app()->log("[ERROR] Клик по текстдраву: игра должна быть инициализирована");
 		return;
 	}
 

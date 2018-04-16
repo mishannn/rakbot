@@ -129,8 +129,6 @@ void MapWindowThread() {
 
 	BitmapHandle = LoadImage(NULL, GetRakBotPath("map.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-	Sleep(300);
-
 	MapWindow = CreateWindowEx(WS_EX_APPWINDOW, wcex.lpszClassName, "San Andreas",
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
 		HWND_DESKTOP, NULL, g_hInst, NULL);
@@ -140,7 +138,7 @@ void MapWindowThread() {
 
 		ShowWindow(MapWindow, 1);
 		UpdateWindow(MapWindow);
-		while (GetMessage(&msg, NULL, 0, 0) && !vars.botOff) {
+		while (GetMessage(&msg, NULL, 0, 0) && !RakBot::app()->isBotOff()) {
 			if (!IsDialogMessage(MapWindow, &msg)) {
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);

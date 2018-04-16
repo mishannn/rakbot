@@ -2,8 +2,6 @@
 
 #include <thread>
 
-#include "Mutex.h"
-
 #include <lua.hpp>
 #pragma comment(lib, "lua51.lib")
 
@@ -28,7 +26,6 @@ private:
 	bool _funcExecuting;
 	bool _scriptClosing;
 
-	std::thread _scriptUpdateThread;
 	std::string _scriptName;
 	sol::state _scriptState;
 
@@ -39,9 +36,6 @@ private:
 
 	Script(Script const&);
 	Script& operator=(Script const&);
-
-	Mutex _scriptMutex;
-	Mutex _defCallMutex;
 
 public:
 	// LUA CALLBACKS

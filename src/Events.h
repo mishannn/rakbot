@@ -10,10 +10,13 @@ struct DefCall {
 	std::function<void(DefCall *)> func;
 };
 
+class Player;
+class Vehicle;
+class Pickup;
+
 class Events {
 private:
 	DefCall _defCalls[MAX_DEFCALLS];
-	Mutex _defCallMutex;
 
 public:
 	Events();

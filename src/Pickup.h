@@ -1,15 +1,11 @@
 #pragma once
 
-#include "Mutex.h"
-
 class Pickup {
 private:
 	int _pickupId;
 	int _model;
 	int _type;
 	float _position[3];
-
-	Mutex _pickupMutex;
 
 public:
 	Pickup();

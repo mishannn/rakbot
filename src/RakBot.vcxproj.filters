@@ -319,7 +319,6 @@
     <ClInclude Include="netgame.h" />
     <ClInclude Include="netrpc.h" />
     <ClInclude Include="window.h" />
-    <ClInclude Include="servinfo.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Structs.h" />
     <ClInclude Include="RakBot.h" />
@@ -344,7 +343,7 @@
     <ClInclude Include="Includes.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Timer.h" />
-    <ClInclude Include="Mutex.h" />
+    <ClInclude Include="ServerInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="raknet\_findfirst.cpp">
@@ -496,7 +495,6 @@
     <ClCompile Include="netgame.cpp" />
     <ClCompile Include="netrpc.cpp" />
     <ClCompile Include="window.cpp" />
-    <ClCompile Include="serverinfo.cpp" />
     <ClCompile Include="RakBot.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="Bot.cpp" />
@@ -516,7 +514,7 @@
     <ClCompile Include="SAMPDialog.cpp" />
     <ClCompile Include="Vehicle.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="Mutex.cpp" />
+    <ClCompile Include="ServerInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon.ico" />

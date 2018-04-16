@@ -10,7 +10,6 @@
 #include "Pickup.h"
 #include "Vehicle.h"
 #include "Events.h"
-#include "Mutex.h"
 
 #include "Funcs.h"
 #include "MathStuff.h"
@@ -27,9 +26,6 @@
 #define cmdcmp(command) !strnicmp(cmd, command, strlen(command))
 
 void RunCommand(const char *cmdstr) {
-	Mutex *mutex = RakBot::app()->getMutex(MUTEX_RUNCOMMAND);
-	Lock lock(mutex);
-
 	std::string command = std::string(cmdstr);
 
 	if (command.empty())
@@ -60,7 +56,7 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		vars.botOff = 1;
+		RakBot::app()->exit();
 		return;
 	}
 
@@ -927,12 +923,17 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
+		if (!bot->isConnected()) {
+			RakBot::app()->log("[ERROR] Нажатие клавиши: бот должен быть подключен к серверу!");
+			return;
+		}
+
 		uint8_t weapon = 0;
 		uint16_t keys = 0;
 		uint16_t upDownKey = 0;
 		uint16_t leftRightKey = 0;
 
-		switch (cmd[7]) {
+		switch (cmd[6]) {
 			case 'Y':
 				weapon = 64;
 				RakBot::app()->log("[RAKBOT] Нажатие кнопки Y...");
@@ -993,9 +994,12 @@ void RunCommand(const char *cmdstr) {
 
 		uint8_t currentWeapon = bot->getWeapon();
 		bot->setWeapon(weapon);
-		bot->sync(5);
+		bot->sync(10);
 
 		RakBot::app()->getEvents()->defCallAdd(500, false, [bot, currentWeapon](DefCall *) {
+			if (!bot->isConnected())
+				return;
+
 			bot->getKeys()->reset();
 			bot->setWeapon(currentWeapon);
 		});
@@ -1179,9 +1183,6 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("admins")) {
-		Mutex *adminsMutex = RakBot::app()->getMutex(MUTEX_ADMINS);
-		Lock lock(adminsMutex);
-
 		if (strstr(cmd, "-help")) {
 			MessageBox(
 				g_hWndMain,
@@ -1381,16 +1382,16 @@ void RunCommand(const char *cmdstr) {
 		if (FILE *f = fopen(GetRakBotPath("places.txt"), "r")) {
 			for (int i = 0; i < 300; i++) {
 				if (fgets(szBuf, 128, f)) {
-					strcpy(TeleportPlaces[i].szName, strtok(szBuf, "|"));
+					strcpy(vars.TeleportPlaces[i].szName, strtok(szBuf, "|"));
 
 					for (int n = 0; n < 3; n++)
-						TeleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
+						vars.TeleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
 				}
 			}
 			fclose(f);
 
 			int iPlaceIndex = std::strtoul(&cmd[8], nullptr, 10);
-			float *pos = TeleportPlaces[iPlaceIndex - 1].position;
+			float *pos = vars.TeleportPlaces[iPlaceIndex - 1].position;
 			DoCoordMaster(true, pos[0], pos[1], pos[2]);
 
 			sprintf(szBuf, "[RAKBOT] CoordMaster: телепорт на координаты (%0.2f; %0.2f; %0.2f)", vars.coordMasterTarget[0], vars.coordMasterTarget[1], vars.coordMasterTarget[2]);
@@ -1417,17 +1418,17 @@ void RunCommand(const char *cmdstr) {
 		if (FILE *f = fopen(GetRakBotPath("places.txt"), "r")) {
 			for (int i = 0; i < 300; i++) {
 				if (fgets(buf, 128, f)) {
-					strcpy(TeleportPlaces[i].szName, strtok(buf, "|"));
+					strcpy(vars.TeleportPlaces[i].szName, strtok(buf, "|"));
 
 					for (int n = 0; n < 3; n++)
-						TeleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
+						vars.TeleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
 				}
 			}
 			fclose(f);
 
 			for (int i = 0; i < 300; i++) {
-				if (TeleportPlaces[i].szName[0] != NULL)
-					RakBot::app()->log("[RAKBOT] !toplace %d - %s\n", i + 1, TeleportPlaces[i].szName);
+				if (vars.TeleportPlaces[i].szName[0] != NULL)
+					RakBot::app()->log("[RAKBOT] !toplace %d - %s\n", i + 1, vars.TeleportPlaces[i].szName);
 			}
 		}
 
