@@ -148,7 +148,7 @@ struct Vars {
 
 	int mainDelay;
 	int luaUpdateDelay;
-	int networkDelay;
+	int networkUpdateDelay;
 	int spawnDelay;
 	int dialogResponseDelay;
 	int noAfkDelay;

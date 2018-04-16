@@ -71,6 +71,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		RakBot::app()->log("  RakBot.Ru");
 		RakBot::app()->log("* ===================================================== *");
 
+		if (vars.luaUpdateDelay < vars.mainDelay) {
+			RakBot::app()->log("[WARNING] Задержка обновления скриптов (%d) не может быть меньше основной задержки обновления (%d)!", vars.luaUpdateDelay, vars.mainDelay);
+		}
+
+		if (vars.networkUpdateDelay < vars.mainDelay) {
+			RakBot::app()->log("[WARNING] Задержка обновления сети (%d) не может быть меньше основной задержки обновления (%d)!", vars.luaUpdateDelay, vars.mainDelay);
+		}
+
 		LoadScripts();
 
 		RakBot::app()->log("[RAKBOT] IP сервера: %s:%d", RakBot::app()->getSettings()->getAddress()->getIp().c_str(), RakBot::app()->getSettings()->getAddress()->getPort());

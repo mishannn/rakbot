@@ -1163,6 +1163,10 @@ void Script::luaError(std::string error) {
 }
 
 void Script::luaUpdate() {
+	static Timer timer;
+	if (!timer.isElapsed(vars.luaUpdateDelay, true))
+		return;
+
 	for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
 		LuaDefCall *defCall = &_defCalls[i];
 

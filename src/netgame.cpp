@@ -509,6 +509,10 @@ void UpdatePlayerScoresAndPings(int iWait, int iMS) {
 }
 
 void UpdateNetwork() {
+	static Timer timer;
+	if (!timer.isElapsed(vars.networkUpdateDelay, true))
+		return;
+
 	Bot *bot = RakBot::app()->getBot();
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 

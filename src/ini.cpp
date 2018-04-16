@@ -29,7 +29,7 @@ bool LoadCustom() {
 		vars.luaUpdateDelay = std::strtoul(szBuf, nullptr, 10);
 
 		GetPrivateProfileString(szAppName, "NetworkUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
-		vars.networkDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.networkUpdateDelay = std::strtoul(szBuf, nullptr, 10);
 
 		GetPrivateProfileString(szAppName, "SpawnDelay", "500", szBuf, sizeof(szBuf), szPath);
 		vars.spawnDelay = std::strtoul(szBuf, nullptr, 10);
