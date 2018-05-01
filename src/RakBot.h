@@ -11,20 +11,22 @@
 #include "Events.h"
 #include "SAMPDialog.h"
 #include "ServerInfo.h"
+#include "Pickup.h"
+#include "PlayerBase.h"
+#include "Player.h"
+#include "Vehicle.h"
 
 class RakClientInterface;
-class Player;
-class Pickup;
-class Vehicle;
 
 class RakBot {
 private:
 	bool _botOff;
 
 	RakClientInterface *_rakClient;
-	Player *_players[MAX_PLAYERS];
-	Pickup *_pickups[MAX_PICKUPS];
-	Vehicle *_vehicles[MAX_VEHICLES];
+
+	Player _players[MAX_PLAYERS];
+	Pickup _pickups[MAX_PICKUPS];
+	Vehicle _vehicles[MAX_VEHICLES];
 
 	Bot _bot;
 	Settings _settings;

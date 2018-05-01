@@ -4,6 +4,7 @@ class Player;
 
 class Vehicle {
 private:
+	bool _active;
 	bool _doorsOpened;
 	bool _engineEnabled;
 	bool _lightsEnabled;
@@ -38,6 +39,9 @@ public:
 	~Vehicle();
 
 	void reset();
+
+	void setActive(bool active);
+	bool isActive();
 
 	void setDoorsOpened(bool doorsOpened);
 	bool isDoorsOpened();

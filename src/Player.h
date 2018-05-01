@@ -4,6 +4,7 @@
 
 class Player : public PlayerBase {
 private:
+	bool _active;
 	bool _inStream;
 	bool _admin;
 
@@ -12,6 +13,9 @@ public:
 	~Player();
 
 	void reset();
+
+	void setActive(bool active);
+	bool isActive();
 
 	void setInStream(bool admin);
 	bool isInStream();

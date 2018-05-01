@@ -2,6 +2,7 @@
 
 class Pickup {
 private:
+	bool _active;
 	int _pickupId;
 	int _model;
 	int _type;
@@ -12,6 +13,9 @@ public:
 	~Pickup();
 
 	void reset();
+
+	void setActive(bool active);
+	bool isActive();
 
 	void setPickupId(int pickupId);
 	int getPickupId();

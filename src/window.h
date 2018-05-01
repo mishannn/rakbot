@@ -8,4 +8,7 @@ extern HWND g_hWndCoordX, g_hWndCoordY, g_hWndCoordZ, g_hWndPickupID, g_hWndPlay
 extern HINSTANCE g_hInst;
 extern HFONT g_hfText, g_hfListBoxText;
 
+extern std::queue<std::string> CommandQueue;
+extern std::mutex CommandQueueMutex;
+
 void MainWindow();

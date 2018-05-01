@@ -1,6 +1,6 @@
 #pragma once
 
-#define MAX_DEFCALLS 30
+#define MAX_DEFCALLS 100
 
 struct DefCall {
 	bool active;
@@ -45,7 +45,8 @@ public:
 	bool onServerMessage(std::string message);
 	bool onChatMessage(uint16_t playerId, std::string message);
 	bool onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string dialogTitle, std::string okButtonText, std::string cancelButtonText, std::string dialogText);
-	bool onDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput);
+	bool onDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput, bool isOffline);
+	void onDialogResponseSent(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput);
 	void onSetSkin(uint16_t playerid, uint16_t skinId);
 	void onApplyAnimation(uint16_t playerId, uint16_t animId);
 	void onConnect(uint16_t playerId);

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <queue>
 #include <map>
 #include <forward_list>
 #include <cstdlib>

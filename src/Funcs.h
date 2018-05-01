@@ -6,17 +6,11 @@ public:
 	~Funcs();
 };
 
-enum BotLoaderStep {
-	BOTLOADER_STEP_TAKEBAG = 100,
-	BOTLOADER_STEP_WAITING,
-	BOTLOADER_STEP_PUTBAG,
-	BOTLOADER_STEP_GETPAY,
-	BOTLOADER_STEP_STARTWORK
-};
-
-extern int LoaderStep;
-extern int BagCount;
-extern bool BotWithBag;
+extern int BotLoaderBagCount;
+extern bool BotLoaderWithBag;
+extern bool BotLoaderWaitDialog;
+extern bool BotLoaderWaitAfterPay;
+extern Timer BotLoaderTakenBagTimer;
 
 extern bool FarmWork;
 extern float FarmPos[5][3];

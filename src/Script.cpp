@@ -273,8 +273,12 @@ void Script::luaOnApplyAnimation(uint16_t playerId, uint16_t animId) {
 	luaCallback("onApplyAnimation", playerId, animId);
 }
 
-bool Script::luaOnDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput) {
-	return luaCallback("onDialogResponse", dialogId, dialogButton, dialogItem, dialogInput);
+bool Script::luaOnDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput, bool isOffline) {
+	return luaCallback("onDialogResponse", dialogId, dialogButton, dialogItem, dialogInput, isOffline);
+}
+
+void Script::luaOnDialogResponseSent(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput) {
+	luaCallback("onDialogResponseSent", dialogId, dialogButton, dialogItem, dialogInput);
 }
 
 bool Script::luaOnSpawn() {
@@ -1150,6 +1154,33 @@ void Script::luaRegisterFunctions() {
 		RakBot::app()->log("[WARNING] Использование функции \"sleep()\" в скриптах не рекомендуется!");
 		RakBot::app()->log("[WARNING] Предпочительнее использование \"defCallAdd()\"");
 		Sleep(ms);
+	});
+	_scriptState.set_function("hideDialog", [this]() {
+		RakBot::app()->getSampDialog()->hideDialog();
+	});
+	_scriptState.set_function("showDialog", [this]() {
+		RakBot::app()->getSampDialog()->showDialog();
+	});
+	_scriptState.set_function("createDialog", [this](int dialogId, int dialogStyle, std::string title, std::string btn1, std::string btn2, std::string text) {
+		SAMPDialog *sampDialog = RakBot::app()->getSampDialog();
+		if (sampDialog->isDialogActive())
+			return false;
+
+		if (dialogId < 0 || dialogId >= 65536)
+			return false;
+		sampDialog->setDialogId(dialogId);
+
+		if (dialogStyle < 1 || dialogStyle >= 5)
+			return false;
+		sampDialog->setDialogStyle(dialogStyle);
+
+		sampDialog->setDialogTitle(title);
+		sampDialog->setOkButtonText(btn1);
+		sampDialog->setCancelButtonText(btn2);
+		sampDialog->setDialogText(text);
+		sampDialog->setDialogActive(false);
+		sampDialog->setDialogOffline(true);
+		return true;
 	});
 }
 

@@ -3,6 +3,7 @@
 class SAMPDialog {
 private:
 	bool _dialogActive;
+	bool _dialogOffline;
 	uint8_t _dialogStyle;
 	uint16_t _dialogId;
 	std::string _dialogTitle;
@@ -18,6 +19,9 @@ public:
 
 	void setDialogActive(bool dialogActive);
 	bool isDialogActive();
+
+	void setDialogOffline(bool offlineDialog);
+	bool isDialogOffline();
 
 	void setDialogStyle(uint8_t dialogStyle);
 	uint8_t getDialogStyle();
@@ -36,4 +40,7 @@ public:
 
 	void setDialogText(std::string dialogText);
 	std::string getDialogText();
+
+	void showDialog();
+	void hideDialog();
 };

@@ -92,7 +92,8 @@ public:
 	bool luaOnPickUpPickup(uint16_t pickupId);
 	bool luaOnTextDrawClick(uint16_t textDrawId);
 	void luaOnApplyAnimation(uint16_t playerId, uint16_t animId);
-	bool luaOnDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput);
+	bool luaOnDialogResponse(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput, bool isOffline);
+	void luaOnDialogResponseSent(uint16_t dialogId, uint8_t dialogButton, uint16_t dialogItem, std::string dialogInput);
 	bool luaOnSpawn();
 	bool luaOnSendInput(std::string input);
 	bool luaOnSync();

@@ -30,19 +30,19 @@ Bot::~Bot() {
 }
 
 void Bot::setConnectRequested(bool connectRequested) {
-	
+
 
 	_connectRequested = connectRequested;
 }
 
 bool Bot::isConnectRequested() {
-	
+
 
 	return _connectRequested;
 }
 
 void Bot::reset(bool disconnect) {
-	
+
 
 	uint16_t playerId;
 	bool connected;
@@ -67,52 +67,52 @@ void Bot::reset(bool disconnect) {
 }
 
 void Bot::reconnect(int reconnectDelay) {
-	
+
 
 	if (isConnected()) {
 		disconnect(false);
 	}
 
 	setConnectRequested(false);
-	vars.ReconnectTimer.setTimer(GetTickCount() + reconnectDelay);
+	vars.reconnectTimer.setTimer(GetTickCount() + reconnectDelay);
 	RakBot::app()->getEvents()->onReconnect(reconnectDelay);
 }
 
 // Connected
 void Bot::setConnected(bool connected) {
-	
+
 
 	_connected = connected;
 }
 
 bool Bot::isConnected() {
-	
+
 
 	return _connected;
 }
 
 // Spawned
 void Bot::setSpawned(bool spawned) {
-	
+
 
 	_spawned = spawned;
 }
 
 bool Bot::isSpawned() {
-	
+
 
 	return _spawned;
 }
 
 // Money
 void Bot::setMoney(int money) {
-	
+
 
 	_money = money;
 }
 
 int Bot::getMoney() {
-	
+
 
 	return _money;
 }
@@ -475,9 +475,9 @@ void Bot::disconnect(bool timeOut) {
 	ZeroMemory(&gtaMenu, sizeof(GTAMenu));
 
 	setConnectRequested(true);
-	vars.BotConnectedTimer.setTimer(UINT32_MAX);
-	vars.BotSpawnedTimer.setTimer(UINT32_MAX);
-	vars.GameInitedTimer.setTimer(UINT32_MAX);
+	vars.botConnectedTimer.setTimer(UINT32_MAX);
+	vars.botSpawnedTimer.setTimer(UINT32_MAX);
+	vars.gameInitedTimer.setTimer(UINT32_MAX);
 
 	RakBot::app()->getServer()->reset();
 	RakBot::app()->log("[RAKBOT] Бот отключен от сервера");
@@ -715,51 +715,53 @@ void Bot::spectateSync() {
 	rakClient->Send(&bsSpecSync, HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 0);
 }
 
-void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::string input) {
-	
-
-	if (!isConnected()) {
-		RakBot::app()->log("[ERROR] Отправка диалога: бот должен быть подключен к серверу");
-		return;
-	}
-
-	if (!RakBot::app()->getServer()->isGameInited()) {
-		RakBot::app()->log("[ERROR] Отправка диалога: игра должна быть инициализирована");
-		return;
-	}
-
-	if (RakBot::app()->getEvents()->onDialogResponse(dialogId, button, item, input))
-		return;
-
-	RakBot::app()->getEvents()->defCallAdd(vars.dialogResponseDelay, false, [this, dialogId, button, item, input](DefCall *) {
+void Bot::dialogResponse(uint16_t dialogId, uint8_t button, uint16_t item, std::string input, bool isOffline) {
+	if (!isOffline) {
 		if (!isConnected()) {
-			RakBot::app()->log("[WARNING] Завершение отправки диалога: бот должен быть подключен к серверу");
+			RakBot::app()->log("[ERROR] Отправка диалога: бот должен быть подключен к серверу");
 			return;
 		}
 
 		if (!RakBot::app()->getServer()->isGameInited()) {
-			RakBot::app()->log("[WARNING] Завершение отправки диалога: игра должна быть инициализирована");
+			RakBot::app()->log("[ERROR] Отправка диалога: игра должна быть инициализирована");
 			return;
 		}
+	}
 
-		RakClientInterface *rakClient = RakBot::app()->getRakClient();
+	if (RakBot::app()->getEvents()->onDialogResponse(dialogId, button, item, input, isOffline))
+		return;
 
-		uint8_t length = static_cast<uint8_t>(input.length());
-		RakNet::BitStream bsSend;
-		bsSend.Write(dialogId);
-		bsSend.Write(button);
-		bsSend.Write(item);
-		bsSend.Write(length);
-		bsSend.Write(input.c_str(), length);
+	if (!isOffline) {
+		RakBot::app()->getEvents()->defCallAdd(vars.dialogResponseDelay, false, [this, dialogId, button, item, input](DefCall *) {
+			if (!isConnected()) {
+				RakBot::app()->log("[WARNING] Завершение отправки диалога: бот должен быть подключен к серверу");
+				return;
+			}
 
-		rakClient->RPC(&RPC_DialogResponse, const_cast<BitStream *>(&bsSend), HIGH_PRIORITY, RELIABLE_ORDERED, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
-	});
+			if (!RakBot::app()->getServer()->isGameInited()) {
+				RakBot::app()->log("[WARNING] Завершение отправки диалога: игра должна быть инициализирована");
+				return;
+			}
+
+			RakClientInterface *rakClient = RakBot::app()->getRakClient();
+
+			uint8_t length = static_cast<uint8_t>(input.length());
+			RakNet::BitStream bsSend;
+			bsSend.Write(dialogId);
+			bsSend.Write(button);
+			bsSend.Write(item);
+			bsSend.Write(length);
+			bsSend.Write(input.c_str(), length);
+
+			rakClient->RPC(&RPC_DialogResponse, const_cast<BitStream *>(&bsSend), HIGH_PRIORITY, RELIABLE_ORDERED, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
+			RakBot::app()->log("[RAKBOT] Отправлен ответ диалогу с ID %d (кнопка: %d, список: %d; текст: %s)", dialogId, button, item, input.c_str());
+			RakBot::app()->getEvents()->onDialogResponseSent(dialogId, button, item, input);
+		});
+	}
 }
 
 void Bot::spawn() {
 	static bool spawnReady = true;
-
-	
 
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Спавн бота: бот должен быть подключен к серверу");
@@ -803,10 +805,10 @@ void Bot::spawn() {
 		position[i] = getPosition(i);
 
 	RakBot::app()->getEvents()->defCallAdd(vars.spawnDelay, false, [this](DefCall *) {
-		if (isSpawned()) {
+		/* if (isSpawned()) {
 			RakBot::app()->log("[WARNING] Завершение спавна бота: бот уже заспавнен");
-			return;
-		}
+			// return;
+		} */
 
 		if (!isConnected()) {
 			RakBot::app()->log("[WARNING] Завершение спавна бота: бот должен быть подключен к серверу");
@@ -821,8 +823,11 @@ void Bot::spawn() {
 		setSpawned(true);
 		sync();
 
-		RakBot::app()->log("[RAKBOT] Бот заспавнен");
-		vars.BotSpawnedTimer.setTimerFromCurrentTime();
+		if (isSpawned()) {
+			RakBot::app()->log("[RAKBOT] Бот заспавнен");
+		}
+
+		vars.botSpawnedTimer.setTimerFromCurrentTime();
 		RakBot::app()->getEvents()->onSpawned();
 		spawnReady = true;
 		vars.syncAllowed = true;
@@ -830,8 +835,6 @@ void Bot::spawn() {
 }
 
 void Bot::kill() {
-	
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Убийство бота: бот должен быть подключен к серверу");
 		return;
@@ -857,7 +860,7 @@ void Bot::kill() {
 }
 
 void Bot::clickTextdraw(uint16_t textDrawId) {
-	
+
 
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Клик по текстдраву: бот должен быть подключен к серверу");

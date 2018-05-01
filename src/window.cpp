@@ -89,8 +89,17 @@ HFONT g_hfText, g_hfListBoxText;
 NOTIFYICONDATA notifyIconData;
 char szHint[64];
 
+std::queue<std::string> CommandQueue;
+std::mutex CommandQueueMutex;
+
 std::vector<std::string> commandHistory;
 int currentCommand = 0;
+
+void AddCommandToQueue(char *command) {
+	CommandQueueMutex.lock();
+	CommandQueue.push(std::string(command));
+	CommandQueueMutex.unlock();
+}
 
 void CommandHistoryPrev() {
 	if (currentCommand > 0)
@@ -101,7 +110,7 @@ void CommandHistoryPrev() {
 }
 
 void CommandHistoryNext() {
-	if (currentCommand < (commandHistory.size() - 1))
+	if (currentCommand < (static_cast<int>(commandHistory.size()) - 1))
 		currentCommand++;
 
 	SendMessage(g_hWndInput, WM_SETTEXT, 0, (LPARAM)commandHistory[currentCommand].c_str());
@@ -116,7 +125,7 @@ void SendCommand() {
 
 	char *text = new char[length + 1];
 	SendMessage(g_hWndInput, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)text);
-	RunCommand(text);
+	AddCommandToQueue(text);
 	commandHistory[(commandHistory.size() - 1)] = std::string(text);
 	commandHistory.push_back("");
 	currentCommand = (commandHistory.size() - 1);
@@ -540,15 +549,15 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					break;
 
 				case IDC_AAFKBTN:
-					RunCommand("!aafk");
+					AddCommandToQueue("!aafk");
 					break;
 
 				case IDC_NOAFKBTN:
-					RunCommand("!noafk");
+					AddCommandToQueue("!noafk");
 					break;
 
 				case IDC_SPAWNBTN:
-					RunCommand("!spawn");
+					AddCommandToQueue("!spawn");
 					break;
 
 				case IDC_TPBTN:
@@ -558,7 +567,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 					char buf[64];
 					snprintf(buf, sizeof(buf), "!tp %f %f %f", pos[0], pos[1], pos[2]);
-					RunCommand(buf);
+					AddCommandToQueue(buf);
 					break;
 				}
 
@@ -569,7 +578,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 					char buf[128];
 					snprintf(buf, sizeof(buf), "!scoords %f %f %f", pos[0], pos[1], pos[2]);
-					RunCommand(buf);
+					AddCommandToQueue(buf);
 					break;
 				}
 
@@ -580,12 +589,12 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 					char buf[64];
 					snprintf(buf, sizeof(buf), "!coord %f %f %f", pos[0], pos[1], pos[2]);
-					RunCommand(buf);
+					AddCommandToQueue(buf);
 					break;
 				}
 
 				case IDC_PARSEBTN:
-					RunCommand("!parsenicks");
+					AddCommandToQueue("!parsenicks");
 					break;
 
 				case IDC_SPICBTN:
@@ -595,7 +604,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					int pickupId = atoi(buf);
 
 					snprintf(buf, sizeof(buf), "!sendpick %d", pickupId);
-					RunCommand(buf);
+					AddCommandToQueue(buf);
 					break;
 				}
 
@@ -654,7 +663,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					uint32_t playerId = atol(buf);
 
 					snprintf(buf, sizeof(buf), "!follow %d", playerId);
-					RunCommand(buf);
+					AddCommandToQueue(buf);
 					break;
 				}
 
@@ -665,7 +674,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					uint32_t playerId = atol(buf);
 
 					snprintf(buf, sizeof(buf), "!goto %d", playerId);
-					RunCommand(buf);
+					AddCommandToQueue(buf);
 					break;
 				}
 
@@ -676,17 +685,17 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					uint32_t playerId = atol(buf);
 
 					snprintf(buf, sizeof(buf), "!stick %d", playerId);
-					RunCommand(buf);
+					AddCommandToQueue(buf);
 					break;
 				}
 				break;
 
 				case IDC_VWORLDBTN:
-					RunCommand("!virtualworld");
+					AddCommandToQueue("!virtualworld");
 					break;
 
 				case IDC_WORKERBTN:
-					RunCommand("!botloader");
+					AddCommandToQueue("!botloader");
 					break;
 
 				case IDC_SKIPDIALOGBTN:
@@ -716,27 +725,27 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				break;
 
 				case IDC_CPMBTN:
-					RunCommand("!cpm");
+					AddCommandToQueue("!cpm");
 					break;
 
 				case IDC_ANTIDEATHBTN:
-					RunCommand("!antideath");
+					AddCommandToQueue("!antideath");
 					break;
 
 				case IDC_FARMBOTBTN:
-					RunCommand("!botfarmer");
+					AddCommandToQueue("!botfarmer");
 					break;
 
 				case IDC_WRITESTATBTN:
-					RunCommand("!parsestat");
+					AddCommandToQueue("!parsestat");
 					break;
 
 				case IDC_MAPBTN:
-					RunCommand("!map");
+					AddCommandToQueue("!map");
 					break;
 
 				case IDC_FARCHATBTN:
-					RunCommand("!farchat");
+					AddCommandToQueue("!farchat");
 					break;
 
 				case IDC_FLOODBTN:
@@ -748,23 +757,23 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					break;
 
 				case IDC_IGNOREMSGSBTN:
-					RunCommand("!skipmsg");
+					AddCommandToQueue("!skipmsg");
 					break;
 
 				case IDC_AUTOLICBTN:
-					RunCommand("!autoschool");
+					AddCommandToQueue("!autoschool");
 					break;
 
 				case IDC_AUTOQUEST:
-					RunCommand("!quest");
+					AddCommandToQueue("!quest");
 					break;
 
 				case MENU_DEBUG:
-					RunCommand("!debug");
+					AddCommandToQueue("!debug");
 					break;
 
 				case MENU_OPENLOG:
-					RunCommand("!openlog");
+					AddCommandToQueue("!openlog");
 					break;
 
 				case MENU_TRAY:
@@ -785,7 +794,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					break;
 
 				case MENU_LUA_SCRIPTSRELOAD:
-					RunCommand("!reloadscripts");
+					AddCommandToQueue("!reloadscripts");
 					break;
 
 				case MENU_LUA_SCRIPTSDIR:

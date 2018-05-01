@@ -49,7 +49,7 @@ public:
 	void requestSpawn();
 	bool pickUpPickup(Pickup *pickup, bool checkDist = true);
 	bool takeCheckpoint();
-	void dialogResponse(uint16_t dialogId, uint8_t button = 1, uint16_t item = 0, std::string input = std::string());
+	void dialogResponse(uint16_t dialogId, uint8_t button = 1, uint16_t item = 0, std::string input = std::string(), bool isOffline = false);
 	void spawn();
 	void kill();
 	void clickTextdraw(uint16_t textDrawId);

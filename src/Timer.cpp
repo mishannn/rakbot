@@ -18,21 +18,25 @@ void Timer::setTimer(uint32_t timer) {
 }
 
 uint32_t Timer::getElapsed() {
-	if (_timer > GetTickCount())
+	uint32_t tickCount = GetTickCount();
+
+	if (_timer > tickCount)
 		return 0;
 
-	return (GetTickCount() - _timer);
+	return (tickCount - _timer);
 }
 
 bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
-	if (_timer >= GetTickCount())
+	uint32_t tickCount = GetTickCount();
+
+	if (_timer >= tickCount)
 		return false;
 
-	if ((GetTickCount() - _timer) < ms)
+	if ((tickCount - _timer) < ms)
 		return false;
 
 	if (resetIfTrue)
-		_timer = GetTickCount();
+		_timer = tickCount;
 
 	return true;
 }

@@ -129,10 +129,10 @@ struct Vars {
 
 	bool routeEnabled;
 	bool routeLoop;
-	float routeSpeed;
+	int routeUpdateDelay;
+	int routeUpdateCount;
 	std::vector<OnfootData> routeData;
 	uint32_t routeIndex;
-	HANDLE routeThread;
 
 	bool textDrawCreateLogging;
 	bool textDrawHideLogging;
@@ -163,12 +163,12 @@ struct Vars {
 
 	HANDLE dialogWindowThread;
 
-	TeleportPlace TeleportPlaces[300];
+	TeleportPlace teleportPlaces[300];
 
-	Timer BotConnectedTimer;
-	Timer BotSpawnedTimer;
-	Timer GameInitedTimer;
-	Timer ReconnectTimer;
+	Timer botConnectedTimer;
+	Timer botSpawnedTimer;
+	Timer gameInitedTimer;
+	Timer reconnectTimer;
 };
 
 extern Vars vars;

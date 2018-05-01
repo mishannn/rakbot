@@ -5,7 +5,6 @@
 class Timer {
 private:
 	uint32_t _timer;
-	uint32_t _lastTickCount;
 
 public:
 	Timer();

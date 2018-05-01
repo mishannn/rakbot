@@ -48,7 +48,7 @@ void Packet_ConnectionSucceeded(Packet *p) {
 
 	RakBot::app()->log("[RAKBOT] Подключено. Вход в игру...");
 	bot->setConnected(true);
-	vars.BotConnectedTimer.setTimerFromCurrentTime();
+	vars.botConnectedTimer.setTimerFromCurrentTime();
 	RakBot::app()->getEvents()->onConnect(localPlayerId);
 
 	int iVersion = NETGAME_VERSION;

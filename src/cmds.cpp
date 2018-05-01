@@ -26,6 +26,9 @@
 #define cmdcmp(command) !strnicmp(cmd, command, strlen(command))
 
 void RunCommand(const char *cmdstr) {
+	static std::mutex mutex;
+	std::lock_guard<std::mutex> lock(mutex);
+
 	std::string command = std::string(cmdstr);
 
 	if (command.empty())
@@ -47,7 +50,7 @@ void RunCommand(const char *cmdstr) {
 
 	// ВЫЙТИ ИЗ КЛИЕНТА
 	if (cmdcmp("quit")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда выхода из бота, не требует аргументов",
@@ -61,7 +64,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("keeponline")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда контроля онлайна бота (сколько времени в часу бот работает и когда).\n"
@@ -110,7 +113,7 @@ void RunCommand(const char *cmdstr) {
 
 	// ANTIAFK
 	if (cmdcmp("aafk")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения АнтиАФК, не требует аргументов",
@@ -131,7 +134,7 @@ void RunCommand(const char *cmdstr) {
 
 	// NOAFK
 	if (cmdcmp("noafk")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения NoAFK, не требует аргументов",
@@ -152,7 +155,7 @@ void RunCommand(const char *cmdstr) {
 	// SPAWN
 
 	if (cmdcmp("reqspawn")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда запроса спавна бота, не требует аргументов",
@@ -168,7 +171,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("spawn")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда спавна бота, не требует аргументов",
@@ -183,7 +186,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("reqclass")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда выбора класса, требует 1 аргумент: ID класса",
@@ -205,7 +208,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("sendpick")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда поднятия пикапа, требует 1 аргумент: ID пикапа",
@@ -228,7 +231,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("reloadscripts")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда перезагрузки Lua скриптов",
@@ -244,7 +247,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("sleep")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения анимации сна, работает после спавна и переподключения",
@@ -274,7 +277,7 @@ void RunCommand(const char *cmdstr) {
 
 	// SPAWN CAR
 	if (cmdcmp("spawncar")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда спавна автомобиля (палится админам, да и по сути бесполезна, но пусть будет).\n"
@@ -298,7 +301,7 @@ void RunCommand(const char *cmdstr) {
 
 	// TELEPORT
 	if (cmdcmp("tp")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда телепортации бота, принимает 3 аргумента, которые являются X, Y и Z координатами.\n"
@@ -329,7 +332,7 @@ void RunCommand(const char *cmdstr) {
 
 	// SAVE COORDS
 	if (cmdcmp("scoords")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда сохранения координат для телепорта после спавна,\n"
@@ -368,8 +371,53 @@ void RunCommand(const char *cmdstr) {
 
 	// ROUTE
 
+	if (cmdcmp("routedelay")) {
+		if (strstr(cmd, "+help")) {
+			MessageBox(
+				g_hWndMain,
+				"Команда установки задержки отправки пакетов при воспроизведении маршрута"
+				"Принимает 1 аргумент: задержка обновления в миллисекундах",
+				"Помощь",
+				MB_ICONASTERISK);
+			return;
+		}
+
+		int delay;
+		if (sscanf(cmd, "%*s%d", &delay) < 1) {
+			RakBot::app()->log("[RAKBOT] Задержка маршрута: введите задержку воспроизведения маршрута");
+			return;
+		}
+		vars.routeUpdateDelay = delay;
+		RakBot::app()->log("[RAKBOT] Задержка маршрута: установлена задержка %d", vars.routeUpdateDelay);
+		if (vars.routeUpdateDelay < vars.mainDelay) {
+			RakBot::app()->log("[WARNING] Задержка воспроизведения маршрута (%d) не может быть меньше основной задержки обновления (%d)!", vars.routeUpdateDelay, vars.mainDelay);
+		}
+		return;
+	}
+
+	if (cmdcmp("routecount")) {
+		if (strstr(cmd, "+help")) {
+			MessageBox(
+				g_hWndMain,
+				"Команда установки количества повторов отправки пакетов при воспроизведении маршрута"
+				"Принимает 1 аргумент: количество повторов отправки пакетов",
+				"Помощь",
+				MB_ICONASTERISK);
+			return;
+		}
+
+		int count;
+		if (sscanf(cmd, "%*s%d", &count) < 1) {
+			RakBot::app()->log("[RAKBOT] Повтор пакетов маршрута: введите количество повторов отправки пакетов");
+			return;
+		}
+		vars.routeUpdateCount = count;
+		RakBot::app()->log("[RAKBOT] Повтор пакетов маршрута: отправка пакетов будет выполняться %d раз", vars.routeUpdateCount);
+		return;
+	}
+
 	if (cmdcmp("routeloop")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения повтора при воспроизведении маршрута.",
@@ -389,45 +437,57 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("route")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда запуска маршрута, принимает 2 аргумента: имя файла маршрута (без расширения) и скорость.\n"
 				"Скорость необходимо подстраивать под каждый ПК отдельно, универсального значения НЕТ!\n\n"
-				"Пауза - \"!route --pause\"\nВозобновление - \"!route -- resume\"",
+				"Пауза - \"!route +pause\"\nВозобновление - \"!route +resume\"",
 				"Помощь",
 				MB_ICONASTERISK);
 
 			return;
-		} else if (strstr(cmd, "-pause")) {
-			vars.routeEnabled = false;
-			vars.syncAllowed = true;
-			return;
-		} else if (strstr(cmd, "-resume")) {
-			if (vars.routeThread != nullptr) {
-				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: ждем завершения предыдущего потока");
-				WaitForSingleObject(vars.routeThread, INFINITE);
-				vars.routeThread = nullptr;
+		} else if (strstr(cmd, "+pause")) {
+			if (!vars.routeEnabled) {
+				RakBot::app()->log("[WARNING] Сохраненный маршрут уже остановлен");
+				return;
 			}
 
-			if (vars.routeSpeed <= 0.f) {
-				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: необходим начальный запуск!");
+			vars.routeEnabled = false;
+			bot->getKeys()->reset();
+			bot->getAnimation()->reset();
+			for (int i = 0; i < 3; i++)
+				bot->setSpeed(i, 0.f);
+			bot->sync();
+			vars.syncAllowed = true;
+			return;
+		} else if (strstr(cmd, "+resume")) {
+			if (vars.routeEnabled) {
+				RakBot::app()->log("[WARNING] Сохраненный маршрут уже запущен");
+				return;
+			}
+
+			if (vars.routeData.size() < 1) {
+				RakBot::app()->log("[ERROR] Сначала загрузите маршрут!");
+				return;
 			}
 
 			vars.routeEnabled = true;
 			vars.syncAllowed = false;
-			vars.routeThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(RoutePlay), NULL, NULL, NULL);
-
-			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: запущен со скоростью %.2f", vars.routeSpeed);
+			RakBot::app()->log("[RAKBOT] Сохраненный маршрут продолжил работу");
 			return;
 		}
 
 		vars.routeEnabled = false;
+		bot->getKeys()->reset();
+		bot->getAnimation()->reset();
+		for (int i = 0; i < 3; i++)
+			bot->setSpeed(i, 0.f);
+		bot->sync();
 		vars.syncAllowed = true;
 
-		float routeSpeed;
 		char routeFile[64];
-		if (sscanf(cmd, "%*s%s%f", routeFile, &routeSpeed) < 2) {
+		if (sscanf(cmd, "%*s%s", routeFile) < 1) {
 			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: запуск командой !route <файл> <скорость>");
 			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: остановлен");
 			return;
@@ -436,22 +496,11 @@ void RunCommand(const char *cmdstr) {
 		LoadRoute(routeFile);
 
 		if (vars.routeData.size() > 0) {
-			if (routeSpeed <= 0.f) {
-				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: скорость должна быть больше 0!");
-			}
-
-			if (vars.routeThread != nullptr) {
-				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: ждем завершения предыдущего потока");
-				WaitForSingleObject(vars.routeThread, INFINITE);
-				vars.routeThread = nullptr;
-			}
-
 			vars.routeEnabled = true;
-			vars.routeSpeed = 25.f * (1.f / routeSpeed);
 			vars.syncAllowed = false;
-			vars.routeThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(RoutePlay), NULL, NULL, NULL);
+			vars.routeIndex = 0;
 
-			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: запущен со скоростью %.2f", routeSpeed);
+			RakBot::app()->log("[RAKBOT] Сохраненный маршрут запущен");
 		} else {
 			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: файл маршрутов пуст или недоступен");
 		}
@@ -459,7 +508,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("buswork")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда начала работы водителем автобуса.\n"
@@ -552,7 +601,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("setwork")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда устройства на работу.\n"
@@ -584,7 +633,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("flood")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения флудера.\n"
@@ -636,7 +685,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("atm")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда получения баланса в банкомате.\n"
@@ -682,7 +731,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("coord")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда телепортации бота коордмастером, принимает 3 аргумента, которые являются X, Y и Z координатами.\n"
@@ -706,7 +755,7 @@ void RunCommand(const char *cmdstr) {
 
 	// ПЕРЕПОДКЛЮЧИТЬСЯ
 	if (cmdcmp("rejoin")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда переподключения к серверу, не принимает аргументов.",
@@ -723,7 +772,7 @@ void RunCommand(const char *cmdstr) {
 
 	// УСТАНОВИТЬ ВРЕМЯ РЕКОННЕКТА
 	if (cmdcmp("setrjtime")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда установки времени ожидания перед переподключением к серверу.\n"
@@ -752,7 +801,7 @@ void RunCommand(const char *cmdstr) {
 
 	// УСТАНОВКА ЗДОРОВЬЯ
 	if (cmdcmp("sethp")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда установки количества здоровья боту.\n"
@@ -784,7 +833,7 @@ void RunCommand(const char *cmdstr) {
 
 	// СПИСОК ИГРОКОВ
 	if (cmdcmp("players")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда вывода списка игроков, не принимает аргументов.",
@@ -817,7 +866,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("quest")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения прохождения квеста, не принимает аргументов.",
@@ -836,7 +885,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("loadcars")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения загрузки машин ботом грузчика, не принимает аргументов.",
@@ -856,7 +905,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("loadcount")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда установки лимита мешков боту грузчику (после достижения забирает ЗП и работает дальше).\n"
@@ -875,7 +924,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("picks")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда вывода списка пикапов, не принимает аргументов.",
@@ -887,14 +936,15 @@ void RunCommand(const char *cmdstr) {
 
 		int count = 0;
 		RakBot::app()->log("[RAKBOT] === СПИСОК ПИКАПОВ ===");
-		RakBot::app()->log("[RAKBOT] ID * МОДЕЛЬ * ТИП * РАССТОЯНИЕ");
+		RakBot::app()->log("[RAKBOT] ID * МОДЕЛЬ * ТИП * РАССТОЯНИЕ * ПОЗИЦИЯ");
 		for (int i = 0; i < MAX_PICKUPS; i++) {
 			Pickup *pickup = RakBot::app()->getPickup(i);
 			if (pickup == nullptr)
 				continue;
 
-			RakBot::app()->log("[RAKBOT] %d * %d * %d * %.2f",
-				i, pickup->getModel(), pickup->getType(), bot->distanceTo(pickup));
+			RakBot::app()->log("[RAKBOT] %d * %d * %d * %.2f * (%.2f; %.2f; %.2f)",
+				i, pickup->getModel(), pickup->getType(), bot->distanceTo(pickup),
+				pickup->getPosition(0), pickup->getPosition(1), pickup->getPosition(2));
 			count++;
 		}
 		RakBot::app()->log("[RAKBOT] === [ВСЕГО: %d] ===", count);
@@ -903,7 +953,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("press")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда отправки нажатия игровой кнопки. Варианты ввода:\n\n"
@@ -1008,7 +1058,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("reqid")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда указания требуемого ID, проверяется при входе (если не подходит - переподключение, пока не будет подхдящий).\n"
@@ -1031,7 +1081,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("reqonline")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда указания требуемого онлайна, проверяется при входе (если не подходит - переподключение, пока не будет подхдящий).\n"
@@ -1053,7 +1103,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("instream")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда вывода игроков поблизости, не требует аргументов.",
@@ -1067,7 +1117,7 @@ void RunCommand(const char *cmdstr) {
 
 		RakBot::app()->log("[RAKBOT] ===================[ИГРОКИ РЯДОМ]===================");
 
-		RakBot::app()->log("[RAKBOT] %-3s * %-24s * %-3s * %s", "ID", "НИК", "ЛВЛ", "СТАТУС");
+		RakBot::app()->log("[RAKBOT] %-3s * %-24s * %-3s * %-16s * %s", "ID", "НИК", "ЛВЛ", "СТАТУС", "ПОЗИЦИЯ");
 
 		for (int i = 0; i < MAX_PLAYERS; i++) {
 			Player *player = RakBot::app()->getPlayer(i);
@@ -1083,7 +1133,10 @@ void RunCommand(const char *cmdstr) {
 			if (player->getPlayerState() == PLAYER_STATE_DRIVER || player->getPlayerState() == PLAYER_STATE_PASSENGER)
 				ss << "[" << player->getVehicle()->getVehicleId() << "]";
 
-			RakBot::app()->log("[RAKBOT] %-3d * %-24s * %-3d * %s", i, player->getName().c_str(), player->getInfo()->getScore(), ss.str().c_str());
+			char positionBuffer[64];
+			snprintf(positionBuffer, sizeof(positionBuffer), "(%.2f; %.2f; %.2f)", player->getPosition(0), player->getPosition(1), player->getPosition(2));
+
+			RakBot::app()->log("[RAKBOT] %-3d * %-24s * %-3d * %-16s * %s", i, player->getName().c_str(), player->getInfo()->getScore(), ss.str().c_str(), positionBuffer);
 			playerCount++;
 		}
 		if (playerCount == 0) {
@@ -1096,7 +1149,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("autopick")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения автоподнятия пикапов, когда бот оказался на нем. Не принимает аргументы.",
@@ -1118,7 +1171,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("timestamp")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения вывода времени в чат. Не принимает аргументы.",
@@ -1138,7 +1191,7 @@ void RunCommand(const char *cmdstr) {
 
 	// INFO
 	if (cmdcmp("info")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда вывода информации об игроке. В качестве аргумента принимает ID игрока",
@@ -1183,7 +1236,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("admins")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда вывода списка админов, не требует аргументов.",
@@ -1209,7 +1262,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("admonline")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда переключения действия при нахождении админа в сети. Не принимает аргументов.",
@@ -1240,7 +1293,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("admnear")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда переключения действия при нахождении админа рядом. Не принимает аргументов.",
@@ -1272,7 +1325,7 @@ void RunCommand(const char *cmdstr) {
 
 	// GOTO
 	if (cmdcmp("goto")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда телепорта к игроку. В качестве аргумента принимает ID игрока.",
@@ -1318,7 +1371,7 @@ void RunCommand(const char *cmdstr) {
 
 	// СПИСОК АВТОМОБИЛЕЙ
 	if (cmdcmp("vlist")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда вывода видимых транспортных средств. Не принимает аргументов.",
@@ -1344,15 +1397,17 @@ void RunCommand(const char *cmdstr) {
 		else
 			RakBot::app()->log("[RAKBOT] =====[ТРАНСПОРТ]=====");
 
-		RakBot::app()->log("[RAKBOT] ID * НАЗВАНИЕ * СТАТУС * ЦВЕТ * ДИСТАНЦИЯ");
+		RakBot::app()->log("[RAKBOT] ID * НАЗВАНИЕ * СТАТУС * ЦВЕТ * ДИСТАНЦИЯ * ПОЗИЦИЯ");
 		for (uint16_t i = 0; i < MAX_VEHICLES; i++) {
 			Vehicle *vehicle = RakBot::app()->getVehicle(i);
 			if (vehicle == nullptr)
 				continue;
 
 			if (vehicleModel && vehicle->getModel() == vehicleModel || !vehicleModel) {
-				RakBot::app()->log("[RAKBOT] %d * %s * %s * %d/%d * %.2f",
-					i, vehicle->getName().c_str(), vehicle->isDoorsOpened() ? "Открыта" : "Закрыта", vehicle->getFirstColor(), vehicle->getSecondColor(), bot->distanceTo(vehicle));
+				RakBot::app()->log("[RAKBOT] %d * %s * %s * %d/%d * %.2f * (%.2f; %.2f; %.2f)",
+					i, vehicle->getName().c_str(), vehicle->isDoorsOpened() ? "Открыта" : "Закрыта",
+					vehicle->getFirstColor(), vehicle->getSecondColor(), bot->distanceTo(vehicle),
+					vehicle->getPosition(0), vehicle->getPosition(1), vehicle->getPosition(2));
 				cmd_count++;
 			}
 		}
@@ -1366,7 +1421,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("toplace")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда телепорта к сохраненному в файле месту. В качестве аргумента принимает номер места.\n"
@@ -1382,16 +1437,16 @@ void RunCommand(const char *cmdstr) {
 		if (FILE *f = fopen(GetRakBotPath("places.txt"), "r")) {
 			for (int i = 0; i < 300; i++) {
 				if (fgets(szBuf, 128, f)) {
-					strcpy(vars.TeleportPlaces[i].szName, strtok(szBuf, "|"));
+					strcpy(vars.teleportPlaces[i].szName, strtok(szBuf, "|"));
 
 					for (int n = 0; n < 3; n++)
-						vars.TeleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
+						vars.teleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
 				}
 			}
 			fclose(f);
 
 			int iPlaceIndex = std::strtoul(&cmd[8], nullptr, 10);
-			float *pos = vars.TeleportPlaces[iPlaceIndex - 1].position;
+			float *pos = vars.teleportPlaces[iPlaceIndex - 1].position;
 			DoCoordMaster(true, pos[0], pos[1], pos[2]);
 
 			sprintf(szBuf, "[RAKBOT] CoordMaster: телепорт на координаты (%0.2f; %0.2f; %0.2f)", vars.coordMasterTarget[0], vars.coordMasterTarget[1], vars.coordMasterTarget[2]);
@@ -1402,7 +1457,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("places")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда вывода мест, сохраненных в файле \"places.txt\". Не принимает аргументов.\n"
@@ -1418,17 +1473,17 @@ void RunCommand(const char *cmdstr) {
 		if (FILE *f = fopen(GetRakBotPath("places.txt"), "r")) {
 			for (int i = 0; i < 300; i++) {
 				if (fgets(buf, 128, f)) {
-					strcpy(vars.TeleportPlaces[i].szName, strtok(buf, "|"));
+					strcpy(vars.teleportPlaces[i].szName, strtok(buf, "|"));
 
 					for (int n = 0; n < 3; n++)
-						vars.TeleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
+						vars.teleportPlaces[i].position[n] = std::strtof(strtok(NULL, "|"), nullptr);
 				}
 			}
 			fclose(f);
 
 			for (int i = 0; i < 300; i++) {
-				if (vars.TeleportPlaces[i].szName[0] != NULL)
-					RakBot::app()->log("[RAKBOT] !toplace %d - %s\n", i + 1, vars.TeleportPlaces[i].szName);
+				if (vars.teleportPlaces[i].szName[0] != NULL)
+					RakBot::app()->log("[RAKBOT] !toplace %d - %s\n", i + 1, vars.teleportPlaces[i].szName);
 			}
 		}
 
@@ -1437,7 +1492,7 @@ void RunCommand(const char *cmdstr) {
 
 	// ПОСАДКА В АВТОМОБИЛЬ
 	if (cmdcmp("seat")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда посадки бота в транспорт. В качестве аргумента принимает ID транспорта.",
@@ -1463,7 +1518,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("pseat")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда посадки бота в транспорт на пассажирское место. В качестве аргумента принимает ID транспорта.",
@@ -1490,7 +1545,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("antisat")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения антиголода. Не принимает аргументов.",
@@ -1508,7 +1563,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("exit")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда выхода из транспорта. Не принимает аргументов.",
@@ -1533,7 +1588,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("farm")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда начала работы на ферме. В качестве аргумента принмает ID фермы.",
@@ -1556,7 +1611,7 @@ void RunCommand(const char *cmdstr) {
 
 	// ВЫБРАТЬ ПУНКТ В МЕНЮ
 	if (cmdcmp("menu")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда выбора пункта меню. В качестве аргумента принимает номер пункта.",
@@ -1574,7 +1629,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("bank")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда пополнения баланса в банке. В качестве аргумента принимает сумму пополнения.",
@@ -1599,7 +1654,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("parsenicks")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда парсинга игроков в файл. Не требует аргументов.",
@@ -1642,7 +1697,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("follow")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда повтора действий за игроком. В качестве аргумента принимает ID игрока",
@@ -1702,7 +1757,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("stick")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения липучки. В качестве аргумента принимает ID игрока",
@@ -1762,7 +1817,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("virtualworld")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения виртуального мира. Не требует аргументов.",
@@ -1788,7 +1843,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("botloader")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения бота грузчика. Не требует аргументов.",
@@ -1806,7 +1861,6 @@ void RunCommand(const char *cmdstr) {
 		vars.botLoaderEnabled ^= true;
 		if (vars.botLoaderEnabled) {
 			DoCoordMaster(true, 2126.78f, -2281.03f, 24.88f);
-			LoaderStep = BOTLOADER_STEP_STARTWORK;
 			RakBot::app()->log("[RAKBOT] Бот грузчика: включен");
 		} else {
 			RakBot::app()->log("[RAKBOT] Бот грузчика: отключен");
@@ -1815,7 +1869,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("skipdialog")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения пропуска диалогов. Подробнее: введите \"!skipdialog\"",
@@ -1869,7 +1923,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("cpm")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения чекпоинт мастера. Не требует аргументов.",
@@ -1889,7 +1943,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("antideath")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения антисмерти (бот не спавнится при 0 ХП). Не требует аргументов.",
@@ -1909,7 +1963,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("botfarmer")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения бота фермера (включается уже на поле, для полной автоматизации используйте \"!farm\"). Не требует аргументов.",
@@ -1933,7 +1987,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("parsestat")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда сбора информации об аккаунте (только Samp-Rp). Не требует аргументов.",
@@ -1954,7 +2008,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("map")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда открытия/закрытия карты. Не требует аргументов.",
@@ -1973,7 +2027,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("farchat")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения дальнего чата (расширить дальность получения сообщений чата). Не требует аргументов.",
@@ -1993,7 +2047,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("skipmsg")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения пропуска сообщений сервера в чате. Не требует аргументов.",
@@ -2013,7 +2067,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("badpos")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения искаженной синхронизации. Не требует аргументов.",
@@ -2033,7 +2087,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("smartinvis")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда включения/выключения невидимки. Не требует аргументов.",
@@ -2053,7 +2107,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("autoschool")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда начала/завершения сдачи на права. Не требует аргументов.",
@@ -2080,7 +2134,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("botkill")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда убийства бота. Не требует аргументов.",
@@ -2098,7 +2152,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("debug")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда запуска окна отладки. Не требует аргументов.",
@@ -2125,7 +2179,7 @@ void RunCommand(const char *cmdstr) {
 
 
 	if (cmdcmp("tdclick")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда клика по текстдраву. В качестве аргумента принимает ID текстдрава.",
@@ -2148,7 +2202,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("setnick")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда установки ника бота. В качестве аргумента принимает новый ник (до 20 символов).",
@@ -2171,7 +2225,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("setpass")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда установки пароля бота. В качестве аргумента принимает новый пароль (до 120 символов).",
@@ -2196,7 +2250,7 @@ void RunCommand(const char *cmdstr) {
 
 	if (cmdcmp("setip")) {
 
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда установки IP сервера. В качестве аргумента принимает новый IP (формат адрес:порт).",
@@ -2240,7 +2294,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("setweapon")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда установка оружия. В качестве аргумента принимает ID оружия.",
@@ -2280,7 +2334,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("saveakk")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда сохранения аккаунта (аналогична кнопке в лаунчере). Не требует аргументов.",
@@ -2391,7 +2445,7 @@ void RunCommand(const char *cmdstr) {
 	}
 
 	if (cmdcmp("delakk")) {
-		if (strstr(cmd, "-help")) {
+		if (strstr(cmd, "+help")) {
 			MessageBox(
 				g_hWndMain,
 				"Команда удаления ярлыка текущего аккаунта. Не требует аргументов.",
@@ -2470,6 +2524,11 @@ void RunCommand(const char *cmdstr) {
 		}
 
 		getchar();
+		return;
+	}
+
+	if (cmdcmp("showdialog")) {
+		RakBot::app()->getSampDialog()->showDialog();
 		return;
 	}
 

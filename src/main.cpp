@@ -32,104 +32,94 @@ void CreateMiniDump(EXCEPTION_POINTERS *ExceptionInfo);
 LONG WINAPI unhandledExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo);
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
-	try {
-		char *locale = "RUSSIAN";
-		setlocale(LC_COLLATE, locale);
-		setlocale(LC_MONETARY, locale);
-		setlocale(LC_TIME, locale);
-		setlocale(LC_CTYPE, locale);
+	char *locale = "RUSSIAN";
+	setlocale(LC_COLLATE, locale);
+	setlocale(LC_MONETARY, locale);
+	setlocale(LC_TIME, locale);
+	setlocale(LC_CTYPE, locale);
 
-		// RunCommand("!debug");
-		OrigExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
+	RunCommand("!debug");
+	OrigExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
 
-		bool configLoaded = LoadConfig();
-		bool customLoaded = LoadCustom();
+	bool configLoaded = LoadConfig();
+	bool customLoaded = LoadCustom();
 
-		if (!configLoaded || !customLoaded)
-			return 0;
-
-		g_hInst = hInstance;
-		g_hIcon = (HICON)LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_ICON));
-
-		CheckKey();
-		if (!vars.keyAccepted)
-			return 0;
-
-		RegisterRPCs();
-
-		HANDLE mainWindowThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(MainWindow), NULL, NULL, NULL);
-		while (!vars.windowOpened || !g_hWndMain)
-			SwitchToThread();
-
-		SYSTEMTIME time;
-		GetLocalTime(&time);
-		RakBot::app()->log("* ===================================================== *");
-		RakBot::app()->log("  RakBot " RAKBOT_VERSION " инициализирован");
-		RakBot::app()->log("  Автор адаптации: " ADAPT_AUTHOR);
-		RakBot::app()->log("  Автор перевода: " TRNSLT_AUTHOR);
-		RakBot::app()->log("  Благодарность: " SPECIAL_THANKS);
-		RakBot::app()->log("  RakBot.Ru");
-		RakBot::app()->log("* ===================================================== *");
-
-		if (vars.luaUpdateDelay < vars.mainDelay) {
-			RakBot::app()->log("[WARNING] Задержка обновления скриптов (%d) не может быть меньше основной задержки обновления (%d)!", vars.luaUpdateDelay, vars.mainDelay);
-		}
-
-		if (vars.networkUpdateDelay < vars.mainDelay) {
-			RakBot::app()->log("[WARNING] Задержка обновления сети (%d) не может быть меньше основной задержки обновления (%d)!", vars.luaUpdateDelay, vars.mainDelay);
-		}
-
-		LoadScripts();
-
-		RakBot::app()->log("[RAKBOT] IP сервера: %s:%d", RakBot::app()->getSettings()->getAddress()->getIp().c_str(), RakBot::app()->getSettings()->getAddress()->getPort());
-		RakBot::app()->log("[RAKBOT] Ник игрока: %s", RakBot::app()->getSettings()->getName().c_str());
-		RakBot::app()->log("[RAKBOT] Пароль игрока: %s", RakBot::app()->getSettings()->getLoginPassword().c_str());
-
-		srand((unsigned int)GetTickCount());
-
-		LoadAdmins();
-
-		RakBot::app()->getServerInfo()->socketInit();
-
-		while (!RakBot::app()->isBotOff()) {
-			Sleep(vars.mainDelay);
-			RakBot::app()->getEvents()->onUpdate();
-		}
-
-		RakBot::app()->log("[RAKBOT] Завершение работы...");
-
-		UnloadScripts();
-
-		CloseMapWindow();
-
-		RakBot::app()->log("[RAKBOT] Ожидание завершения потока главного окна");
-		WaitForSingleObject(mainWindowThread, INFINITE);
-
-		RakBot::app()->log("[RAKBOT] Ожидание завершения потока окна карты");
-		WaitForSingleObject(vars.mapWindowThread, INFINITE);
-
-		RakBot::app()->log("[RAKBOT] Ожидание завершения потока окна диалога");
-		WaitForSingleObject(vars.dialogWindowThread, INFINITE);
-
-		RakBot::app()->log("[RAKBOT] Ожидание завершения потока маршрутов");
-		WaitForSingleObject(vars.routeThread, INFINITE);
-
-		RakBot::app()->log("[RAKBOT] Работа завершена");
-
-		if (vars.logFile != nullptr)
-			fclose(vars.logFile);
-
+	if (!configLoaded || !customLoaded)
 		return 0;
-	} catch (const char *e) {
-		std::cerr << "Ошибка: " << e << std::endl;
-		return 1;
-	} catch (const std::exception &e) {
-		std::cerr << "Ошибка: " << e.what() << std::endl;
-		return 1;
-	} catch (...) {
-		std::cerr << "Неизвестная ошибка!" << std::endl;
-		return 1;
+
+	g_hInst = hInstance;
+	g_hIcon = (HICON)LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_ICON));
+
+	CheckKey();
+	if (!vars.keyAccepted)
+		return 0;
+
+	RegisterRPCs();
+
+	HANDLE mainWindowThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(MainWindow), NULL, NULL, NULL);
+	while (!vars.windowOpened || !g_hWndMain)
+		SwitchToThread();
+
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+	RakBot::app()->log("* ===================================================== *");
+	RakBot::app()->log("  RakBot " RAKBOT_VERSION " инициализирован");
+	RakBot::app()->log("  Автор адаптации: " ADAPT_AUTHOR);
+	RakBot::app()->log("  Автор перевода: " TRNSLT_AUTHOR);
+	RakBot::app()->log("  Благодарность: " SPECIAL_THANKS);
+	RakBot::app()->log("  RakBot.Ru");
+	RakBot::app()->log("* ===================================================== *");
+
+	if (vars.luaUpdateDelay < vars.mainDelay) {
+		RakBot::app()->log("[WARNING] Задержка обновления скриптов (%d) не может быть меньше основной задержки обновления (%d)!", vars.luaUpdateDelay, vars.mainDelay);
 	}
+
+	if (vars.networkUpdateDelay < vars.mainDelay) {
+		RakBot::app()->log("[WARNING] Задержка обновления сети (%d) не может быть меньше основной задержки обновления (%d)!", vars.networkUpdateDelay, vars.mainDelay);
+	}
+
+	if (vars.routeUpdateDelay < vars.mainDelay) {
+		RakBot::app()->log("[WARNING] Задержка воспроизведения маршрута (%d) не может быть меньше основной задержки обновления (%d)!", vars.routeUpdateDelay, vars.mainDelay);
+	}
+
+	LoadScripts();
+
+	RakBot::app()->log("[RAKBOT] IP сервера: %s:%d", RakBot::app()->getSettings()->getAddress()->getIp().c_str(), RakBot::app()->getSettings()->getAddress()->getPort());
+	RakBot::app()->log("[RAKBOT] Ник игрока: %s", RakBot::app()->getSettings()->getName().c_str());
+	RakBot::app()->log("[RAKBOT] Пароль игрока: %s", RakBot::app()->getSettings()->getLoginPassword().c_str());
+
+	srand((unsigned int)GetTickCount());
+
+	LoadAdmins();
+
+	RakBot::app()->getServerInfo()->socketInit();
+
+	while (!RakBot::app()->isBotOff()) {
+		Sleep(vars.mainDelay);
+		RakBot::app()->getEvents()->onUpdate();
+	}
+
+	RakBot::app()->log("[RAKBOT] Завершение работы...");
+
+	UnloadScripts();
+
+	CloseMapWindow();
+
+	RakBot::app()->log("[RAKBOT] Ожидание завершения потока главного окна");
+	WaitForSingleObject(mainWindowThread, INFINITE);
+
+	RakBot::app()->log("[RAKBOT] Ожидание завершения потока окна карты");
+	WaitForSingleObject(vars.mapWindowThread, INFINITE);
+
+	RakBot::app()->log("[RAKBOT] Ожидание завершения потока окна диалога");
+	WaitForSingleObject(vars.dialogWindowThread, INFINITE);
+
+	RakBot::app()->log("[RAKBOT] Работа завершена");
+
+	if (vars.logFile != nullptr)
+		fclose(vars.logFile);
+
+	return 0;
 }
 
 void LoadAdmins() {

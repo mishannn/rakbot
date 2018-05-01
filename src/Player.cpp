@@ -11,10 +11,19 @@ Player::~Player() {
 }
 
 void Player::reset() {
+	_active = false;
 	_inStream = false;
 	_admin = false;
 
 	PlayerBase::reset();
+}
+
+void Player::setActive(bool active) {
+	_active = active;
+}
+
+bool Player::isActive() {
+	return _active;
 }
 
 // IN STREAM

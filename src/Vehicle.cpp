@@ -26,6 +26,7 @@ Vehicle::~Vehicle() {
 }
 
 void Vehicle::reset() {
+	_active = false;
 	_doorsOpened = false;
 	_engineEnabled = false;
 	_lightsEnabled = false;
@@ -45,6 +46,14 @@ void Vehicle::reset() {
 	_carHealth = 0.f;
 	_driver = nullptr;
 	_passenger = nullptr;
+}
+
+void Vehicle::setActive(bool active) {
+	_active = active;
+}
+
+bool Vehicle::isActive() {
+	return _active;
 }
 
 void Vehicle::setDoorsOpened(bool doorsOpened) {

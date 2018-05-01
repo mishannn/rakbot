@@ -7,12 +7,21 @@ Pickup::Pickup() {}
 Pickup::~Pickup() {}
 
 void Pickup::reset() {
+	_active = false;
 	_pickupId = 0;
 	_model = 0;
 	_type = 0;
 
 	for (int i = 0; i < 3; i++)
 		_position[i] = 0.f;
+}
+
+void Pickup::setActive(bool active) {
+	_active = active;
+}
+
+bool Pickup::isActive() {
+	return _active;
 }
 
 void Pickup::setPickupId(int pickupId) {

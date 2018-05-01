@@ -1,10 +1,6 @@
 #include "StdAfx.h"
 
 #include "RakNet.h"
-#include "Pickup.h"
-#include "PlayerBase.h"
-#include "Player.h"
-#include "Vehicle.h"
 
 #include "window.h"
 
@@ -12,13 +8,13 @@
 
 RakBot::RakBot() {
 	for (int i = 0; i < MAX_PLAYERS; i++)
-		_players[i] = nullptr;
+		_players[i].reset();
 
 	for (int i = 0; i < MAX_VEHICLES; i++)
-		_vehicles[i] = nullptr;
+		_vehicles[i].reset();
 
 	for (int i = 0; i < MAX_PICKUPS; i++)
-		_pickups[i] = nullptr;
+		_pickups[i].reset();
 
 	_bot.reset(true);
 	_settings.reset();
@@ -35,27 +31,6 @@ RakBot::RakBot() {
 RakBot::~RakBot() {
 	if (_rakClient != nullptr)
 		RakNetworkFactory::DestroyRakClientInterface(_rakClient);
-
-	for (int i = 0; i < MAX_VEHICLES; i++) {
-		if (_vehicles[i] != nullptr) {
-			delete _vehicles[i];
-			_vehicles[i] = nullptr;
-		}
-	}
-
-	for (int i = 0; i < MAX_PICKUPS; i++) {
-		if (_pickups[i] != nullptr) {
-			delete _pickups[i];
-			_pickups[i] = nullptr;
-		}
-	}
-
-	for (int i = 0; i < MAX_PLAYERS; i++) {
-		if (_players[i] != nullptr) {
-			delete _players[i];
-			_players[i] = nullptr;
-		}
-	}
 }
 
 RakBot *RakBot::app() {
@@ -79,32 +54,33 @@ Player *RakBot::getPlayer(uint16_t playerId) {
 	if (playerId < 0 || playerId >= MAX_PLAYERS)
 		return nullptr;
 
-	return _players[playerId];
+	if (_players[playerId].isActive())
+		return nullptr;
+
+	return &_players[playerId];
 }
 
 Player *RakBot::addPlayer(uint16_t playerId) {
 	if (playerId < 0 || playerId >= MAX_PLAYERS)
 		return nullptr;
 
-	if (_players[playerId] != nullptr)
-		return _players[playerId];
+	if (_players[playerId].isActive())
+		return &_players[playerId];
 
-	_players[playerId] = new Player;
-	_players[playerId]->reset();
-	_players[playerId]->setPlayerId(playerId);
+	_players[playerId].setPlayerId(playerId);
+	_players[playerId].setActive(true);
 
-	return _players[playerId];
+	return &_players[playerId];
 }
 
 void RakBot::deletePlayer(uint16_t playerId) {
 	if (playerId < 0 || playerId >= MAX_PLAYERS)
 		return;
 
-	if (_players[playerId] == nullptr)
+	if (!_players[playerId].isActive())
 		return;
 
-	delete _players[playerId];
-	_players[playerId] = nullptr;
+	_players[playerId].reset();
 }
 
 uint16_t RakBot::getPlayersCount() {
@@ -114,8 +90,7 @@ uint16_t RakBot::getPlayersCount() {
 	uint16_t count = 1;
 
 	for (int i = 0; i < MAX_PLAYERS; i++) {
-		Player *player = _players[i];
-		if (player == nullptr)
+		if (!_players[i].isActive())
 			continue;
 		count++;
 	}
@@ -127,62 +102,66 @@ Pickup *RakBot::getPickup(int pickupId) {
 	if (pickupId < 0 || pickupId >= MAX_PICKUPS)
 		return nullptr;
 
-	return _pickups[pickupId];
+	if (!_pickups[pickupId].isActive())
+		return nullptr;
+
+	return &_pickups[pickupId];
 }
 
 Pickup *RakBot::addPickup(int pickupId) {
 	if (pickupId < 0 || pickupId >= MAX_PICKUPS)
 		return nullptr;
 
-	if (_pickups[pickupId] != nullptr)
-		return _pickups[pickupId];
+	if (_pickups[pickupId].isActive())
+		return &_pickups[pickupId];
 
-	_pickups[pickupId] = new Pickup;
-	_pickups[pickupId]->reset();
-	_pickups[pickupId]->setPickupId(pickupId);
-	return _pickups[pickupId];
+	_pickups[pickupId].setPickupId(pickupId);
+	_pickups[pickupId].setActive(true);
+
+	return &_pickups[pickupId];
 }
 
 void RakBot::deletePickup(int pickupId) {
 	if (pickupId < 0 || pickupId >= MAX_PICKUPS)
 		return;
 
-	if (_pickups[pickupId] == nullptr)
+	if (!_pickups[pickupId].isActive())
 		return;
 
-	delete _pickups[pickupId];
-	_pickups[pickupId] = nullptr;
+	_pickups[pickupId].reset();
 }
 
 Vehicle *RakBot::getVehicle(uint16_t vehicleId) {
 	if (vehicleId < 1 || vehicleId >= MAX_VEHICLES)
 		return nullptr;
 
-	return _vehicles[vehicleId];
+	if (!_vehicles[vehicleId].isActive())
+		return nullptr;
+
+	return &_vehicles[vehicleId];
 }
 
 Vehicle *RakBot::addVehicle(uint16_t vehicleId) {
 	if (vehicleId < 1 || vehicleId >= MAX_VEHICLES)
 		return nullptr;
 
-	if (_vehicles[vehicleId] != nullptr)
-		return _vehicles[vehicleId];
+	if (_vehicles[vehicleId].isActive())
+		return &_vehicles[vehicleId];
 
-	_vehicles[vehicleId] = new Vehicle;
-	_vehicles[vehicleId]->reset();
-	_vehicles[vehicleId]->setVehicleId(vehicleId);
-	return _vehicles[vehicleId];
+	_vehicles[vehicleId].setVehicleId(vehicleId);
+	_vehicles[vehicleId].setActive(true);
+
+	return &_vehicles[vehicleId];
 }
 
 void RakBot::deleteVehicle(uint16_t vehicleId) {
 	if (vehicleId < 1 || vehicleId >= MAX_VEHICLES)
 		return;
 
-	if (_vehicles[vehicleId] == nullptr)
+	if (!_vehicles[vehicleId].isActive())
 		return;
 
-	delete _vehicles[vehicleId];
-	_vehicles[vehicleId] = nullptr;
+	_vehicles[vehicleId].reset();
 }
 
 Bot *RakBot::getBot() {

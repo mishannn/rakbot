@@ -35,7 +35,7 @@ void NoAfk() {
 	if (vars.stickEnabled || vars.followEnabled)
 		return;
 
-	if (!vars.BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
+	if (!vars.botSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
 		return;
 
 	static Timer timer;
@@ -47,45 +47,55 @@ void NoAfk() {
 }
 
 void RoutePlay() {
-	vars.routeIndex = 0;
+	static Timer timer;
+	if (timer.isElapsed(vars.routeUpdateDelay, true))
+		return;
 
-	while (vars.routeEnabled && !RakBot::app()->isBotOff()) {
-		Sleep(static_cast<uint32_t>(vars.routeSpeed));
+	if (!vars.routeEnabled)
+		return;
 
-		Bot *bot = RakBot::app()->getBot();
-		RakClientInterface *rakClient = RakBot::app()->getRakClient();
-		BitStream data;
+	Bot *bot = RakBot::app()->getBot();
 
-		if (bot->isSpawned()) {
-			if (vars.routeIndex >= vars.routeData.size()) {
-				if (!vars.routeLoop) {
-					vars.routeEnabled = false;
-					vars.syncAllowed = true;
-					RakBot::app()->log("[RAKBOT] Сохраненный маршрут: остановлен");
-					break;
-				} else {
-					RakBot::app()->log("[RAKBOT] Сохраненный маршрут: повтор");
-					vars.routeIndex = 0;
-				}
-			}
+	if (!bot->isSpawned())
+		return;
 
-			for (int i = 0; i < 4; i++)
-				bot->setQuaternion(i, vars.routeData[vars.routeIndex].quaternion[i]);
-
+	if (vars.routeIndex >= vars.routeData.size()) {
+		if (!vars.routeLoop) {
+			vars.routeEnabled = false;
+			vars.syncAllowed = true;
+			bot->getKeys()->reset();
+			bot->getAnimation()->reset();
 			for (int i = 0; i < 3; i++)
-				bot->setPosition(i, vars.routeData[vars.routeIndex].position[i]);
-
-			for (int i = 0; i < 3; i++)
-				bot->setSpeed(i, vars.routeData[vars.routeIndex].speed[i]);
-
-			bot->getAnimation()->setAnimFlags(vars.routeData[vars.routeIndex].animFlags);
-			bot->getAnimation()->setAnimId(vars.routeData[vars.routeIndex].animId);
-			bot->getKeys()->setKeyId(vars.routeData[vars.routeIndex].keys);
-			bot->getKeys()->setLeftRightKey(vars.routeData[vars.routeIndex].leftRightKey);
-			bot->getKeys()->setUpDownKey(vars.routeData[vars.routeIndex].upDownKey);
+				bot->setSpeed(i, 0.f);
 			bot->sync();
-			vars.routeIndex++;
+			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: остановлен");
+			return;
+		} else {
+			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: повтор");
+			vars.routeIndex = 0;
 		}
+	}
+
+	for (int c = 0; c < vars.routeUpdateCount; c++) {
+		if (vars.routeIndex >= vars.routeData.size())
+			return;
+
+		for (int i = 0; i < 4; i++)
+			bot->setQuaternion(i, vars.routeData[vars.routeIndex].quaternion[i]);
+
+		for (int i = 0; i < 3; i++)
+			bot->setPosition(i, vars.routeData[vars.routeIndex].position[i]);
+
+		for (int i = 0; i < 3; i++)
+			bot->setSpeed(i, vars.routeData[vars.routeIndex].speed[i]);
+
+		bot->getAnimation()->setAnimFlags(vars.routeData[vars.routeIndex].animFlags);
+		bot->getAnimation()->setAnimId(vars.routeData[vars.routeIndex].animId);
+		bot->getKeys()->setKeyId(vars.routeData[vars.routeIndex].keys);
+		bot->getKeys()->setLeftRightKey(vars.routeData[vars.routeIndex].leftRightKey);
+		bot->getKeys()->setUpDownKey(vars.routeData[vars.routeIndex].upDownKey);
+		bot->sync();
+		vars.routeIndex++;
 	}
 }
 
@@ -162,7 +172,7 @@ void CheckOnlineAndId() {
 			}
 		}
 
-		if (!vars.GameInitedTimer.isElapsed(5000, false))
+		if (!vars.gameInitedTimer.isElapsed(5000, false))
 			return;
 
 		if (vars.checkOnlineEnabled) {
@@ -271,193 +281,69 @@ void AdminChecker() {
 	}
 }
 
-int LoaderStep = -1;
-int BagCount = 0;
-bool BotWithBag = false;
-Timer BotTakenBagTimer = UINT32_MAX;
+int BotLoaderBagCount = 0;
+bool BotLoaderWithBag = false;
+bool BotLoaderWaitDialog = false;
+bool BotLoaderWaitAfterPay = false;
+Timer BotLoaderTakenBagTimer = UINT32_MAX;
 
 void BotLoader() {
-	static Timer afterGetPayTimer(0);
-	if (!afterGetPayTimer.isElapsed(10000, false))
+	static Timer timer;
+	if (!timer.isElapsed(1000, true))
+		return;
+
+	if (!vars.botLoaderEnabled || vars.coordMasterEnabled)
+		return;
+
+	if (BotLoaderWaitDialog || BotLoaderWaitAfterPay)
 		return;
 
 	Bot *bot = RakBot::app()->getBot();
 
-	if (!vars.botLoaderEnabled || !bot->isSpawned() || vars.coordMasterEnabled || SampRpFuncs::isBotSuspended())
+	if (!bot->isSpawned() || SampRpFuncs::isBotSuspended())
 		return;
 
-	if (!vars.sendBadSync)
-		vars.sendBadSync = true;
+	float botPosition[3];
+	for (int i = 0; i < 3; i++)
+		botPosition[i] = bot->getPosition(i);
 
-	if (LoaderStep == BOTLOADER_STEP_STARTWORK) {
-		if (bot->getSkin() == 260 || bot->getSkin() == 16 || bot->getSkin() == 27) {
-			LoaderStep = BOTLOADER_STEP_TAKEBAG;
-			bot->teleport(2231.10f, -2285.39f, 11.88f);
-			return;
-		}
+	float loaderPosition[3] = { 2126.78f, -2281.03f, 24.88f };
 
-		Pickup *pickup = FindNearestPickup(1275);
-		if (pickup == nullptr)
-			return;
-
-		RakBot::app()->log("[RAKBOT] Начало работы грузчика...");
-		SampRpFuncs::pickUpPickup(pickup);
+	if (vect3_dist(botPosition, loaderPosition) > 120.f)
 		return;
-	}
 
-	if (LoaderStep == BOTLOADER_STEP_TAKEBAG) {
-		if (vars.botLoaderCount > 0) {
-			if ((BagCount >= vars.botLoaderCount) && (BagCount % vars.botLoaderCount == 0)) {
-				bot->teleport(2160.f, -2265.f, 14.08f);
-				LoaderStep = BOTLOADER_STEP_GETPAY;
+	if ((bot->getSkin() == 260 || bot->getSkin() == 16 || bot->getSkin() == 27) && BotLoaderBagCount < vars.botLoaderCount) {
+		if (BotLoaderWithBag) {
+			if (!BotLoaderTakenBagTimer.isElapsed(vars.botLoaderDelay, false))
 				return;
-			}
-		}
 
-		if (BotWithBag) {
-			LoaderStep = BOTLOADER_STEP_WAITING;
-			return;
-		}
-
-		SampRpFuncs::takeCheckpoint();
-		LoaderStep = BOTLOADER_STEP_WAITING;
-		return;
-	}
-
-	if (LoaderStep == BOTLOADER_STEP_WAITING) {
-		if (!BotWithBag) {
-			LoaderStep = BOTLOADER_STEP_TAKEBAG;
-			return;
-		}
-
-		if (BotWithBag && (BotTakenBagTimer.getTimer() == UINT32_MAX)) {
-			bot->teleport(2231.10f, -2285.39f, 11.88f);
-			BotTakenBagTimer.setTimerFromCurrentTime();
-			return;
-		}
-
-		if (BotWithBag && (BotTakenBagTimer.isElapsed(vars.botLoaderDelay - 3000, false))) {
-			LoaderStep = BOTLOADER_STEP_PUTBAG;
-			BotTakenBagTimer.setTimer(UINT32_MAX);
-			return;
+			// RakBot::app()->log("[RAKBOT] Бот грузчика: сдаем мешок...");
+			SampRpFuncs::takeCheckpoint([bot]() {
+				srand(static_cast<uint32_t>(time(NULL)));
+				float offsetX = (-0.5f) + (static_cast<float>(rand() % 101) / 100.f);
+				float offsetY = 0.5f - (static_cast<float>(rand() % 101) / 100.f);
+				bot->teleport(2201.f + offsetX, -2271.f + offsetY, 14.f);
+			});
+		} else {
+			// RakBot::app()->log("[RAKBOT] Бот грузчика: поднимаем мешок...");
+			SampRpFuncs::takeCheckpoint([bot]() {
+				srand(static_cast<uint32_t>(time(NULL)));
+				float offsetX = (-0.5f) + (static_cast<float>(rand() % 101) / 100.f);
+				float offsetY = 0.5f - (static_cast<float>(rand() % 101) / 100.f);
+				bot->teleport(2201.f + offsetX, -2271.f + offsetY, 14.f);
+			});
 		}
 		return;
 	}
 
-	if (LoaderStep == BOTLOADER_STEP_PUTBAG) {
-		if (!BotWithBag) {
-			LoaderStep = BOTLOADER_STEP_TAKEBAG;
-			bot->teleport(2231.10f, -2285.39f, 11.88f);
-			return;
-		}
-
-		SampRpFuncs::takeCheckpoint();
-		LoaderStep = BOTLOADER_STEP_TAKEBAG;
+	Pickup *pickup = FindNearestPickup(1275);
+	if (pickup == nullptr)
 		return;
-	}
 
-	if (LoaderStep == BOTLOADER_STEP_GETPAY) {
-		Pickup *pickup = FindNearestPickup(1274);
-		if (pickup == nullptr)
-			return;
-
-		RakBot::app()->log("[RAKBOT] Получение ЗП грузчика...");
-		SampRpFuncs::pickUpPickup(pickup);
-		bot->teleport(2231.10f, -2285.39f, 11.88f);
-		LoaderStep = BOTLOADER_STEP_TAKEBAG;
-		BagCount = 0;
-		afterGetPayTimer.setTimerFromCurrentTime();
-		return;
-	}
-
-	/* int iPickupID = ;
-	if (iPickupID != -1) {
-		switch (LoaderStep) {
-			case 0:
-			{
-				if (bot->getSkin() != 260 && bot->getSkin() != 16 && bot->getSkin() != 27) {
-					LoaderStep = 6;
-					break;
-				} else if (BagCount >= vars.botLoaderCount) {
-					BagCount = 0;
-					LoaderStep = 5;
-					bot->sync(2160.f, -2265.f, 14.08f);
-					Sleep(500);
-					int iGetPayPickup = FindNearestPickup(1274);
-					SampRpFuncs::pickUpPickup(iGetPayPickup);
-					RakBot::app()->log("[RAKBOT] Получение ЗП грузчика...");
-				} else {
-					bot->sync(2231.10f, -2285.39f, 11.88f);
-					LoaderStep = 1;
-				}
-				Sleep((uint32_t)(vars.botLoaderDelay * 0.1875f));
-			}
-			break;
-
-			case 1:
-			{
-				bot->sync(2231.11f, -2285.40f, 14.38f);
-				LoaderStep = 2;
-			}
-			break;
-
-			case 2:
-			{
-				bot->sync(2231.10f, -2285.39f, 11.88f);
-				LoaderStep = 3;
-				Sleep((uint32_t)((vars.botLoaderDelay * 0.625f) - 250));
-			}
-			break;
-
-			case 3:
-			{
-				bot->sync(2171.69f, -2255.39f, 10.80f);
-				LoaderStep = 4;
-				Sleep((uint32_t)(vars.botLoaderDelay * 0.1875f));
-			}
-			break;
-
-			case 4:
-			{
-				int iLoadPickupID = FindNearestPickup(19197);
-				if (iLoadPickupID != -1 && vars.botLoaderCheckVans) {
-					RakBot::app()->log("[RAKBOT] Сдача мешка в машину");
-					SampRpFuncs::pickUpPickup(iLoadPickupID);
-				} else
-					bot->sync(2171.70f, -2255.40f, 13.30f);
-
-				bot->sync(2195.07f, -2269.02f, -10.00f);
-				Sleep(250);
-				LoaderStep = 0;
-			}
-			break;
-
-			case 5:
-			{
-				SampRpFuncs::pickUpPickup(FindNearestPickup(1274));
-				LoaderStep = 0;
-				BagCount = 0;
-			}
-			break;
-
-			case 6:
-			{
-				RakBot::app()->log("[RAKBOT] Начало работы грузчика...");
-				SampRpFuncs::pickUpPickup(iPickupID);
-				LoaderStep = 0;
-
-				if (vars.savedTeleportEnabled) {
-					vect3_copy(vars.savedCoords, vars.coordMasterTarget);
-					vars.coordMasterEnabled = true;
-					RakBot::app()->log("[RAKBOT] Телепорт на сохраненные координаты");
-				}
-			}
-			break;
-		}
-	} else {
-		BagCount = 0;
-		LoaderStep = 6;
-	} */
+	RakBot::app()->log("[RAKBOT] Бот грузчика: поднятие пикапа раздевалки...");
+	SampRpFuncs::pickUpPickup(pickup);
+	BotLoaderWaitDialog = true;
+	BotLoaderBagCount = 0;
 }
 
 void BusBot() {
@@ -592,7 +478,7 @@ void CoordMaster() {
 
 	Bot *bot = RakBot::app()->getBot();
 
-	if (!vars.BotSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
+	if (!vars.botSpawnedTimer.isElapsed(vars.afterSpawnDelay, false))
 		return;
 
 	if (!bot->isSpawned())
@@ -952,6 +838,7 @@ void SleepAnim() {
 }
 
 void FuncsLoop() {
+	RoutePlay();
 	Flood();
 	CoordMaster();
 	CheckPointMaster();
@@ -971,8 +858,7 @@ void FuncsLoop() {
 }
 
 void FuncsOff() {
-	BagCount = 0;
-	LoaderStep = 0;
+	BotLoaderBagCount = 0;
 	FarmCount = 0;
 	FarmGetPay = 0;
 	FarmWork = 0;

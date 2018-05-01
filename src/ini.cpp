@@ -54,6 +54,12 @@ bool LoadCustom() {
 		GetPrivateProfileString(szAppName, "Loop", "1", szBuf, sizeof(szBuf), szPath);
 		vars.routeLoop = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
 
+		GetPrivateProfileString(szAppName, "Delay", "50", szBuf, sizeof(szBuf), szPath);
+		vars.routeUpdateDelay = std::strtoul(szBuf, nullptr, 10);
+
+		GetPrivateProfileString(szAppName, "Count", "2", szBuf, sizeof(szBuf), szPath);
+		vars.routeUpdateCount = std::strtoul(szBuf, nullptr, 10);
+
 		szAppName = "TextDraw";
 		GetPrivateProfileString(szAppName, "CreateLog", "1", szBuf, sizeof(szBuf), szPath);
 		vars.textDrawCreateLogging = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
@@ -90,6 +96,8 @@ bool LoadCustom() {
 
 		szAppName = "Route";
 		WritePrivateProfileString(szAppName, "Loop", "1", szPath);
+		WritePrivateProfileString(szAppName, "Delay", "50", szPath);
+		WritePrivateProfileString(szAppName, "Count", "2", szPath);
 
 		szAppName = "TextDraw";
 		WritePrivateProfileString(szAppName, "CreateLog", "1", szPath);
@@ -126,8 +134,8 @@ void LoadRoute(char *routeName) {
 		}
 
 		routeFile.close();
+		vars.routeIndex = 0;
 
-		vars.routeSpeed = 25.f;
 		RakBot::app()->log("[RAKBOT] Маршрут '%s' успешно загружен", routeName);
 	} else {
 		RakBot::app()->log("[RAKBOT] Маршрут '%s' не найден", routeName);
@@ -268,13 +276,12 @@ bool LoadConfig() {
 
 	vars.noAfk = true;
 	vars.timeStamp = true;
-	vars.routeSpeed = 0;
 	vars.logFile = nullptr;
 
-	vars.BotConnectedTimer.setTimer(UINT32_MAX);
-	vars.BotSpawnedTimer.setTimer(UINT32_MAX);
-	vars.GameInitedTimer.setTimer(UINT32_MAX);
-	vars.ReconnectTimer.setTimer(0);
+	vars.botConnectedTimer.setTimer(UINT32_MAX);
+	vars.botSpawnedTimer.setTimer(UINT32_MAX);
+	vars.gameInitedTimer.setTimer(UINT32_MAX);
+	vars.reconnectTimer.setTimer(0);
 
 	return result;
 }
