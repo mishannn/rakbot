@@ -28,8 +28,11 @@ private:
 
 	std::string _scriptName;
 	sol::state _scriptState;
+	std::thread _scriptThread;
+	std::recursive_mutex _scriptMutex;
 
 	LuaDefCall _defCalls[LUA_MAXDEFCALLS];
+	std::recursive_mutex _defCallsMutex;
 
 	Script(std::string scriptName);
 	~Script();

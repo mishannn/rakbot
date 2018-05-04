@@ -56,14 +56,18 @@ void ServerJoin(RPCParameters *rpcParams) {
 	if (player == nullptr)
 		return;
 
+	printf("Player joined to the server: %s[%d]\n", name, playerId);
+
 	player->setName(std::string(name));
 
+	vars.adminsMutex.lock();
 	for (int i = 0; i < static_cast<int>(vars.admins.size()); i++) {
 		if (vars.admins[i] == std::string(name)) {
 			player->setAdmin(true);
 			break;
 		}
 	}
+	vars.adminsMutex.unlock();
 
 	RakBot::app()->getEvents()->onPlayerJoin(player);
 }
@@ -79,6 +83,8 @@ void ServerQuit(RPCParameters *rpcParams) {
 	Player *player = RakBot::app()->getPlayer(playerId);
 	if (player == nullptr)
 		return;
+
+	printf("Player left the server: %s[%d]\n", player->getName().c_str(), playerId);
 
 	RakBot::app()->getEvents()->onPlayerQuit(player, byteReason);
 	RakBot::app()->deletePlayer(playerId);
@@ -176,6 +182,8 @@ void WorldPlayerAdd(RPCParameters *rpcParams) {
 	if (player == nullptr)
 		return;
 
+	printf("Player entered the stream: %s[%d]\n", player->getName().c_str(), playerId);
+
 	player->setPlayerState(PLAYER_STATE_ONFOOT);
 	player->setInStream(true);
 	player->setHealth(100);
@@ -215,6 +223,8 @@ void WorldPlayerRemove(RPCParameters *rpcParams) {
 	Player *player = RakBot::app()->getPlayer(playerId);
 	if (player == nullptr)
 		return;
+
+	printf("Player out of the stream: %s[%d]\n", player->getName().c_str(), playerId);
 
 	player->setPlayerState(PLAYER_STATE_NONE);
 	player->setInStream(false);

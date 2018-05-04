@@ -12,6 +12,7 @@ SAMPDialog::SAMPDialog() {}
 SAMPDialog::~SAMPDialog() {}
 
 void SAMPDialog::reset() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_dialogActive = false;
 	_dialogOffline = false;
 	_dialogStyle = 0;
@@ -19,66 +20,82 @@ void SAMPDialog::reset() {
 }
 
 void SAMPDialog::setDialogActive(bool dialogActive) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_dialogActive = dialogActive;
 }
 
 bool SAMPDialog::isDialogActive() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _dialogActive;
 }
 
 void SAMPDialog::setDialogOffline(bool dialogOffline) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_dialogOffline = dialogOffline;
 }
 
 bool SAMPDialog::isDialogOffline() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _dialogOffline;
 }
 
 void SAMPDialog::setDialogStyle(uint8_t dialogStyle) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_dialogStyle = dialogStyle;
 }
 
 uint8_t SAMPDialog::getDialogStyle() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _dialogStyle;
 }
 
 void SAMPDialog::setDialogId(uint16_t dialogId) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_dialogId = dialogId;
 }
 
 uint16_t SAMPDialog::getDialogId() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _dialogId;
 }
 
 void SAMPDialog::setDialogTitle(std::string dialogTitle) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_dialogTitle = dialogTitle;
 }
 
 std::string SAMPDialog::getDialogTitle() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _dialogTitle;
 }
 
 void SAMPDialog::setOkButtonText(std::string okButtonText) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_okButtonText = okButtonText;
 }
 
 std::string SAMPDialog::getOkButtonText() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _okButtonText;
 }
 
 void SAMPDialog::setCancelButtonText(std::string cancelButtonText) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_cancelButtonText = cancelButtonText;
 }
 
 std::string SAMPDialog::getCancelButtonText() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _cancelButtonText;
 }
 
 void SAMPDialog::setDialogText(std::string dialogText) {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	_dialogText = dialogText;
 }
 
 std::string SAMPDialog::getDialogText() {
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 	return _dialogText;
 }
 
@@ -118,6 +135,7 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					break;
 
 				case DIALOG_STYLE_INPUT:
+				case DIALOG_STYLE_PASSWORD:
 				{
 					hwndEditBox = CreateWindowEx(NULL, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
 						10, 400, 365, 20, hwnd, (HMENU)IDE_INPUTEDIT, hInst, NULL);
@@ -143,6 +161,7 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				break;
 
 				case DIALOG_STYLE_LIST:
+				case DIALOG_STYLE_TABLIST:
 				{
 					hwndListBox = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTBOX, "",
 						WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
@@ -317,27 +336,25 @@ void SAMPDialog::showDialog() {
 	if (hwndSAMPDlg != NULL)
 		hideDialog();
 
-	if (RakBot::app()->getSampDialog()->getDialogStyle() == DIALOG_STYLE_PASSWORD)
-		RakBot::app()->getSampDialog()->setDialogStyle(DIALOG_STYLE_INPUT);
+	std::lock_guard<std::mutex> lock(_sampDialogMutex);
 
-	if (RakBot::app()->getSampDialog()->getDialogStyle() == DIALOG_STYLE_TABLIST)
-		RakBot::app()->getSampDialog()->setDialogStyle(DIALOG_STYLE_LIST);
-
-	if (RakBot::app()->getSampDialog()->getDialogId() == DIALOG_ID_NONE)
+	if (_dialogId == DIALOG_ID_NONE)
 		return;
 
-	switch (RakBot::app()->getSampDialog()->getDialogStyle()) {
+	switch (_dialogStyle) {
 		case DIALOG_STYLE_MSGBOX:
 		case DIALOG_STYLE_INPUT:
+		case DIALOG_STYLE_PASSWORD:
 		case DIALOG_STYLE_LIST:
-			if (!RakBot::app()->getSampDialog()->isDialogActive()) {
-				RakBot::app()->getSampDialog()->setDialogActive(true);
+		case DIALOG_STYLE_TABLIST:
+			if (!_dialogActive) {
+				_dialogActive = true;
 				vars.dialogWindowThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(DialogWindowThread), NULL, NULL, NULL);
 			}
 			break;
 
 		default:
-			if (RakBot::app()->getSampDialog()->isDialogActive()) {
+			if (_dialogActive) {
 				SendMessage(hwndSAMPDlg, WM_DESTROY, 0, 0);
 			}
 			break;

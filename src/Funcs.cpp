@@ -47,55 +47,55 @@ void NoAfk() {
 }
 
 void RoutePlay() {
-	static Timer timer;
-	if (timer.isElapsed(vars.routeUpdateDelay, true))
-		return;
+	while (!RakBot::app()->isBotOff()) {
+		Sleep(vars.routeUpdateDelay);
 
-	if (!vars.routeEnabled)
-		return;
+		if (!vars.routeEnabled)
+			continue;
 
-	Bot *bot = RakBot::app()->getBot();
+		Bot *bot = RakBot::app()->getBot();
 
-	if (!bot->isSpawned())
-		return;
+		if (!bot->isSpawned())
+			Sleep(100);
 
-	if (vars.routeIndex >= vars.routeData.size()) {
-		if (!vars.routeLoop) {
-			vars.routeEnabled = false;
-			vars.syncAllowed = true;
-			bot->getKeys()->reset();
-			bot->getAnimation()->reset();
-			for (int i = 0; i < 3; i++)
-				bot->setSpeed(i, 0.f);
-			bot->sync();
-			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: остановлен");
-			return;
-		} else {
-			RakBot::app()->log("[RAKBOT] Сохраненный маршрут: повтор");
-			vars.routeIndex = 0;
+		if (vars.routeIndex >= vars.routeData.size()) {
+			if (!vars.routeLoop) {
+				vars.routeEnabled = false;
+				vars.syncAllowed = true;
+				bot->getKeys()->reset();
+				bot->getAnimation()->reset();
+				for (int i = 0; i < 3; i++)
+					bot->setSpeed(i, 0.f);
+				bot->sync();
+				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: остановлен");
+				continue;
+			} else {
+				RakBot::app()->log("[RAKBOT] Сохраненный маршрут: повтор");
+				vars.routeIndex = 0;
+			}
 		}
-	}
 
-	for (int c = 0; c < vars.routeUpdateCount; c++) {
-		if (vars.routeIndex >= vars.routeData.size())
-			return;
+		for (int c = 0; c < vars.routeUpdateCount; c++) {
+			if (vars.routeIndex >= vars.routeData.size())
+				continue;
 
-		for (int i = 0; i < 4; i++)
-			bot->setQuaternion(i, vars.routeData[vars.routeIndex].quaternion[i]);
+			for (int i = 0; i < 4; i++)
+				bot->setQuaternion(i, vars.routeData[vars.routeIndex].quaternion[i]);
 
-		for (int i = 0; i < 3; i++)
-			bot->setPosition(i, vars.routeData[vars.routeIndex].position[i]);
+			for (int i = 0; i < 3; i++)
+				bot->setPosition(i, vars.routeData[vars.routeIndex].position[i]);
 
-		for (int i = 0; i < 3; i++)
-			bot->setSpeed(i, vars.routeData[vars.routeIndex].speed[i]);
+			for (int i = 0; i < 3; i++)
+				bot->setSpeed(i, vars.routeData[vars.routeIndex].speed[i]);
 
-		bot->getAnimation()->setAnimFlags(vars.routeData[vars.routeIndex].animFlags);
-		bot->getAnimation()->setAnimId(vars.routeData[vars.routeIndex].animId);
-		bot->getKeys()->setKeyId(vars.routeData[vars.routeIndex].keys);
-		bot->getKeys()->setLeftRightKey(vars.routeData[vars.routeIndex].leftRightKey);
-		bot->getKeys()->setUpDownKey(vars.routeData[vars.routeIndex].upDownKey);
-		bot->sync();
-		vars.routeIndex++;
+			bot->getAnimation()->setAnimFlags(vars.routeData[vars.routeIndex].animFlags);
+			bot->getAnimation()->setAnimId(vars.routeData[vars.routeIndex].animId);
+			bot->getKeys()->setKeyId(vars.routeData[vars.routeIndex].keys);
+			bot->getKeys()->setLeftRightKey(vars.routeData[vars.routeIndex].leftRightKey);
+			bot->getKeys()->setUpDownKey(vars.routeData[vars.routeIndex].upDownKey);
+			bot->sync();
+			vars.routeIndex++;
+		}
 	}
 }
 
@@ -838,7 +838,6 @@ void SleepAnim() {
 }
 
 void FuncsLoop() {
-	RoutePlay();
 	Flood();
 	CoordMaster();
 	CheckPointMaster();

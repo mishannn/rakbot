@@ -8,6 +8,8 @@ private:
 	bool _inStream;
 	bool _admin;
 
+	std::mutex _playerMutex;
+
 public:
 	Player();
 	~Player();

@@ -21,38 +21,47 @@ private:
 	uint16_t _upDownKey;
 	uint16_t _keys;
 
+	std::mutex _playerBaseMutex;
+
 public:
 	PlayerKeys() {
 		// reset();
 	}
 
 	void reset() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_leftRightKey = 0;
 		_upDownKey = 0;
 		_keys = 0;
 	}
 
 	void setLeftRightKey(uint16_t leftRightKey) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_leftRightKey = leftRightKey;
 	}
 
 	uint16_t getLeftRightKey() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _leftRightKey;
 	}
 
 	void setUpDownKey(uint16_t upDownKey) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_upDownKey = upDownKey;
 	}
 
 	uint16_t getUpDownKey() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _upDownKey;
 	}
 
 	void setKeyId(uint16_t keys) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_keys = keys;
 	}
 
 	uint16_t getKeyId() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _keys;
 	}
 };
@@ -62,29 +71,36 @@ private:
 	uint16_t _animId;
 	uint16_t _animFlags;
 
+	std::mutex _playerBaseMutex;
+
 public:
 	PlayerAnimation() {
 		// reset();
 	}
 
 	void reset() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_animId = 1189;
 		_animFlags = 33000;
 	}
 
 	void setAnimId(uint16_t animId) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_animId = animId;
 	}
 
 	uint16_t getAnimId() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _animId;
 	}
 
 	void setAnimFlags(uint16_t animFlags) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_animFlags = animFlags;
 	}
 
 	uint16_t getAnimFlags() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _animFlags;
 	}
 };
@@ -94,29 +110,36 @@ private:
 	int _score;
 	int _ping;
 
+	std::mutex _playerBaseMutex;
+
 public:
 	PlayerInfo() {
 		// reset();
 	}
 
 	void reset() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_score = 0;
 		_ping = 0;
 	}
 
 	void setScore(int score) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_score = score;
 	}
 
 	int getScore() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _score;
 	}
 
 	void setPing(int ping) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_ping = ping;
 	}
 
 	int getPing() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _ping;
 	}
 };
@@ -126,12 +149,16 @@ private:
 	uint16_t _vehicleId;
 	float _surfOffsets[3];
 
+	std::mutex _playerBaseMutex;
+
 public:
 	PlayerSurfing() {
 		// reset();
 	}
 
 	void reset() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
+
 		_vehicleId = 0;
 
 		for (int i = 0; i < 3; i++)
@@ -139,10 +166,12 @@ public:
 	}
 
 	void setVehicleId(uint16_t vehicleId) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_vehicleId = vehicleId;
 	}
 
 	uint16_t getVehicleId() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _vehicleId;
 	}
 
@@ -150,6 +179,7 @@ public:
 		if (n < 0 || n > 2)
 			return;
 
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_surfOffsets[n] = val;
 	}
 
@@ -157,6 +187,7 @@ public:
 		if (n < 0 || n > 2)
 			return 0.f;
 
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _surfOffsets[n];
 	}
 };
@@ -166,29 +197,36 @@ private:
 	uint8_t	_seatId;
 	uint16_t _vehicleId;
 
+	std::mutex _playerBaseMutex;
+
 public:
 	PlayerPassenger() {
 		// reset();
 	}
 
 	void reset() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_seatId = 0;
 		_vehicleId = VEHICLE_ID_NONE;
 	}
 
 	void setSeatId(uint8_t seatId) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_seatId = seatId;
 	}
 
 	uint8_t getSeatId() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _seatId;
 	}
 
 	void setVehicleId(uint16_t vehicleId) {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		_vehicleId = vehicleId;
 	}
 
 	uint16_t getVehicleId() {
+		std::lock_guard<std::mutex> lock(_playerBaseMutex);
 		return _vehicleId;
 	}
 };
@@ -214,6 +252,8 @@ private:
 	PlayerAnimation _anim;
 	PlayerInfo _info;
 	PlayerSurfing _surfing;
+
+	std::mutex _playerBaseMutex;
 
 	PlayerBase(PlayerBase const&);
 	PlayerBase& operator= (PlayerBase const&);

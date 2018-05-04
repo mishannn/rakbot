@@ -9,6 +9,8 @@ private:
 	bool _connectRequested;
 	int _money;
 
+	std::mutex _botMutex;
+
 	void aimSync();
 	void onfootSync();
 	void passengerSync();

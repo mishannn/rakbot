@@ -11,6 +11,8 @@ Player::~Player() {
 }
 
 void Player::reset() {
+	std::lock_guard<std::mutex> lock(_playerMutex);
+
 	_active = false;
 	_inStream = false;
 	_admin = false;
@@ -19,27 +21,33 @@ void Player::reset() {
 }
 
 void Player::setActive(bool active) {
+	std::lock_guard<std::mutex> lock(_playerMutex);
 	_active = active;
 }
 
 bool Player::isActive() {
+	std::lock_guard<std::mutex> lock(_playerMutex);
 	return _active;
 }
 
 // IN STREAM
 void Player::setInStream(bool inStream) {
+	std::lock_guard<std::mutex> lock(_playerMutex);
 	_inStream = inStream;
 }
 
 bool Player::isInStream() {
+	std::lock_guard<std::mutex> lock(_playerMutex);
 	return _inStream;
 }
 
 // ADMIN
 void Player::setAdmin(bool admin) {
+	std::lock_guard<std::mutex> lock(_playerMutex);
 	_admin = admin;
 }
 
 bool Player::isAdmin() {
+	std::lock_guard<std::mutex> lock(_playerMutex);
 	return _admin;
 }

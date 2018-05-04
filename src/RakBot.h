@@ -35,16 +35,21 @@ private:
 	SAMPDialog _sampDialog;
 	ServerInfo _serverInfo;
 
+	std::mutex _botOffMutex;
+	std::mutex _logToFileMutex;
+
 	RakBot();
 	~RakBot();
 
 	RakBot(RakBot const&);
 	RakBot& operator= (RakBot const&);
 
+	void logToFile(std::string line);
+
 public:
 	static RakBot *app();
 
-	bool isBotOff() { return _botOff; }
+	bool isBotOff();
 	void exit();
 
 	Player *getPlayer(uint16_t playerId);
@@ -69,5 +74,4 @@ public:
 	ServerInfo *getServerInfo();
 
 	void log(const char *format, ...);
-	void logToFile(std::string line);
 };

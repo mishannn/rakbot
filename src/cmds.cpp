@@ -850,7 +850,9 @@ void RunCommand(const char *cmdstr) {
 
 		RakBot::app()->log("[RAKBOT] === —œ»—Œ  »√–Œ Œ¬ ===");
 		RakBot::app()->log("[RAKBOT] ID * Õ»  * œ»Õ√ * À¬À");
-		RakBot::app()->log("[RAKBOT] %d * %s * %d * %d", bot->getPlayerId(), bot->getName().c_str(), bot->getInfo()->getPing(), bot->getInfo()->getScore());
+
+		if (bot->isConnected())
+			RakBot::app()->log("[RAKBOT] %d * %s * %d * %d", bot->getPlayerId(), bot->getName().c_str(), bot->getInfo()->getPing(), bot->getInfo()->getScore());
 
 		for (int i = 0; i < MAX_PLAYERS; i++) {
 			Player *player = RakBot::app()->getPlayer(i);
@@ -1248,15 +1250,21 @@ void RunCommand(const char *cmdstr) {
 
 		RakBot::app()->log("[RAKBOT] =====[—œ»—Œ  ¿ƒÃ»ÕŒ¬]=====");
 
-		if (vars.admins.size() == 0) {
+		vars.adminsMutex.lock();
+		size_t adminsCount = vars.admins.size();
+		vars.adminsMutex.unlock();
+
+		if (adminsCount == 0) {
 			RakBot::app()->log("[RAKBOT] ÕÂÚ ‡‰ÏËÌÓ‚ ‚ ÒÔËÒÍÂ");
 			RakBot::app()->log("[RAKBOT] =====[—œ»—Œ  ¿ƒÃ»ÕŒ¬]=====");
 		} else {
 			RakBot::app()->log("[RAKBOT] # * Õ» ");
-			for (int i = 0; i < static_cast<int>(vars.admins.size()); i++) {
+			for (int i = 0; i < static_cast<int>(adminsCount); i++) {
+				vars.adminsMutex.lock();
 				RakBot::app()->log("[RAKBOT] %d * %s", (i + 1), vars.admins[i].c_str());
+				vars.adminsMutex.unlock();
 			}
-			RakBot::app()->log("[RAKBOT] ===========[¬—≈√Œ: %d]===========", vars.admins.size());
+			RakBot::app()->log("[RAKBOT] ===========[¬—≈√Œ: %d]===========", adminsCount);
 		}
 		return;
 	}

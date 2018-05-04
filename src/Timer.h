@@ -5,6 +5,7 @@
 class Timer {
 private:
 	uint32_t _timer;
+	std::mutex _timerMutex;
 
 public:
 	Timer();

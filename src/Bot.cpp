@@ -26,24 +26,19 @@ Bot::Bot() : PlayerBase() {
 }
 
 Bot::~Bot() {
-
 }
 
 void Bot::setConnectRequested(bool connectRequested) {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	_connectRequested = connectRequested;
 }
 
 bool Bot::isConnectRequested() {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	return _connectRequested;
 }
 
 void Bot::reset(bool disconnect) {
-
-
 	uint16_t playerId;
 	bool connected;
 
@@ -52,9 +47,11 @@ void Bot::reset(bool disconnect) {
 		connected = isConnected();
 	}
 
+	_botMutex.lock();
 	_connected = false;
 	_spawned = false;
 	_money = 0;
+	_botMutex.unlock();
 
 	PlayerBase::reset();
 
@@ -67,8 +64,6 @@ void Bot::reset(bool disconnect) {
 }
 
 void Bot::reconnect(int reconnectDelay) {
-
-
 	if (isConnected()) {
 		disconnect(false);
 	}
@@ -80,40 +75,34 @@ void Bot::reconnect(int reconnectDelay) {
 
 // Connected
 void Bot::setConnected(bool connected) {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	_connected = connected;
 }
 
 bool Bot::isConnected() {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	return _connected;
 }
 
 // Spawned
 void Bot::setSpawned(bool spawned) {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	_spawned = spawned;
 }
 
 bool Bot::isSpawned() {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	return _spawned;
 }
 
 // Money
 void Bot::setMoney(int money) {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	_money = money;
 }
 
 int Bot::getMoney() {
-
-
+	std::lock_guard<std::mutex> lock(_botMutex);
 	return _money;
 }
 
@@ -860,8 +849,6 @@ void Bot::kill() {
 }
 
 void Bot::clickTextdraw(uint16_t textDrawId) {
-
-
 	if (!isConnected()) {
 		RakBot::app()->log("[ERROR] Клик по текстдраву: бот должен быть подключен к серверу");
 		return;

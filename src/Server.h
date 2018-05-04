@@ -5,6 +5,8 @@ private:
 	bool _gameInited;
 	std::string _serverName;
 
+	std::mutex _serverMutex;
+
 public:
 	Server();
 	~Server();

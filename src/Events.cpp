@@ -82,18 +82,6 @@ void Events::onUpdate() {
 		}
 	}
 
-	for each (Script *script in scripts) {
-		if (script != nullptr)
-			script->luaUpdate();
-	}
-
-	CommandQueueMutex.lock();
-	while (CommandQueue.size() > 0) {
-		RunCommand(CommandQueue.front().c_str());
-		CommandQueue.pop();
-	}
-	CommandQueueMutex.unlock();
-
 	RakBot::app()->getServerInfo()->updateInfo();
 
 	Bot *bot = RakBot::app()->getBot();
@@ -104,7 +92,6 @@ void Events::onUpdate() {
 		bot->connect(RakBot::app()->getSettings()->getAddress()->getIp(), RakBot::app()->getSettings()->getAddress()->getPort());
 	}
 
-	UpdateNetwork();
 	FuncsLoop();
 	UpdateInfo();
 	AdminChecker();

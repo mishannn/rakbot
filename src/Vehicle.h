@@ -32,6 +32,8 @@ private:
 	Player *_driver;
 	Player **_passenger;
 
+	std::mutex _vehicleMutex;
+
 	void loadModelData();
 
 public:

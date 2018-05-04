@@ -86,13 +86,19 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 
 	// CALL ON_SCRIPT_START CALBACK
 	luaOnScriptStart();
+	_scriptThread = std::thread(&Script::luaUpdate, this);
 }
 
 Script::~Script() {
+	_defCallsMutex.lock();
 	for (int i = 0; i < LUA_MAXDEFCALLS; i++)
 		_defCalls[i].active = false;
+	_defCallsMutex.unlock();
 
 	_scriptClosing = true;
+
+	if (_scriptThread.joinable())
+		_scriptThread.join();
 }
 
 Script *Script::load(std::string scriptName) {
@@ -799,6 +805,7 @@ void Script::luaRegisterFunctions() {
 		if (!func.valid())
 			return sol::make_object(_scriptState, sol::nil);
 
+		_defCallsMutex.lock();
 		int defCallIndex = -1;
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
 			if (!_defCalls[i].active) {
@@ -821,14 +828,16 @@ void Script::luaRegisterFunctions() {
 		} else {
 			_defCalls[defCallIndex].params = _scriptState.create_table();
 		}
+		_defCallsMutex.unlock();
 
 		return sol::make_object(_scriptState, (defCallIndex + 1));
 	});
 	_scriptState.set_function("defCallDelete", [this](int defCallId) {
 		if (defCallId < 1 || defCallId > LUA_MAXDEFCALLS)
 			return false;
-
+		_defCallsMutex.lock();
 		_defCalls[defCallId - 1].active = false;
+		_defCallsMutex.unlock();
 		return false;
 	});
 	_scriptState.set_function("printLog", [this](std::string log) {
@@ -1194,49 +1203,53 @@ void Script::luaError(std::string error) {
 }
 
 void Script::luaUpdate() {
-	static Timer timer;
-	if (!timer.isElapsed(vars.luaUpdateDelay, true))
-		return;
+	while (!_scriptClosing) {
+		Sleep(vars.luaUpdateDelay);
 
-	for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
-		LuaDefCall *defCall = &_defCalls[i];
+		_defCallsMutex.lock();
+		for (int i = 0; i < LUA_MAXDEFCALLS; i++) {
+			LuaDefCall *defCall = &_defCalls[i];
 
-		if (!defCall->active)
-			continue;
+			if (!defCall->active)
+				continue;
 
-		static Timer timer;
-		timer.setTimer(defCall->startTime);
-		if (!timer.isElapsed(defCall->callDelay, false))
-			continue;
+			static Timer timer;
+			timer.setTimer(defCall->startTime);
+			if (!timer.isElapsed(defCall->callDelay, false))
+				continue;
 
-		try {
-			_funcExecuting = true;
-			sol::protected_function_result result = defCall->func(defCall->params);
-			if (!result.valid())
-				throw result.get<sol::error>();
-			_funcExecuting = false;
-		} catch (const char *e) {
-			std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e;
-			luaError(message);
-			_funcExecuting = false;
-		} catch (const std::exception &e) {
-			std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e.what();
-			luaError(message);
-			_funcExecuting = false;
-		} catch (...) {
-			std::string message = "Неизвестная ошибка скрипта \"" + _scriptName + "\"";
-			luaError(message);
-			_funcExecuting = false;
+			_scriptMutex.lock();
+			try {
+				_funcExecuting = true;
+				sol::protected_function_result result = defCall->func(defCall->params);
+				if (!result.valid())
+					throw result.get<sol::error>();
+				_funcExecuting = false;
+			} catch (const char *e) {
+				std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e;
+				luaError(message);
+				_funcExecuting = false;
+			} catch (const std::exception &e) {
+				std::string message = "Ошибка скрипта \"" + _scriptName + "\": " + e.what();
+				luaError(message);
+				_funcExecuting = false;
+			} catch (...) {
+				std::string message = "Неизвестная ошибка скрипта \"" + _scriptName + "\"";
+				luaError(message);
+				_funcExecuting = false;
+			}
+			_scriptMutex.unlock();
+
+			if (defCall->repeat) {
+				defCall->startTime = Timer::getCurrentTime();
+			} else {
+				_defCalls[i].active = false;
+			}
 		}
+		_defCallsMutex.unlock();
 
-		if (defCall->repeat) {
-			defCall->startTime = Timer::getCurrentTime();
-		} else {
-			_defCalls[i].active = false;
-		}
+		luaOnScriptUpdate();
 	}
-
-	luaOnScriptUpdate();
 }
 
 void LoadScripts() {
@@ -1268,6 +1281,8 @@ void UnloadScripts() {
 
 template<typename ...Args>
 bool Script::luaCallback(std::string funcName, Args && ...args) {
+	std::lock_guard<std::recursive_mutex> lock(_scriptMutex);
+
 	try {
 		if (_scriptClosing)
 			return false;

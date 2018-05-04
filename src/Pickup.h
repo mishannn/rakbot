@@ -8,6 +8,8 @@ private:
 	int _type;
 	float _position[3];
 
+	std::mutex _pickupMutex;
+
 public:
 	Pickup();
 	~Pickup();

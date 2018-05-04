@@ -14,33 +14,46 @@ Timer::~Timer() {
 }
 
 void Timer::setTimer(uint32_t timer) {
+	std::lock_guard<std::mutex> lock(_timerMutex);
 	_timer = timer;
 }
 
 uint32_t Timer::getElapsed() {
 	uint32_t tickCount = GetTickCount();
 
-	if (_timer > tickCount)
+	_timerMutex.lock();
+	uint32_t timer = _timer;
+	_timerMutex.unlock();
+
+	if (timer > tickCount)
 		return 0;
 
-	return (tickCount - _timer);
+	return (tickCount - timer);
 }
 
 bool Timer::isElapsed(uint32_t ms, bool resetIfTrue) {
 	uint32_t tickCount = GetTickCount();
 
-	if (_timer >= tickCount)
+	_timerMutex.lock();
+	uint32_t timer = _timer;
+	_timerMutex.unlock();
+
+	if (timer >= tickCount)
 		return false;
 
-	if ((tickCount - _timer) < ms)
+	if ((tickCount - timer) < ms)
 		return false;
 
-	if (resetIfTrue)
+	if (resetIfTrue) {
+		_timerMutex.lock();
 		_timer = tickCount;
+		_timerMutex.unlock();
+	}
 
 	return true;
 }
 
 void Timer::setTimerFromCurrentTime() {
+	std::lock_guard<std::mutex> lock(_timerMutex);
 	_timer = GetTickCount();
 }

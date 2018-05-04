@@ -38,6 +38,11 @@ RakBot *RakBot::app() {
 	return &rakBot;
 }
 
+bool RakBot::isBotOff() {
+	std::lock_guard<std::mutex> lock(_botOffMutex);
+	return _botOff;
+}
+
 void RakBot::exit() {
 	log("[RAKBOT] Выход из бота...");
 
@@ -47,6 +52,7 @@ void RakBot::exit() {
 		bot->disconnect(false);
 	}
 
+	std::lock_guard<std::mutex> lock(_botOffMutex);
 	_botOff = true;
 }
 
@@ -54,7 +60,7 @@ Player *RakBot::getPlayer(uint16_t playerId) {
 	if (playerId < 0 || playerId >= MAX_PLAYERS)
 		return nullptr;
 
-	if (_players[playerId].isActive())
+	if (!_players[playerId].isActive())
 		return nullptr;
 
 	return &_players[playerId];
@@ -238,6 +244,8 @@ void RakBot::log(const char *format, ...) {
 }
 
 void RakBot::logToFile(std::string line) {
+	std::lock_guard<std::mutex> lock(_logToFileMutex);
+
 	if (vars.logFile == nullptr) {
 		Settings *settings = RakBot::app()->getSettings();
 

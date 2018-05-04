@@ -11,6 +11,8 @@ private:
 	std::string _cancelButtonText;
 	std::string _dialogText;
 
+	std::mutex _sampDialogMutex;
+
 public:
 	SAMPDialog();
 	~SAMPDialog();

@@ -9,10 +9,10 @@
 struct Vars {
 	bool windowOpened;
 	bool waitForRequestSpawnReply;
-	Timer lastChangePos;
 
 	std::vector<std::string> admins;
 	std::string adminsUrl;
+	static std::mutex adminsMutex;
 
 	bool farChatEnabled;
 
@@ -160,15 +160,18 @@ struct Vars {
 
 	bool mapWindowOpened;
 	HANDLE mapWindowThread;
-
 	HANDLE dialogWindowThread;
 
-	TeleportPlace teleportPlaces[300];
+	static TeleportPlace teleportPlaces[300];
 
-	Timer botConnectedTimer;
-	Timer botSpawnedTimer;
-	Timer gameInitedTimer;
-	Timer reconnectTimer;
+	static Timer botConnectedTimer;
+	static Timer botSpawnedTimer;
+	static Timer gameInitedTimer;
+	static Timer reconnectTimer;
+	static Timer lastChangePos;
+
+	static std::queue<std::string> commandQueue;
+	static std::mutex commandQueueMutex;
 };
 
 extern Vars vars;
@@ -178,27 +181,34 @@ private:
 	std::string _ip;
 	uint16_t _port;
 
+	std::mutex _addressMutex;
+
 public:
 	Address() { }
 
 	void reset() {
+		std::lock_guard<std::mutex> lock(_addressMutex);
 		_ip = "127.0.0.1";
 		_port = 7777;
 	}
 
 	void setIp(std::string ip) {
+		std::lock_guard<std::mutex> lock(_addressMutex);
 		_ip = ip;
 	}
 
 	std::string getIp() {
+		std::lock_guard<std::mutex> lock(_addressMutex);
 		return _ip;
 	}
 
 	void setPort(uint16_t port) {
+		std::lock_guard<std::mutex> lock(_addressMutex);
 		_port = port;
 	}
 
 	uint16_t getPort() {
+		std::lock_guard<std::mutex> lock(_addressMutex);
 		return _port;
 	}
 };
@@ -210,13 +220,15 @@ private:
 	std::string _serverPassword;
 	std::string _loginPassword;
 
+	std::mutex _settingsMutex;
+
 public:
 	Settings();
 	~Settings();
 
 	void reset();
 
-	Address *getAddress() { return &_address; }
+	Address *getAddress();
 
 	void setName(std::string name);
 	std::string getName();

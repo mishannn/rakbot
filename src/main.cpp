@@ -38,7 +38,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	setlocale(LC_TIME, locale);
 	setlocale(LC_CTYPE, locale);
 
-	RunCommand("!debug");
+	// RunCommand("!debug");
 	OrigExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
 
 	bool configLoaded = LoadConfig();
@@ -90,7 +90,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	srand((unsigned int)GetTickCount());
 
-	LoadAdmins();
+	HANDLE loadAdminsThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadAdmins), NULL, NULL, NULL);
+	HANDLE routePlayThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(RoutePlay), NULL, NULL, NULL);
+	HANDLE updateNetworkThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(UpdateNetwork), NULL, NULL, NULL);
 
 	RakBot::app()->getServerInfo()->socketInit();
 
@@ -104,6 +106,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	UnloadScripts();
 
 	CloseMapWindow();
+
+	RakBot::app()->log("[RAKBOT] Ожидание завершения потока воспроизведения маршрута");
+	WaitForSingleObject(routePlayThread, INFINITE);
+
+	RakBot::app()->log("[RAKBOT] Ожидание завершения потока загрузки админов");
+	WaitForSingleObject(loadAdminsThread, INFINITE);
+
+	RakBot::app()->log("[RAKBOT] Ожидание завершения потока обновления сети");
+	WaitForSingleObject(updateNetworkThread, INFINITE);
 
 	RakBot::app()->log("[RAKBOT] Ожидание завершения потока главного окна");
 	WaitForSingleObject(mainWindowThread, INFINITE);
@@ -123,7 +134,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 
 void LoadAdmins() {
+	vars.adminsMutex.lock();
 	vars.admins.clear();
+	vars.adminsMutex.unlock();
+
 	std::fstream adminsFile(GetRakBotPath("admins.txt"), std::ios::in);
 
 	if (adminsFile.is_open()) {
@@ -134,12 +148,18 @@ void LoadAdmins() {
 			Trim(admin);
 
 			if (!admin.empty()) {
+				vars.adminsMutex.lock();
 				vars.admins.push_back(admin);
+				vars.adminsMutex.unlock();
 			}
 		}
 		adminsFile.close();
 
-		RakBot::app()->log("[RAKBOT] Загружено %d админов из файла", vars.admins.size());
+		vars.adminsMutex.lock();
+		size_t adminsCount = vars.admins.size();
+		vars.adminsMutex.unlock();
+
+		RakBot::app()->log("[RAKBOT] Загружено %d админов из файла", adminsCount);
 	} else {
 		RakBot::app()->log("[RAKBOT] Загрузка админов с сервера...");
 
@@ -151,14 +171,18 @@ void LoadAdmins() {
 				Trim(admin);
 
 				if (!admin.empty()) {
-					// vars.adminsMutex.lock();
+					vars.adminsMutex.lock();
 					vars.admins.push_back(admin);
-					// vars.adminsMutex.unlock();
+					vars.adminsMutex.unlock();
 				}
 				pch = strtok(NULL, ":");
 			}
 
-			RakBot::app()->log("[RAKBOT] Загружено %d админов с сервера", vars.admins.size());
+			vars.adminsMutex.lock();
+			size_t adminsCount = vars.admins.size();
+			vars.adminsMutex.unlock();
+
+			RakBot::app()->log("[RAKBOT] Загружено %d админов с сервера", adminsCount);
 		} else {
 			RakBot::app()->log("[RAKBOT] Ошибка #%d при загрузке админов с сервера", curlCode);
 		}
