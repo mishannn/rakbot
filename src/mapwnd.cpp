@@ -86,11 +86,15 @@ LRESULT CALLBACK MapWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		case WM_GETMINMAXINFO:
 		{
-			LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-			lpMMI->ptMinTrackSize.x = 496;
-			lpMMI->ptMinTrackSize.y = 494;
-			lpMMI->ptMaxTrackSize.x = 496;
-			lpMMI->ptMaxTrackSize.y = 494;
+			int windowWidth = 496;
+			int windowHeight = 494;
+
+			LPMINMAXINFO minMaxInfo = reinterpret_cast<LPMINMAXINFO>(lParam);
+			minMaxInfo->ptMinTrackSize.x = windowWidth;
+			minMaxInfo->ptMinTrackSize.y = windowHeight;
+			minMaxInfo->ptMaxTrackSize.x = windowWidth;
+			minMaxInfo->ptMaxTrackSize.y = windowHeight;
+			break;
 		}
 		break;
 

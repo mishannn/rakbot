@@ -206,7 +206,7 @@ void AdminChecker() {
 	if (!timer.isElapsed(500, true))
 		return;
 
-	if (g_hWndAdmins == NULL || !g_hWndAdminsTitle == NULL)
+	if (g_hWndAdmins == NULL || g_hWndAdminsTitle == NULL)
 		return;
 
 	Bot *bot = RakBot::app()->getBot();
@@ -230,7 +230,7 @@ void AdminChecker() {
 			continue;
 
 		if (player->isAdmin()) {
-			switch (vars.adminActionOnline) {
+			switch (vars.adminOnlineAction) {
 				case 1:
 					RakBot::app()->log("[RAKBOT] Àäìèí â ñåòè, ÏÅÐÅÏÎÄÊËÞ×ÅÍÈÅ");
 					bot->disconnect(false);
@@ -248,7 +248,7 @@ void AdminChecker() {
 			ZeroMemory(szBuf, sizeof(szBuf));
 
 			if (player->isInStream()) {
-				switch (vars.adminActionNear) {
+				switch (vars.adminNearAction) {
 					case 1:
 						RakBot::app()->log("[RAKBOT] Àäìèí ðÿäîì, ÏÅÐÅÏÎÄÊËÞ×ÅÍÈÅ");
 						bot->disconnect(false);
@@ -262,22 +262,23 @@ void AdminChecker() {
 						return;
 				}
 
-				strcat_s(szBuf, sizeof(szBuf), "!");
+				strncat(szBuf, "!", sizeof(szBuf));
 				iCountNear++;
 			}
-			sprintf_s(szBuf, sizeof(szBuf), "%s[%d] | L:%d\n", player->getName().c_str(), i, player->getInfo()->getScore());
-			strcat_s(szAdminList, sizeof(szAdminList), szBuf);
+			snprintf(szBuf, sizeof(szBuf), "%s[%d] | L:%d\n", player->getName().c_str(), i, player->getInfo()->getScore());
+			strncat(szAdminList, szBuf, sizeof(szAdminList));
 			iCount++;
 		}
 	}
 
-	if (iCount == 0) {
+	if (iCount < 1) {
 		SetWindowText(g_hWndAdmins, "Íåò àäìèíîâ îíëàéí");
-		SetWindowText(g_hWndAdminsTitle, "Àäìèíû îíëàéí (0/0)");
+		SetWindowText(g_hWndAdminsTitle, "Àäìèíû îíëàéí");
 	} else {
 		SetWindowText(g_hWndAdmins, szAdminList);
-		sprintf_s(szAdminList, sizeof(szAdminList), "Àäìèíû îíëàéí (%d/%d)", iCountNear, iCount);
-		SetWindowText(g_hWndAdminsTitle, szAdminList);
+		char szAdminListTitle[256];
+		snprintf(szAdminListTitle, sizeof(szAdminListTitle), "Àäìèíû îíëàéí (%d/%d)", iCountNear, iCount);
+		SetWindowText(g_hWndAdminsTitle, szAdminListTitle);
 	}
 }
 
@@ -303,6 +304,9 @@ void BotLoader() {
 	if (!bot->isSpawned() || SampRpFuncs::isBotSuspended())
 		return;
 
+	if (!vars.sendBadSync)
+		vars.sendBadSync = true;
+
 	float botPosition[3];
 	for (int i = 0; i < 3; i++)
 		botPosition[i] = bot->getPosition(i);
@@ -312,7 +316,7 @@ void BotLoader() {
 	if (vect3_dist(botPosition, loaderPosition) > 120.f)
 		return;
 
-	if ((bot->getSkin() == 260 || bot->getSkin() == 16 || bot->getSkin() == 27) && BotLoaderBagCount < vars.botLoaderCount) {
+	if ((bot->getSkin() == 260 || bot->getSkin() == 16 || bot->getSkin() == 27) && BotLoaderBagCount < vars.botLoaderLimit) {
 		if (BotLoaderWithBag) {
 			if (!BotLoaderTakenBagTimer.isElapsed(vars.botLoaderDelay, false))
 				return;
@@ -348,7 +352,13 @@ void BotLoader() {
 
 void BusBot() {
 	static Timer timer;
-	if (!timer.isElapsed(1500, true))
+	if (!timer.isElapsed(1000, true))
+		return;
+
+	if (!vars.busWorkerRoute)
+		return;
+
+	if (vars.coordMasterEnabled)
 		return;
 
 	Bot *bot = RakBot::app()->getBot();
@@ -356,15 +366,10 @@ void BusBot() {
 	if (bot->getPlayerState() == PLAYER_STATE_DRIVER)
 		return;
 
-	if (vars.coordMasterEnabled)
+	if (bot->getPlayerState() == PLAYER_STATE_ENTERING_VEHICLE)
 		return;
 
-	if (!vars.busWorkerRoute)
-		return;
-
-	bot->sync();
-
-	Vehicle *vehicle = FindNearestVehicle(vars.busWorkerBusModel);
+	Vehicle *vehicle = FindNearestVehicle(1, vars.busWorkerBusModel);
 	if (vehicle == nullptr)
 		return;
 
@@ -443,6 +448,10 @@ void FarmerBot() {
 			}
 		} else {
 			bot->takeCheckpoint();
+			srand(static_cast<uint32_t>(time(NULL)));
+			float offsetX = (-0.5f) + (static_cast<float>(rand() % 101) / 100.f);
+			float offsetY = 0.5f - (static_cast<float>(rand() % 101) / 100.f);
+			bot->teleport(bot->getPosition(0) + offsetX, bot->getPosition(1) + offsetY, bot->getPosition(2));
 		}
 	} else {
 		int pickupId = FARM_FIRST_PICK + (FarmIndex * 2);
@@ -589,15 +598,19 @@ void AntiAFK() {
 		return;
 
 	static float k = 1.f;
+	static float n = 1.f;
 
-	float offset = (vars.antiAfkOffset != 0.f) ? vars.antiAfkOffset : 0.01f;
-	bot->setPosition(0, bot->getPosition(0) + (offset * k));
+	float offset = (vars.antiAfkOffset != 0.f) ? vars.antiAfkOffset : 0.1f;
+	bot->setPosition(0, bot->getPosition(0) + (offset * (k * n)));
 	bot->sync();
 
-	if (k < 1.f)
-		k += 0.5f;
+	if (k <= 2.f || k >= 2.f)
+		n *= -1.f;
 	else
-		k *= -1.f;
+		k += (1.f * n);
+
+	if (k == 0.f)
+		k += (1.f * n);
 }
 
 void AutoLicensePass() {

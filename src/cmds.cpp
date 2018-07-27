@@ -19,6 +19,7 @@
 
 #include "main.h"
 #include "ini.h"
+#include "netrpc.h"
 #include "mapwnd.h"
 #include "netgame.h"
 #include "window.h"
@@ -919,9 +920,8 @@ void RunCommand(const char *cmdstr) {
 		}
 
 		int limit = std::strtoul(&cmd[10], nullptr, 10);
-		vars.botLoaderCount = limit;
+		vars.botLoaderLimit = limit;
 		RakBot::app()->log("[RAKBOT] Установлен лимит мешков: %d", limit);
-
 		return;
 	}
 
@@ -1048,7 +1048,7 @@ void RunCommand(const char *cmdstr) {
 		bot->setWeapon(weapon);
 		bot->sync(10);
 
-		RakBot::app()->getEvents()->defCallAdd(500, false, [bot, currentWeapon](DefCall *) {
+		RakBot::app()->getEvents()->defCallAdd(300, false, [bot, currentWeapon](DefCall *) {
 			if (!bot->isConnected())
 				return;
 
@@ -1280,20 +1280,20 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		switch (vars.adminActionOnline) {
+		switch (vars.adminOnlineAction) {
 			case 0:
 				RakBot::app()->log("[RAKBOT] Переподключение, если админ в сети");
-				vars.adminActionOnline = 1;
+				vars.adminOnlineAction = 1;
 				break;
 
 			case 1:
 				RakBot::app()->log("[RAKBOT] Выход, если админ в сети");
-				vars.adminActionOnline = 2;
+				vars.adminOnlineAction = 2;
 				break;
 
 			case 2:
 				RakBot::app()->log("[RAKBOT] Бездействие, если админ в сети");
-				vars.adminActionOnline = 0;
+				vars.adminOnlineAction = 0;
 				break;
 		}
 
@@ -1311,20 +1311,20 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		switch (vars.adminActionNear) {
+		switch (vars.adminNearAction) {
 			case 0:
 				RakBot::app()->log("[RAKBOT] Переподключение, если админ рядом");
-				vars.adminActionNear = 1;
+				vars.adminNearAction = 1;
 				break;
 
 			case 1:
 				RakBot::app()->log("[RAKBOT] Выход, если админ рядом");
-				vars.adminActionNear = 2;
+				vars.adminNearAction = 2;
 				break;
 
 			case 2:
 				RakBot::app()->log("[RAKBOT] Бездействие, если админ рядом");
-				vars.adminActionNear = 0;
+				vars.adminNearAction = 0;
 				break;
 		}
 
@@ -1872,6 +1872,7 @@ void RunCommand(const char *cmdstr) {
 			RakBot::app()->log("[RAKBOT] Бот грузчика: включен");
 		} else {
 			RakBot::app()->log("[RAKBOT] Бот грузчика: отключен");
+			vars.sendBadSync = false;
 		}
 		return;
 	}
@@ -1927,6 +1928,41 @@ void RunCommand(const char *cmdstr) {
 				break;
 		}
 
+		return;
+	}
+
+	if (cmdcmp("whereiscp")) {
+		if (strstr(cmd, "+help")) {
+			MessageBox(
+				g_hWndMain,
+				"Команда поиска чекпоинта. Не требует аргументов.",
+				"Помощь",
+				MB_ICONASTERISK);
+
+			return;
+		}
+
+		if (checkpoint.active || raceCheckpoint.active) {
+			float *position = (checkpoint.active) ? (checkpoint.position) : (raceCheckpoint.position);
+			RakBot::app()->log("[RAKBOT] Позиция чекпоинта: (%.2f; %.2f; %.2f)!", position[0], position[1], position[2]);
+		} else {
+			RakBot::app()->log("[RAKBOT] Поиск чекпоинта: чекпоинт неактивен!");
+		}
+		return;
+	}
+
+	if (cmdcmp("takecp")) {
+		if (strstr(cmd, "+help")) {
+			MessageBox(
+				g_hWndMain,
+				"Команда поднятия чекпоинта. Не требует аргументов.",
+				"Помощь",
+				MB_ICONASTERISK);
+
+			return;
+		}
+
+		bot->takeCheckpoint();
 		return;
 	}
 
@@ -1989,6 +2025,7 @@ void RunCommand(const char *cmdstr) {
 		} else {
 			RakBot::app()->log("[RAKBOT] Бот фермера отключен");
 			vars.botFarmerAutomated = 0;
+			vars.sendBadSync = false;
 		}
 
 		return;
@@ -2416,7 +2453,7 @@ void RunCommand(const char *cmdstr) {
 
 		char szAccountData[MAX_PATH];
 		_snprintf(szAccountData, sizeof(szAccountData), "%s\\%s@%s.ini", szAccountsDataPath, RakBot::app()->getSettings()->getName().c_str(), szAddress);
-		CopyFile(GetRakBotPath("settings\\settings.ini"), szAccountData, FALSE);
+		SaveConfig(szAccountData);
 
 		hResult = pShellLink->SetArguments(szAccountData);
 

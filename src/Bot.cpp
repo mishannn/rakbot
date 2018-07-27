@@ -130,7 +130,7 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 		return;
 	}
 
-	if (seatId < 0 || seatId >= vehicle->getSeatAmount()) {
+	if (seatId < 0 || seatId >= vehicle->getSeatsAmount()) {
 		RakBot::app()->log("[ERROR] ѕосадка в транспорт: неверное посадочное место!");
 		return;
 	}
@@ -142,6 +142,7 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 
 	enterVehicleReady = false;
 
+	setPlayerState(PLAYER_STATE_ENTERING_VEHICLE);
 	teleport(vehicle->getPosition(0), vehicle->getPosition(1), vehicle->getPosition(2));
 
 	RakBot::app()->getEvents()->defCallAdd(vars.enterVehicleDelay, false, [this, vehicle, seatId](DefCall *) {
@@ -155,8 +156,8 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 			return;
 		}
 
-		if (getPlayerState() != PLAYER_STATE_ONFOOT) {
-			RakBot::app()->log("[WARNING] «авершение посадки в транспорт: бот должен быть пешеходом!");
+		if (getPlayerState() != PLAYER_STATE_ENTERING_VEHICLE) {
+			RakBot::app()->log("[WARNING] «авершение посадки в транспорт: бот должен быть в процессе посадки!");
 			return;
 		}
 
@@ -330,10 +331,10 @@ void Bot::onfootSync() {
 		onfootSync.surfOffsets[i] = getSurfing()->getOffset(i);
 
 	for (int i = 0; i < 3; i++)
-		onfootSync.position[i] = getPosition(i);
+		onfootSync.position[i] = getPosition(i) + vars.syncPositionOffset[i];
 
 	for (int i = 0; i < 3; i++)
-		onfootSync.speed[i] = getSpeed(i);
+		onfootSync.speed[i] = getSpeed(i) + vars.syncSpeedOffset[i];
 
 	for (int i = 0; i < 4; i++)
 		onfootSync.quaternion[i] = getQuaternion(i);
@@ -660,10 +661,10 @@ void Bot::driverSync() {
 	driverSync.fTrainSpeed = vehicle->getTrainSpeed();
 
 	for (int i = 0; i < 3; i++)
-		driverSync.position[i] = getPosition(i);
+		driverSync.position[i] = getPosition(i) + vars.syncPositionOffset[i];
 
 	for (int i = 0; i < 3; i++)
-		driverSync.vecMoveSpeed[i] = getSpeed(i);
+		driverSync.vecMoveSpeed[i] = getSpeed(i) + vars.syncSpeedOffset[i];
 
 	for (int i = 0; i < 4; i++)
 		driverSync.quaternion[i] = getQuaternion(i);

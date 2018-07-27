@@ -12,7 +12,7 @@ private:
 
 	uint8_t _firstColor;
 	uint8_t _secondColor;
-	uint8_t _seatAmount;
+	uint8_t _seatsAmount;
 	uint8_t _gearState;
 
 	uint16_t _vehicleId;
@@ -63,7 +63,7 @@ public:
 	void setSecondColor(uint8_t secondColor);
 	uint8_t getSecondColor();
 
-	uint8_t getSeatAmount();
+	uint8_t getSeatsAmount();
 
 	void setVehicleId(uint16_t vehicleId);
 	uint16_t getVehicleId();

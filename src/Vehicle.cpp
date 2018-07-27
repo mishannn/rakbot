@@ -10,10 +10,10 @@ void Vehicle::loadModelData() {
 			continue;
 
 		_vehicleClass = VehicleList[i].classId;
-		_seatAmount = VehicleList[i].passengers + 1;
+		_seatsAmount = VehicleList[i].passengers + 1;
 		_name = std::string(VehicleList[i].name);
-		_passenger = new Player *[_seatAmount];
-		for (int i = 0; i < _seatAmount; i++)
+		_passenger = new Player *[_seatsAmount];
+		for (int i = 0; i < _seatsAmount; i++)
 			_passenger[i] = nullptr;
 	}
 }
@@ -37,7 +37,7 @@ void Vehicle::reset() {
 	_sirenEnabled = false;
 	_firstColor = 0;
 	_secondColor = 0;
-	_seatAmount = 0;
+	_seatsAmount = 0;
 	_vehicleId = 0;
 	_model = 0;
 	_vehicleClass = VEHICLE_CLASS_NONE;
@@ -122,9 +122,9 @@ uint8_t Vehicle::getSecondColor() {
 	return _secondColor;
 }
 
-uint8_t Vehicle::getSeatAmount() {
+uint8_t Vehicle::getSeatsAmount() {
 	std::lock_guard<std::mutex> lock(_vehicleMutex);
-	return _seatAmount;
+	return _seatsAmount;
 }
 
 void Vehicle::setVehicleId(uint16_t vehicleId) {
@@ -157,7 +157,7 @@ int Vehicle::getPassengerAmount() {
 	int passengerCount = 0;
 
 	_vehicleMutex.lock();
-	for (int i = 0; i < _seatAmount; i++) {
+	for (int i = 0; i < _seatsAmount; i++) {
 		if (_passenger[i] != nullptr)
 			passengerCount++;
 	}
@@ -248,7 +248,7 @@ void Vehicle::setPassenger(int n, Player *passenger) {
 }
 
 Player *Vehicle::getPassenger(int n) {
-	if (n < 0 || n >= _seatAmount)
+	if (n < 0 || n >= _seatsAmount)
 		return nullptr;
 
 	std::lock_guard<std::mutex> lock(_vehicleMutex);

@@ -163,9 +163,9 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				case DIALOG_STYLE_LIST:
 				case DIALOG_STYLE_TABLIST:
 				{
-					hwndListBox = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTBOX, "",
-						WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
-						10, 10, 365, 425, hwnd, (HMENU)IDL_LISTBOX, g_hInst, NULL);
+					hwndListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
+						LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
+						10, 10, 365, 410, hwnd, (HMENU)IDL_LISTBOX, g_hInst, NULL);
 					SendMessage(hwndListBox, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
 					SendMessage(hwndListBox, LB_SETCURSEL, 1, FALSE);
 
@@ -261,11 +261,14 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 		case WM_GETMINMAXINFO:
 		{
-			LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-			lpMMI->ptMinTrackSize.x = 400;
-			lpMMI->ptMinTrackSize.y = 500;
-			lpMMI->ptMaxTrackSize.x = 400;
-			lpMMI->ptMaxTrackSize.y = 500;
+			int windowWidth = 400;
+			int windowHeight = 500;
+
+			LPMINMAXINFO minMaxInfo = reinterpret_cast<LPMINMAXINFO>(lParam);
+			minMaxInfo->ptMinTrackSize.x = windowWidth;
+			minMaxInfo->ptMinTrackSize.y = windowHeight;
+			minMaxInfo->ptMaxTrackSize.x = windowWidth;
+			minMaxInfo->ptMaxTrackSize.y = windowHeight;
 			break;
 		}
 

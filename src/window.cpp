@@ -209,7 +209,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
 				573, 208, 205, 185, hWnd, NULL, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
-			g_hWndAdminsTitle = g_hWndAdminsTitle;
+			g_hWndAdminsTitle = hWndTemp;
 
 			hWndTemp = CreateWindowEx(0, WC_STATIC, "Загрузка игроков...",
 				WS_CHILD | WS_VISIBLE,
@@ -233,7 +233,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_TABSTOP | WS_VISIBLE,
 				5, 10, 560, 310, hWnd, (HMENU)(IDC_LSTCUSTOM), g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfListBoxText, FALSE);
-			SendMessage(hWndTemp, LB_SETITEMHEIGHT, NULL, 14);
+			SendMessage(hWndTemp, LB_SETITEMHEIGHT, NULL, 15);
 			SendMessage(hWndTemp, LB_SETHORIZONTALEXTENT, (WPARAM)1600, FALSE);
 			g_hWndLog = hWndTemp;
 
@@ -313,7 +313,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				216, 419, 60, 22, hWnd, (HMENU)IDC_ADMONLINE_EXIT, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
-			CheckRadioButton(hWnd, IDC_ADMONLINE_IGNORE, IDC_ADMONLINE_EXIT, IDC_ADMONLINE_IGNORE + vars.adminActionOnline);
+			CheckRadioButton(hWnd, IDC_ADMONLINE_IGNORE, IDC_ADMONLINE_EXIT, IDC_ADMONLINE_IGNORE + vars.adminOnlineAction);
 
 			hWndTemp = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTONA, "Админ рядом",
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
@@ -335,7 +335,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				326, 419, 60, 22, hWnd, (HMENU)IDC_ADMNEAR_EXIT, g_hInst, NULL);
 			SendMessage(hWndTemp, WM_SETFONT, (WPARAM)g_hfText, FALSE);
 
-			CheckRadioButton(hWnd, IDC_ADMNEAR_IGNORE, IDC_ADMNEAR_EXIT, IDC_ADMNEAR_IGNORE + vars.adminActionNear);
+			CheckRadioButton(hWnd, IDC_ADMNEAR_IGNORE, IDC_ADMNEAR_EXIT, IDC_ADMNEAR_IGNORE + vars.adminNearAction);
 
 			hWndTemp = CreateWindowEx(WS_EX_TRANSPARENT, WC_BUTTONA, "Отправка пикапа",
 				WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
@@ -602,7 +602,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				case IDC_ADMONLINE_IGNORE:
 				{
 					RakBot::app()->log("[RAKBOT] Бездействие, если админ в сети");
-					vars.adminActionOnline = 0;
+					vars.adminOnlineAction = 0;
 					CheckRadioButton(g_hWndMain, IDC_ADMONLINE_IGNORE, IDC_ADMONLINE_EXIT, LOWORD(wParam));
 					break;
 				}
@@ -610,7 +610,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				case IDC_ADMONLINE_RELOG:
 				{
 					RakBot::app()->log("[RAKBOT] Переподключение, если админ в сети");
-					vars.adminActionOnline = 1;
+					vars.adminOnlineAction = 1;
 					CheckRadioButton(g_hWndMain, IDC_ADMONLINE_IGNORE, IDC_ADMONLINE_EXIT, LOWORD(wParam));
 					break;
 				}
@@ -618,7 +618,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				case IDC_ADMONLINE_EXIT:
 				{
 					RakBot::app()->log("[RAKBOT] Выход, если админ в сети");
-					vars.adminActionOnline = 2;
+					vars.adminOnlineAction = 2;
 					CheckRadioButton(g_hWndMain, IDC_ADMONLINE_IGNORE, IDC_ADMONLINE_EXIT, LOWORD(wParam));
 					break;
 				}
@@ -626,7 +626,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				case IDC_ADMNEAR_IGNORE:
 				{
 					RakBot::app()->log("[RAKBOT] Бездействие, если админ рядом");
-					vars.adminActionNear = 0;
+					vars.adminNearAction = 0;
 					CheckRadioButton(g_hWndMain, IDC_ADMNEAR_IGNORE, IDC_ADMNEAR_EXIT, LOWORD(wParam));
 					break;
 				}
@@ -634,7 +634,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				case IDC_ADMNEAR_RELOG:
 				{
 					RakBot::app()->log("[RAKBOT] Переподключение, если админ рядом");
-					vars.adminActionNear = 1;
+					vars.adminNearAction = 1;
 					CheckRadioButton(g_hWndMain, IDC_ADMNEAR_IGNORE, IDC_ADMNEAR_EXIT, LOWORD(wParam));
 					break;
 				}
@@ -642,7 +642,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				case IDC_ADMNEAR_EXIT:
 				{
 					RakBot::app()->log("[RAKBOT] Выход, если админ рядом");
-					vars.adminActionNear = 2;
+					vars.adminNearAction = 2;
 					CheckRadioButton(g_hWndMain, IDC_ADMNEAR_IGNORE, IDC_ADMNEAR_EXIT, LOWORD(wParam));
 					break;
 				}
@@ -771,7 +771,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					FlipToTray(g_hWndMain, g_hIcon, FALSE);
 					break;
 
-				// СПРАВКА
+					// СПРАВКА
 				case MENU_EXIT:
 					RakBot::app()->exit();
 					break;
@@ -816,11 +816,14 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case WM_GETMINMAXINFO:
 		{
-			LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-			lpMMI->ptMinTrackSize.x = 800;
-			lpMMI->ptMinTrackSize.y = 560;
-			lpMMI->ptMaxTrackSize.x = 800;
-			lpMMI->ptMaxTrackSize.y = 560;
+			int windowWidth = 800;
+			int windowHeight = 560;
+
+			LPMINMAXINFO minMaxInfo = reinterpret_cast<LPMINMAXINFO>(lParam);
+			minMaxInfo->ptMinTrackSize.x = windowWidth;
+			minMaxInfo->ptMinTrackSize.y = windowHeight;
+			minMaxInfo->ptMaxTrackSize.x = windowWidth;
+			minMaxInfo->ptMaxTrackSize.y = windowHeight;
 			break;
 		}
 
@@ -828,38 +831,43 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		{
 			LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
 
-			if (lpDrawItem->CtlID == IDC_LSTCUSTOM) {
-				LPTSTR lpText = (LPTSTR)lpDrawItem->itemData;
-				COLORREF textColor = RGB(0, 0, 0);
-				COLORREF bkColor = RGB(255, 255, 255);
+			switch (lpDrawItem->CtlID) {
+				case IDC_LSTCUSTOM:
+				{
+					LPTSTR lpText = (LPTSTR)lpDrawItem->itemData;
+					COLORREF textColor = RGB(0, 0, 0);
+					COLORREF bkColor = RGB(255, 255, 255);
 
-				if (lpText == NULL)
-					return 0;
+					if (lpText == NULL)
+						return 0;
 
-				if (!strncmp(&lpText[11], "[RAKBOT] ", 9) || !strncmp(lpText, "[RAKBOT] ", 9))
-					textColor = RGB(0, 0, 130);
+					if (!strncmp(&lpText[11], "[RAKBOT] ", 9) || !strncmp(lpText, "[RAKBOT] ", 9))
+						textColor = RGB(0, 0, 130);
 
-				if (!strncmp(&lpText[11], "[СЕРВЕР] ", 9) || !strncmp(lpText, "[СЕРВЕР] ", 9))
-					textColor = RGB(0, 130, 0);
+					if (!strncmp(&lpText[11], "[СЕРВЕР] ", 9) || !strncmp(lpText, "[СЕРВЕР] ", 9))
+						textColor = RGB(0, 130, 0);
 
-				if (!strncmp(&lpText[11], "[ERROR] ", 8) || !strncmp(lpText, "[ERROR] ", 8))
-					textColor = RGB(130, 0, 0);
+					if (!strncmp(&lpText[11], "[ERROR] ", 8) || !strncmp(lpText, "[ERROR] ", 8))
+						textColor = RGB(130, 0, 0);
 
-				if (!strncmp(&lpText[11], "[WARNING] ", 10) || !strncmp(lpText, "[WARNING] ", 10))
-					textColor = RGB(204, 85, 0);
+					if (!strncmp(&lpText[11], "[WARNING] ", 10) || !strncmp(lpText, "[WARNING] ", 10))
+						textColor = RGB(204, 85, 0);
 
-				if (!strncmp(&lpText[11], "[LUA] ", 6) || !strncmp(lpText, "[LUA] ", 6))
-					textColor = RGB(0, 130, 130);
+					if (!strncmp(&lpText[11], "[LUA] ", 6) || !strncmp(lpText, "[LUA] ", 6))
+						textColor = RGB(0, 130, 130);
 
-				SetBkColor(lpDrawItem->hDC, bkColor);
-				SetTextColor(lpDrawItem->hDC, textColor);
+					SetBkColor(lpDrawItem->hDC, bkColor);
+					SetTextColor(lpDrawItem->hDC, textColor);
 
-				ExtTextOut(lpDrawItem->hDC,
-					lpDrawItem->rcItem.left + 3, lpDrawItem->rcItem.top,
-					ETO_OPAQUE | ETO_CLIPPED, &lpDrawItem->rcItem,
-					lpText, lstrlen(lpText), NULL);
+					ExtTextOut(lpDrawItem->hDC,
+						lpDrawItem->rcItem.left + 3, lpDrawItem->rcItem.top,
+						ETO_OPAQUE | ETO_CLIPPED, &lpDrawItem->rcItem,
+						lpText, lstrlen(lpText), NULL);
+					break;
+				}
 
-				break;
+				default:
+					break;
 			}
 			break;
 		}
@@ -908,11 +916,11 @@ void MainWindow() {
 	// our point size to match the users DPI setting.
 	hdcScreen = GetDC(HWND_DESKTOP);
 
-	g_hfText = CreateFont(-MulDiv(10, GetDeviceCaps(hdcScreen, LOGPIXELSY), 81), // 11pt
+	g_hfText = CreateFont(15,
 		0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, RUSSIAN_CHARSET, OUT_TT_PRECIS,
 		CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, "Arial");
 
-	g_hfListBoxText = CreateFont(-MulDiv(10, GetDeviceCaps(hdcScreen, LOGPIXELSY), 81), // 11pt
+	g_hfListBoxText = CreateFont(15,
 		0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, RUSSIAN_CHARSET, OUT_TT_PRECIS,
 		CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, "Consolas");
 

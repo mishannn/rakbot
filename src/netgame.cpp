@@ -486,7 +486,7 @@ void Packet_UnoccupiedSync(Packet *p) {
 	vehicle->setCarHealth(ud.fHealth);
 	vehicle->setDriver(nullptr);
 
-	for (int i = 0; i < vehicle->getSeatAmount(); i++)
+	for (int i = 0; i < vehicle->getSeatsAmount(); i++)
 		vehicle->setPassenger(i, nullptr);
 
 	for (int i = 0; i < 3; i++)

@@ -107,10 +107,16 @@ bool SampRpFuncs::onServerMessage(std::string msg) {
 		vars.botAutoSchoolFinished = true;
 	}
 
-	if (vars.busWorkerRoute) {
+	if (vars.busWorkerRoute != 0) {
 		if (msg.find("Вы арендовали транспортное средство") != std::string::npos) {
 			RakBot::app()->log("[RAKBOT] Заводим двигатель...");
 			bot->sendInput("/en");
+		}
+
+		if (msg.find(" Транспорт недоступен") != std::string::npos) {
+			vars.checkPointMaster = false;
+			vars.busWorkerRoute = 0;
+			RakBot::app()->log("[RAKBOT] Бот-автобусник: транспорт недоступен, бот отключен!");
 		}
 	}
 

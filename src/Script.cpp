@@ -903,7 +903,7 @@ void Script::luaRegisterFunctions() {
 		std::string result = std::string(buf);
 		return result;
 	});
-	_scriptState.set_function("getIniString", [this](std::string file, std::string section, std::string key) {
+	_scriptState.set_function("getIniString", [this](std::string file, std::string section, std::string key, sol::optional<std::string> maybe_default) {
 		char buf[256];
 		GetPrivateProfileString(section.c_str(), key.c_str(), "nil", buf, sizeof(buf), file.c_str());
 		std::string result = std::string(buf);
@@ -969,25 +969,65 @@ void Script::luaRegisterFunctions() {
 	});
 
 	// VEHICLES
-	/* _scriptState.set_function("getVehicle", [this](int vehicleId) {
+	_scriptState.set_function("getVehicle", [this](int vehicleId) {
 		sol::table vehicleInfo = _scriptState.create_table();
 		Bot *bot = RakBot::app()->getBot();
-		stVehicle vehicle = Vehicles[vehicleId];
-		if (!vehicle.isExists)
+		Vehicle *vehicle = RakBot::app()->getVehicle(vehicleId);
+		if (vehicle == nullptr)
 			return sol::make_object(_scriptState, sol::nil);
 		vehicleInfo["id"] = vehicleId;
-		vehicleInfo["model"] = vehicle.model;
-		vehicleInfo["firstColor"] = vehicle.firstColor;
-		vehicleInfo["secondColor"] = vehicle.secondColor;
-		vehicleInfo["lights"] = vehicle.lights;
-		vehicleInfo["engine"] = vehicle.engine;
-		vehicleInfo["distance"] = bot->distanceTo(vehicle.position);
+		vehicleInfo["model"] = vehicle->getModel();
+		vehicleInfo["name"] = vehicle->getName();
+		vehicleInfo["class"] = vehicle->getVehicleClass();
+		vehicleInfo["health"] = vehicle->getCarHealth();
+		vehicleInfo["firstColor"] = vehicle->getFirstColor();
+		vehicleInfo["secondColor"] = vehicle->getSecondColor();
+		vehicleInfo["lights"] = vehicle->isLightsEnabled();
+		vehicleInfo["engine"] = vehicle->isEngineEnabled();
+		vehicleInfo["siren"] = vehicle->isSirenEnabled();
+		vehicleInfo["seatsAmount"] = vehicle->getSeatsAmount();
+		vehicleInfo["gearState"] = vehicle->getGearState();
+		vehicleInfo["distance"] = bot->distanceTo(vehicle);
 		vehicleInfo["position"] = _scriptState.create_table();
-		vehicleInfo["position"]["x"] = vehicle.position[0];
-		vehicleInfo["position"]["y"] = vehicle.position[1];
-		vehicleInfo["position"]["z"] = vehicle.position[2];
+		vehicleInfo["position"]["x"] = vehicle->getPosition(0);
+		vehicleInfo["position"]["y"] = vehicle->getPosition(1);
+		vehicleInfo["position"]["z"] = vehicle->getPosition(2);
+		vehicleInfo["speed"] = _scriptState.create_table();
+		vehicleInfo["speed"]["x"] = vehicle->getSpeed(0);
+		vehicleInfo["speed"]["y"] = vehicle->getSpeed(1);
+		vehicleInfo["speed"]["z"] = vehicle->getSpeed(2);
+		vehicleInfo["quaternion"] = _scriptState.create_table();
+		vehicleInfo["quaternion"]["w"] = vehicle->getQuaternion(0);
+		vehicleInfo["quaternion"]["x"] = vehicle->getQuaternion(1);
+		vehicleInfo["quaternion"]["y"] = vehicle->getQuaternion(2);
+		vehicleInfo["quaternion"]["z"] = vehicle->getQuaternion(3);
+		sol::table passengersTable = _scriptState.create_table();
+		for (int i = 0; i < vehicle->getSeatsAmount(); i++) {
+			Player *player = vehicle->getPassenger(i);
+			if (player == nullptr)
+				continue;
+			passengersTable[i] = player->getPlayerId();
+		}
+		vehicleInfo["passengers"] = passengersTable;
+		vehicleInfo["trailerId"] = vehicle->getTrailerId();
+		vehicleInfo["trainSpeed"] = vehicle->getTrainSpeed();
 		return sol::make_object(_scriptState, vehicleInfo);
-	}); */
+	});
+
+	_scriptState.set_function("getDialog", [this]() {
+		sol::table dialogInfo = _scriptState.create_table();
+		Bot *bot = RakBot::app()->getBot();
+		SAMPDialog *sampDialog = RakBot::app()->getSampDialog();
+		dialogInfo["id"] = sampDialog->getDialogId();
+		dialogInfo["style"] = sampDialog->getDialogStyle();
+		dialogInfo["isActive"] = sampDialog->isDialogActive();
+		dialogInfo["isOffline"] = sampDialog->isDialogOffline();
+		dialogInfo["title"] = sampDialog->getDialogTitle();
+		dialogInfo["okButtonText"] = sampDialog->getOkButtonText();
+		dialogInfo["cancelButtonText"] = sampDialog->getCancelButtonText();
+		dialogInfo["text"] = sampDialog->getDialogText();
+		return sol::make_object(_scriptState, dialogInfo);
+	});
 
 	// OBJECTS
 	_scriptState.set_function("getObject", [this](int objectId) {
@@ -1141,6 +1181,9 @@ void Script::luaRegisterFunctions() {
 		Settings *settings = RakBot::app()->getSettings();
 		settings->setServerPassword(password);
 		return true;
+	});
+	_scriptState.set_function("getRegKey", [this]() {
+		return vars.regKey;
 	});
 	_scriptState.set_function("getServerAddress", [this]() {
 		std::stringstream ss;

@@ -49,8 +49,8 @@ struct Vars {
 	bool botFarmerAutomated;
 
 	bool virtualWorld;
-	int adminActionNear;
-	int adminActionOnline;
+	int adminNearAction;
+	int adminOnlineAction;
 	int skipDialog;
 
 	int dialogIdBan;
@@ -64,7 +64,7 @@ struct Vars {
 	int minId;
 	bool checkIdEnabled;
 
-	int iInteriorID;
+	uint8_t interiorId;
 
 	bool bQuestEnabled;
 	int iQuestStep;
@@ -109,7 +109,7 @@ struct Vars {
 
 	bool botLoaderEnabled;
 	int botLoaderDelay;
-	int botLoaderCount;
+	int botLoaderLimit;
 	int botLoaderGetPay;
 	bool botLoaderCheckVans;
 
@@ -172,6 +172,9 @@ struct Vars {
 
 	static std::queue<std::string> commandQueue;
 	static std::mutex commandQueueMutex;
+
+	float syncSpeedOffset[3];
+	float syncPositionOffset[3];
 };
 
 extern Vars vars;

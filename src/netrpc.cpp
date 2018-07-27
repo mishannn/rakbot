@@ -592,8 +592,8 @@ void ScrRemovePlayerFromVehicle(RPCParameters *rpcParams) {
 	if (RakBot::app()->getEvents()->onEjectFromVehicle())
 		return;
 
-	bot->exitVehicle();
 	RakBot::app()->log("[RAKBOT] Бот выброшен из транспорта");
+	bot->exitVehicle();
 }
 
 void ScrShowDialog(RPCParameters *rpcParams) {
@@ -911,8 +911,12 @@ void SetPlayerSkin(RPCParameters *rpcParams) {
 void SetInterior(RPCParameters *rpcParams) {
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
-	bsData.Read(vars.iInteriorID);
-	RakBot::app()->log("[RAKBOT] Бот перемещен в интерьер %d", vars.iInteriorID);
+	bsData.Read(vars.interiorId);
+	RakBot::app()->log("[RAKBOT] Бот перемещен в интерьер %d", vars.interiorId);
+
+	RakNet::BitStream bsSend;
+	bsSend.Write(vars.interiorId);
+	RakBot::app()->getRakClient()->RPC(&RPC_SetInteriorId, &bsSend, HIGH_PRIORITY, RELIABLE, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
 }
 
 void SetPlayerAttachedObject(RPCParameters *rpcParams) {

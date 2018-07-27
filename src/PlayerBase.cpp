@@ -77,6 +77,10 @@ std::string PlayerBase::getPlayerStateName() {
 			playerStateName = "пассажир";
 			break;
 
+		case PLAYER_STATE_ENTERING_VEHICLE:
+			playerStateName = "садится в машину";
+			break;
+
 		default:
 			playerStateName = "n/a";
 			break;
