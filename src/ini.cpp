@@ -7,147 +7,169 @@
 #include "Settings.h"
 #include "ini.h"
 
-bool SetConfigValue(const std::string &filePath, const std::string &section, const std::string &key, const std::string &value) {
+bool SetConfigString(const std::string &filePath, const std::string &section, const std::string &key, const std::string &value) {
 	return WritePrivateProfileString(section.c_str(), key.c_str(), value.c_str(), filePath.c_str());
 }
 
-const std::string &GetConfigValue(const std::string &filePath, const std::string &section, const std::string &key, const std::string &defaultValue) {
+std::string GetConfigString(const std::string &filePath, const std::string &section, const std::string &key, const std::string &defaultValue) {
 	char valueBuffer[4096];
 	GetPrivateProfileString(section.c_str(), key.c_str(), defaultValue.c_str(), valueBuffer, sizeof(valueBuffer), filePath.c_str());
 	std::string value = valueBuffer;
+	if (value.empty())
+		value = defaultValue;
+
 	return value;
+}
+
+bool SetConfigInt(const std::string &filePath, const std::string &section, const std::string &key, int value) {
+	return WritePrivateProfileString(section.c_str(), key.c_str(), std::to_string(value).c_str(), filePath.c_str());
+}
+
+int GetConfigInt(const std::string &filePath, const std::string &section, const std::string &key, int defaultValue) {
+	char valueBuffer[64];
+	GetPrivateProfileString(section.c_str(), key.c_str(), std::to_string(defaultValue).c_str(), valueBuffer, sizeof(valueBuffer), filePath.c_str());
+	std::string value = valueBuffer;
+	if (value.empty())
+		return defaultValue;
+
+	return std::stoi(value);
+}
+
+bool SetConfigFloat(const std::string &filePath, const std::string &section, const std::string &key, float value) {
+	return WritePrivateProfileString(section.c_str(), key.c_str(), std::to_string(value).c_str(), filePath.c_str());
+}
+
+float GetConfigFloat(const std::string &filePath, const std::string &section, const std::string &key, float defaultValue) {
+	char valueBuffer[64];
+	GetPrivateProfileString(section.c_str(), key.c_str(), std::to_string(defaultValue).c_str(), valueBuffer, sizeof(valueBuffer), filePath.c_str());
+	std::string value = valueBuffer;
+	if (value.empty())
+		return defaultValue;
+
+	return std::stof(value);
 }
 
 bool LoadCustom() {
 	bool result = true;
 
-	char szBuf[512];
-	char *szAppName = nullptr;
-	const char *szPath = GetRakBotPath("settings\\custom.ini");
+	std::string section, stringValue;
+	std::string filePath = GetRakBotPath("settings\\custom.ini");
 
-	FILE *fdCustomSetings = fopen(szPath, "r");
-	if (fdCustomSetings) {
-		fclose(fdCustomSetings);
+	if (IsFileExists(filePath)) {
+		section = "Log";
+		
+		vars.logFileMode = GetConfigString(filePath, section, "FileMode", "a");
 
-		szAppName = "Log";
-		GetPrivateProfileString(szAppName, "FileMode", "a", szBuf, sizeof(szBuf), szPath);
-		vars.logFileMode = std::string(szBuf);
+		section = "Bot";
 
-		szAppName = "Bot";
-		GetPrivateProfileString(szAppName, "MainUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
-		vars.mainDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.mainDelay = GetConfigInt(filePath, section, "MainUpdateDelay", 50);
+		if (vars.mainDelay < 1)
+			vars.mainDelay = 1;
 
-		GetPrivateProfileString(szAppName, "LuaUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
-		vars.luaUpdateDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.luaUpdateDelay = GetConfigInt(filePath, section, "LuaUpdateDelay", 50);
+		if (vars.luaUpdateDelay < 1)
+			vars.luaUpdateDelay = 1;
 
-		GetPrivateProfileString(szAppName, "NetworkUpdateDelay", "50", szBuf, sizeof(szBuf), szPath);
-		vars.networkUpdateDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.networkUpdateDelay = GetConfigInt(filePath, section, "NetworkUpdateDelay", 50);
+		if (vars.networkUpdateDelay < 1)
+			vars.networkUpdateDelay = 1;
 
-		GetPrivateProfileString(szAppName, "SpawnDelay", "500", szBuf, sizeof(szBuf), szPath);
-		vars.spawnDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.spawnDelay = GetConfigInt(filePath, section, "SpawnDelay", 500);
+		if (vars.spawnDelay < 1)
+			vars.spawnDelay = 1;
 
-		GetPrivateProfileString(szAppName, "DialogResponseDelay", "500", szBuf, sizeof(szBuf), szPath);
-		vars.dialogResponseDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.dialogResponseDelay = GetConfigInt(filePath, section, "DialogResponseDelay", 500);
+		if (vars.dialogResponseDelay < 1)
+			vars.dialogResponseDelay = 1;
 
-		GetPrivateProfileString(szAppName, "NoAfkDelay", "100", szBuf, sizeof(szBuf), szPath);
-		vars.dialogResponseDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.noAfkDelay = GetConfigInt(filePath, section, "NoAfkDelay", 100);
+		if (vars.noAfkDelay < 1)
+			vars.noAfkDelay = 1;
 
-		GetPrivateProfileString(szAppName, "AfterSpawnDelay", "1000", szBuf, sizeof(szBuf), szPath);
-		vars.afterSpawnDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.afterSpawnDelay = GetConfigInt(filePath, section, "AfterSpawnDelay", 1000);
+		if (vars.afterSpawnDelay < 1)
+			vars.afterSpawnDelay = 1;
 
-		GetPrivateProfileString(szAppName, "EnterVehicleDelay", "2000", szBuf, sizeof(szBuf), szPath);
-		vars.enterVehicleDelay = std::strtoul(szBuf, nullptr, 10);
+		vars.enterVehicleDelay = GetConfigInt(filePath, section, "EnterVehicleDelay", 2000);
+		if (vars.enterVehicleDelay < 1)
+			vars.enterVehicleDelay = 1;
 
-		szAppName = "Sync";
-		GetPrivateProfileString(szAppName, "SpeedOffsetX", "0.0", szBuf, sizeof(szBuf), szPath);
-		vars.syncSpeedOffset[0] = std::strtof(szBuf, nullptr);
+		section = "Sync";
 
-		GetPrivateProfileString(szAppName, "SpeedOffsetY", "0.0", szBuf, sizeof(szBuf), szPath);
-		vars.syncSpeedOffset[1] = std::strtof(szBuf, nullptr);
+		vars.syncSpeedOffset[0] = GetConfigFloat(filePath, section, "SpeedOffsetX", 0.f);
+		vars.syncSpeedOffset[1] = GetConfigFloat(filePath, section, "SpeedOffsetY", 0.f);
+		vars.syncSpeedOffset[2] = GetConfigFloat(filePath, section, "SpeedOffsetZ", 0.f);
 
-		GetPrivateProfileString(szAppName, "SpeedOffsetZ", "0.0", szBuf, sizeof(szBuf), szPath);
-		vars.syncSpeedOffset[2] = std::strtof(szBuf, nullptr);
+		vars.syncPositionOffset[0] = GetConfigFloat(filePath, section, "PositionOffsetX", 0.f);
+		vars.syncPositionOffset[1] = GetConfigFloat(filePath, section, "PositionOffsetY", 0.f);
+		vars.syncPositionOffset[2] = GetConfigFloat(filePath, section, "PositionOffsetZ", 0.f);
 
-		GetPrivateProfileString(szAppName, "PositionOffsetX", "0.0", szBuf, sizeof(szBuf), szPath);
-		vars.syncPositionOffset[0] = std::strtof(szBuf, nullptr);
+		section = "AdminChecker";
+		vars.adminsUrl = GetConfigString(filePath, section, "URL", "http://api.sanek.love/al_list.php?responseType=colon&from=RakBot");
 
-		GetPrivateProfileString(szAppName, "PositionOffsetY", "0.0", szBuf, sizeof(szBuf), szPath);
-		vars.syncPositionOffset[1] = std::strtof(szBuf, nullptr);
+		section = "Route";
 
-		GetPrivateProfileString(szAppName, "PositionOffsetZ", "0.0", szBuf, sizeof(szBuf), szPath);
-		vars.syncPositionOffset[2] = std::strtof(szBuf, nullptr);
+		vars.routeLoop = static_cast<bool>(GetConfigInt(filePath, section, "Loop", 1));
 
-		szAppName = "AdminChecker";
-		GetPrivateProfileString(szAppName, "URL", "http://api.sanek.love/al_list.php?responseType=colon&from=RakBot", szBuf, sizeof(szBuf), szPath);
-		vars.adminsUrl = std::string(szBuf);
+		vars.routeUpdateDelay = GetConfigInt(filePath, section, "Delay", 50);
+		if (vars.routeUpdateDelay < 1)
+			vars.routeUpdateDelay = 1;
 
-		szAppName = "Route";
-		GetPrivateProfileString(szAppName, "Loop", "1", szBuf, sizeof(szBuf), szPath);
-		vars.routeLoop = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
+		vars.routeUpdateCount = GetConfigInt(filePath, section, "Count", 2);
+		if (vars.routeUpdateCount < 1)
+			vars.routeUpdateCount = 1;
 
-		GetPrivateProfileString(szAppName, "Delay", "50", szBuf, sizeof(szBuf), szPath);
-		vars.routeUpdateDelay = std::strtoul(szBuf, nullptr, 10);
+		section = "TextDraw";
 
-		GetPrivateProfileString(szAppName, "Count", "2", szBuf, sizeof(szBuf), szPath);
-		vars.routeUpdateCount = std::strtoul(szBuf, nullptr, 10);
+		vars.textDrawCreateLogging = static_cast<bool>(GetConfigInt(filePath, section, "CreateLog", 0));
+		vars.textDrawHideLogging = static_cast<bool>(GetConfigInt(filePath, section, "HideLog", 0));
+		vars.textDrawSetStringLogging = static_cast<bool>(GetConfigInt(filePath, section, "SetStringLog", 0));
 
-		szAppName = "TextDraw";
-		GetPrivateProfileString(szAppName, "CreateLog", "1", szBuf, sizeof(szBuf), szPath);
-		vars.textDrawCreateLogging = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
+		section = "3DTextLabel";
+		vars.textLabelCreateLogging = static_cast<bool>(GetConfigInt(filePath, section, "CreateLog", 0));
 
-		GetPrivateProfileString(szAppName, "HideLog", "0", szBuf, sizeof(szBuf), szPath);
-		vars.textDrawHideLogging = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
-
-		GetPrivateProfileString(szAppName, "SetStringLog", "0", szBuf, sizeof(szBuf), szPath);
-		vars.textDrawSetStringLogging = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
-
-		szAppName = "3DTextLabel";
-		GetPrivateProfileString(szAppName, "CreateLog", "1", szBuf, sizeof(szBuf), szPath);
-		vars.textLabelCreateLogging = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
-
-		szAppName = "NetworkAdapter";
-		GetPrivateProfileString(szAppName, "Address", "0.0.0.0", szBuf, sizeof(szBuf), szPath);
-		vars.adapterAddress = std::string(szBuf);
+		section = "NetworkAdapter";
+		vars.adapterAddress = GetConfigString(filePath, section, "Address", "0.0.0.0");
 	} else {
-		szAppName = "Log";
-		WritePrivateProfileString(szAppName, "FileMode", "a", szPath);
+		section = "Log";
+		SetConfigString(filePath, section, "FileMode", "a");
 
-		szAppName = "Bot";
-		WritePrivateProfileString(szAppName, "MainUpdateDelay", "50", szPath);
-		WritePrivateProfileString(szAppName, "LuaUpdateDelay", "50", szPath);
-		WritePrivateProfileString(szAppName, "NetworkUpdateDelay", "50", szPath);
-		WritePrivateProfileString(szAppName, "SpawnDelay", "500", szPath);
-		WritePrivateProfileString(szAppName, "DialogResponseDelay", "500", szPath);
-		WritePrivateProfileString(szAppName, "NoAfkDelay", "100", szPath);
-		WritePrivateProfileString(szAppName, "AfterSpawnDelay", "1000", szPath);
-		WritePrivateProfileString(szAppName, "EnterVehicleDelay", "2000", szPath);
+		section = "Bot";
+		SetConfigString(filePath, section, "MainUpdateDelay", "50");
+		SetConfigString(filePath, section, "LuaUpdateDelay", "50");
+		SetConfigString(filePath, section, "NetworkUpdateDelay", "50");
+		SetConfigString(filePath, section, "SpawnDelay", "500");
+		SetConfigString(filePath, section, "DialogResponseDelay", "500");
+		SetConfigString(filePath, section, "NoAfkDelay", "100");
+		SetConfigString(filePath, section, "AfterSpawnDelay", "1000");
+		SetConfigString(filePath, section, "EnterVehicleDelay", "2000");
 
-		szAppName = "Sync";
-		WritePrivateProfileString(szAppName, "SpeedOffsetX", "0.0", szPath);
-		WritePrivateProfileString(szAppName, "SpeedOffsetY", "0.0", szPath);
-		WritePrivateProfileString(szAppName, "SpeedOffsetZ", "0.0", szPath);
-		WritePrivateProfileString(szAppName, "PositionOffsetX", "0.0", szPath);
-		WritePrivateProfileString(szAppName, "PositionOffsetY", "0.0", szPath);
-		WritePrivateProfileString(szAppName, "PositionOffsetZ", "0.0", szPath);
+		section = "Sync";
+		SetConfigString(filePath, section, "SpeedOffsetX", "0.0");
+		SetConfigString(filePath, section, "SpeedOffsetY", "0.0");
+		SetConfigString(filePath, section, "SpeedOffsetZ", "0.0");
+		SetConfigString(filePath, section, "PositionOffsetX", "0.0");
+		SetConfigString(filePath, section, "PositionOffsetY", "0.0");
+		SetConfigString(filePath, section, "PositionOffsetZ", "0.0");
 
-		szAppName = "AdminChecker";
-		WritePrivateProfileString(szAppName, "URL", "http://api.sanek.love/al_list.php?responseType=colon&from=RakBot", szPath);
+		section = "AdminChecker";
+		SetConfigString(filePath, section, "URL", "http://api.sanek.love/al_list.php?responseType=colon&from=RakBot");
 
-		szAppName = "Route";
-		WritePrivateProfileString(szAppName, "Loop", "1", szPath);
-		WritePrivateProfileString(szAppName, "Delay", "50", szPath);
-		WritePrivateProfileString(szAppName, "Count", "2", szPath);
+		section = "Route";
+		SetConfigString(filePath, section, "Loop", "1");
+		SetConfigString(filePath, section, "Delay", "50");
+		SetConfigString(filePath, section, "Count", "2");
 
-		szAppName = "TextDraw";
-		WritePrivateProfileString(szAppName, "CreateLog", "1", szPath);
-		WritePrivateProfileString(szAppName, "HideLog", "0", szPath);
-		WritePrivateProfileString(szAppName, "SetStringLog", "0", szPath);
+		section = "TextDraw";
+		SetConfigString(filePath, section, "CreateLog", "0");
+		SetConfigString(filePath, section, "HideLog", "0");
+		SetConfigString(filePath, section, "SetStringLog", "0");
 
-		szAppName = "3DTextLabel";
-		WritePrivateProfileString(szAppName, "CreateLog", "1", szPath);
+		section = "3DTextLabel";
+		SetConfigString(filePath, section, "CreateLog", "0");
 
-		szAppName = "NetworkAdapter";
-		WritePrivateProfileString(szAppName, "Address", "0.0.0.0", szPath);
+		section = "NetworkAdapter";
+		SetConfigString(filePath, section, "Address", "0.0.0.0");
 
 		MessageBox(NULL, "Файл \"settings\\custom.ini\" создан! Перезапустите бота.", "Первая настройка", MB_ICONASTERISK);
 		result = false;
@@ -185,128 +207,166 @@ bool LoadConfig() {
 	bool result = true;
 
 	ZeroMemory(&vars, sizeof(Vars));
-	CreateDirectory(GetRakBotPath("settings"), NULL);
+	CreateDirectory(GetRakBotPath("settings").c_str(), NULL);
 
-	char szBuf[64];
-	char *szAppName = nullptr;
-	const char *szPath = GetRakBotPath("settings\\settings.ini");
-	FILE *fdSetings = fopen(szPath, "r");
-	if (fdSetings) {
-		fclose(fdSetings);
+	int intValue;
+	std::string section, stringValue;
+	std::string filePath = GetRakBotPath("settings\\settings.ini");
 
-		szAppName = "Account";
-		GetPrivateProfileString(szAppName, "Server", "127.0.0.1:7777", szBuf, sizeof(szBuf), szPath);
+	if (IsFileExists(filePath)) {
+		section = "Account";
+		stringValue = GetConfigString(filePath, section, "Server", "127.0.0.1:7777");
 
-		char *pChar = szBuf;
-		while (*pChar) {
-			if (*pChar == ':') {
-				*pChar = 0;
-				RakBot::app()->getSettings()->getAddress()->setPort(static_cast<uint16_t>(std::strtoul(pChar + 1, nullptr, 10)));
-			}
-			pChar++;
+		std::smatch matches;
+		std::regex_search(stringValue, matches, std::regex("(\\S+):(\\d+)"));
+
+		if (matches.size() != 3) {
+			RakBot::app()->getSettings()->getAddress()->setIp("127.0.0.1");
+			RakBot::app()->getSettings()->getAddress()->setPort(7777);
+		} else {
+			std::string ip = matches[1];
+			RakBot::app()->getSettings()->getAddress()->setIp(ip);
+
+			int port = std::stoi(matches[2]);
+			if (port < 1 || port > 65535)
+				port = 7777;
+
+			RakBot::app()->getSettings()->getAddress()->setPort(static_cast<uint16_t>(port));
 		}
-		RakBot::app()->getSettings()->getAddress()->setIp(std::string(szBuf));
 
-		GetPrivateProfileString(szAppName, "NickName", "MishaN", szBuf, sizeof(szBuf), szPath);
-		RakBot::app()->getSettings()->setName(std::string(szBuf));
+		stringValue = GetConfigString(filePath, section, "NickName", "MishaN");
+		RakBot::app()->getSettings()->setName(stringValue);
 
-		GetPrivateProfileString(szAppName, "Password", "qwerty", szBuf, sizeof(szBuf), szPath);
-		RakBot::app()->getSettings()->setLoginPassword(std::string(szBuf));
+		stringValue = GetConfigString(filePath, section, "Password", "qwerty");
+		RakBot::app()->getSettings()->setLoginPassword(stringValue);
 
-		szAppName = "AutoReg";
-		GetPrivateProfileString(szAppName, "Enabled", "0", szBuf, sizeof(szBuf), szPath);
-		vars.autoRegEnabled = std::strtoul(szBuf, nullptr, 10);
+		section = "AutoReg";
+		stringValue = GetConfigString(filePath, section, "Enabled", "0");
+		vars.autoRegEnabled = static_cast<bool>(std::stoul(stringValue));
 
-		GetPrivateProfileString(szAppName, "Mail", "mail@mail.ru", szBuf, sizeof(szBuf), szPath);
-		vars.autoRegMail = std::string(szBuf);
+		vars.autoRegMail = GetConfigString(filePath, section, "Mail", "mail@mail.ru");
+		vars.autoRegReferer = GetConfigString(filePath, section, "NickName", "MishaN");
 
-		GetPrivateProfileString(szAppName, "NickName", "CMishaN", szBuf, sizeof(szBuf), szPath);
-		vars.autoRegReferer = std::string(szBuf);
+		stringValue = GetConfigString(filePath, section, "Sex", "1");
+		vars.autoRegSex = std::stoi(stringValue);
+		if (vars.autoRegSex < 0 || vars.autoRegSex > 1)
+			vars.autoRegSex = 1;
 
-		GetPrivateProfileString(szAppName, "Sex", "1", szBuf, sizeof(szBuf), szPath);
-		vars.autoRegSex = std::strtoul(szBuf, nullptr, 10);
+		section = "CoordMaster";
+		stringValue = GetConfigString(filePath, section, "Distance", "80.0");
+		vars.coordMasterDist = std::stof(stringValue);
+		if (vars.coordMasterDist < 1.f)
+			vars.coordMasterDist = 1.f;
 
-		szAppName = "CoordMaster";
-		GetPrivateProfileString(szAppName, "Distance", "80.0", szBuf, sizeof(szBuf), szPath);
-		vars.coordMasterDist = std::strtof(szBuf, nullptr);
+		stringValue = GetConfigString(filePath, section, "Height", "-40.0");
+		vars.coordMasterHeight = std::stof(stringValue);
 
-		GetPrivateProfileString(szAppName, "Height", "-40.0", szBuf, sizeof(szBuf), szPath);
-		vars.coordMasterHeight = std::strtof(szBuf, nullptr);
+		stringValue = GetConfigString(filePath, section, "Delay", "1500");
+		vars.coordMasterDelay = std::stoi(stringValue);
+		if (vars.coordMasterDelay < 1000)
+			vars.coordMasterDelay = 1000;
 
-		GetPrivateProfileString(szAppName, "Delay", "1500", szBuf, sizeof(szBuf), szPath);
-		vars.coordMasterDelay = std::strtoul(szBuf, nullptr, 10);
+		section = "Loader";
+		stringValue = GetConfigString(filePath, section, "Delay", "10000");
+		vars.botLoaderDelay = std::stoi(stringValue);
+		if (vars.botLoaderDelay < 1000)
+			vars.botLoaderDelay = 1000;
 
-		szAppName = "Loader";
-		GetPrivateProfileString(szAppName, "Delay", "10000", szBuf, sizeof(szBuf), szPath);
-		vars.botLoaderDelay = std::strtoul(szBuf, nullptr, 10);
+		stringValue = GetConfigString(filePath, section, "Limit", "20");
+		vars.botLoaderLimit = std::stoi(stringValue);
+		if (vars.botLoaderLimit < 1)
+			vars.botLoaderLimit = 1;
 
-		GetPrivateProfileString(szAppName, "Limit", "20", szBuf, sizeof(szBuf), szPath);
-		vars.botLoaderLimit = std::strtoul(szBuf, nullptr, 10);
+		stringValue = GetConfigString(filePath, section, "Enabled", "0");
+		vars.botLoaderEnabled = static_cast<bool>(std::stoul(stringValue));
 
-		GetPrivateProfileString(szAppName, "Enabled", "0", szBuf, sizeof(szBuf), szPath);
-		vars.botLoaderEnabled = static_cast<bool>(std::strtoul(szBuf, nullptr, 10));
+		section = "Settings";
+		stringValue = GetConfigString(filePath, section, "KickReconnect", "15");
+		intValue = std::stoi(stringValue);
+		if (intValue < 0)
+			intValue = 0;
+		vars.reconnectDelay = (intValue * 1000) + 500;
 
-		szAppName = "Settings";
-		GetPrivateProfileString(szAppName, "KickReconnect", "15", szBuf, sizeof(szBuf), szPath);
-		vars.reconnectDelay = (std::strtoul(szBuf, nullptr, 10) * 1000) + 500;
+		stringValue = GetConfigString(filePath, section, "AdminReconnect", "300");
+		intValue = std::stoi(stringValue);
+		if (intValue < 0)
+			intValue = 0;
+		vars.adminReconnectDelay = (intValue * 1000) + 500;
 
-		GetPrivateProfileString(szAppName, "AdminReconnect", "300", szBuf, sizeof(szBuf), szPath);
-		vars.adminReconnectDelay = std::strtoul(szBuf, nullptr, 10) * 1000;
+		stringValue = GetConfigString(filePath, section, "PasswordDialog", "1");
+		intValue = std::stoi(stringValue);
+		if (intValue < 0)
+			intValue = 0;
+		vars.dialogIdPassword = intValue;
 
-		GetPrivateProfileString(szAppName, "PasswordDialog", "1", szBuf, sizeof(szBuf), szPath);
-		vars.dialogIdPassword = std::strtoul(szBuf, nullptr, 10);
+		stringValue = GetConfigString(filePath, section, "BanDialog", "58");
+		intValue = std::stoi(stringValue);
+		if (intValue < 0)
+			intValue = 0;
+		vars.dialogIdBan = intValue;
 
-		GetPrivateProfileString(szAppName, "BanDialog", "58", szBuf, sizeof(szBuf), szPath);
-		vars.dialogIdBan = std::strtoul(szBuf, nullptr, 10);
+		stringValue = GetConfigString(filePath, section, "AdminOnline", "0");
+		intValue = std::stoi(stringValue);
+		if (intValue < 0 || intValue > 2)
+			intValue = 0;
+		vars.adminOnlineAction = intValue;
 
-		GetPrivateProfileString(szAppName, "AdminOnline", "0", szBuf, sizeof(szBuf), szPath);
-		vars.adminOnlineAction = std::strtoul(szBuf, nullptr, 10);
+		stringValue = GetConfigString(filePath, section, "AdminNear", "0");
+		intValue = std::stoi(stringValue);
+		if (intValue < 0 || intValue > 2)
+			intValue = 0;
+		vars.adminNearAction = intValue;
 
-		GetPrivateProfileString(szAppName, "AdminNear", "0", szBuf, sizeof(szBuf), szPath);
-		vars.adminNearAction = std::strtoul(szBuf, nullptr, 10);
+		stringValue = GetConfigString(filePath, section, "BusRoute", "0");
+		intValue = std::stoi(stringValue);
+		if (intValue < 0 || intValue > 8)
+			intValue = 0;
+		vars.busWorkerRoute = intValue;
 
-		GetPrivateProfileString(szAppName, "BusRoute", "0", szBuf, sizeof(szBuf), szPath);
-		vars.busWorkerRoute = std::strtoul(szBuf, nullptr, 10);
+		stringValue = GetConfigString(filePath, section, "AntiAfkDelay", "1");
+		if (intValue < 1)
+			intValue = 1;
+		vars.antiAfkDelay = intValue * 1000;
 
-		GetPrivateProfileString(szAppName, "AntiAfkDelay", "1", szBuf, sizeof(szBuf), szPath);
-		vars.antiAfkDelay = std::strtoul(szBuf, nullptr, 10) * 1000;
-
-		GetPrivateProfileString(szAppName, "AntiAfkOffset", "0.001", szBuf, sizeof(szBuf), szPath);
-		vars.antiAfkOffset = std::strtof(szBuf, nullptr);
+		stringValue = GetConfigString(filePath, section, "AntiAfkOffset", "0.001");
+		vars.antiAfkOffset = std::stof(stringValue);
+		if (vars.antiAfkOffset < 0.001f)
+			vars.antiAfkOffset = 0.001f;
 	} else {
-		szAppName = "Account";
-		WritePrivateProfileString(szAppName, "Server", "127.0.0.1:7777", szPath);
-		WritePrivateProfileString(szAppName, "NickName", "MishaN", szPath);
-		WritePrivateProfileString(szAppName, "Password", "qwerty", szPath);
+		section = "Account";
+		SetConfigString(filePath, section, "Server", "127.0.0.1:7777");
+		SetConfigString(filePath, section, "NickName", "MishaN");
+		SetConfigString(filePath, section, "Password", "qwerty");
 
-		szAppName = "AutoReg";
-		WritePrivateProfileString(szAppName, "Enabled", "0", szPath);
-		WritePrivateProfileString(szAppName, "Mail", "mail@mail.ru", szPath);
-		WritePrivateProfileString(szAppName, "NickName", "CMishaN", szPath);
-		WritePrivateProfileString(szAppName, "Sex", "1", szPath);
+		section = "AutoReg";
+		SetConfigString(filePath, section, "Enabled", "1");
+		SetConfigString(filePath, section, "Mail", "mail@mail.ru");
+		SetConfigString(filePath, section, "NickName", "MishaN");
+		SetConfigString(filePath, section, "Sex", "1");
 
-		szAppName = "CoordMaster";
-		WritePrivateProfileString(szAppName, "Distance", "80.0", szPath);
-		WritePrivateProfileString(szAppName, "Height", "-40.0", szPath);
-		WritePrivateProfileString(szAppName, "Delay", "1500", szPath);
+		section = "CoordMaster";
+		SetConfigString(filePath, section, "Distance", "80.0");
+		SetConfigString(filePath, section, "Height", "-40.0");
+		SetConfigString(filePath, section, "Delay", "1500");
 
-		szAppName = "Loader";
-		WritePrivateProfileString(szAppName, "Delay", "10000", szPath);
-		WritePrivateProfileString(szAppName, "Limit", "20", szPath);
-		WritePrivateProfileString(szAppName, "Enabled", "0", szPath);
+		section = "Loader";
+		SetConfigString(filePath, section, "Delay", "10000");
+		SetConfigString(filePath, section, "Limit", "20");
+		SetConfigString(filePath, section, "Enabled", "0");
 
-		szAppName = "Settings";
-		WritePrivateProfileString(szAppName, "KickReconnect", "15", szPath);
-		WritePrivateProfileString(szAppName, "AdminReconnect", "300", szPath);
-		WritePrivateProfileString(szAppName, "PasswordDialog", "1", szPath);
-		WritePrivateProfileString(szAppName, "BanDialog", "58", szPath);
-		WritePrivateProfileString(szAppName, "AdminOnline", "0", szPath);
-		WritePrivateProfileString(szAppName, "AdminNear", "0", szPath);
-		WritePrivateProfileString(szAppName, "BusRoute", "0", szPath);
-		WritePrivateProfileString(szAppName, "AntiAfkDelay", "1", szPath);
-		WritePrivateProfileString(szAppName, "AntiAfkOffset", "0.001", szPath);
+		section = "Settings";
+		SetConfigString(filePath, section, "KickReconnect", "15");
+		SetConfigString(filePath, section, "AdminReconnect", "300");
+		SetConfigString(filePath, section, "PasswordDialog", "1");
+		SetConfigString(filePath, section, "BanDialog", "58");
+		SetConfigString(filePath, section, "AdminOnline", "0");
+		SetConfigString(filePath, section, "AdminNear", "0");
+		SetConfigString(filePath, section, "BusRoute", "0");
+		SetConfigString(filePath, section, "AntiAfkDelay", "1");
+		SetConfigString(filePath, section, "AntiAfkOffset", "0.001");
 
-		MessageBox(NULL, "Файл настроек был создан, так как отсутствовал!\nПерезапустите приложение", "Предупреждение", MB_ICONASTERISK);
+		std::string message = "Файл настроек был создан, так как отсутствовал!\nПуть: " + filePath + "\nПерезапустите приложение";
+		MessageBox(NULL, message.c_str(), "Предупреждение", MB_ICONASTERISK);
 		result = false;
 	}
 
@@ -334,34 +394,34 @@ void SaveConfig(const std::string &filePath) {
 	std::string section;
 
 	section = "Account";
-	SetConfigValue(filePath, section, "Server", serverFullAddress.str());
-	SetConfigValue(filePath, section, "NickName", settings->getName());
-	SetConfigValue(filePath, section, "Password", settings->getLoginPassword());
+	SetConfigString(filePath, section, "Server", serverFullAddress.str());
+	SetConfigString(filePath, section, "NickName", settings->getName());
+	SetConfigString(filePath, section, "Password", settings->getLoginPassword());
 
 	section = "AutoReg";
-	SetConfigValue(filePath, section, "Enabled", std::to_string(vars.autoRegEnabled));
-	SetConfigValue(filePath, section, "Mail", vars.autoRegMail);
-	SetConfigValue(filePath, section, "NickName", vars.autoRegReferer);
-	SetConfigValue(filePath, section, "Sex", std::to_string(vars.autoRegSex));
+	SetConfigString(filePath, section, "Enabled", std::to_string(vars.autoRegEnabled));
+	SetConfigString(filePath, section, "Mail", vars.autoRegMail);
+	SetConfigString(filePath, section, "NickName", vars.autoRegReferer);
+	SetConfigString(filePath, section, "Sex", std::to_string(vars.autoRegSex));
 
 	section = "CoordMaster";
-	SetConfigValue(filePath, section, "Distance", std::to_string(vars.coordMasterDist));
-	SetConfigValue(filePath, section, "Height", std::to_string(vars.coordMasterHeight));
-	SetConfigValue(filePath, section, "Delay", std::to_string(vars.coordMasterDelay));
+	SetConfigString(filePath, section, "Distance", std::to_string(vars.coordMasterDist));
+	SetConfigString(filePath, section, "Height", std::to_string(vars.coordMasterHeight));
+	SetConfigString(filePath, section, "Delay", std::to_string(vars.coordMasterDelay));
 
 	section = "Loader";
-	SetConfigValue(filePath, section, "Enabled", std::to_string(vars.botLoaderEnabled));
-	SetConfigValue(filePath, section, "Delay", std::to_string(vars.botLoaderDelay));
-	SetConfigValue(filePath, section, "Limit", std::to_string(vars.botLoaderLimit));
+	SetConfigString(filePath, section, "Enabled", std::to_string(vars.botLoaderEnabled));
+	SetConfigString(filePath, section, "Delay", std::to_string(vars.botLoaderDelay));
+	SetConfigString(filePath, section, "Limit", std::to_string(vars.botLoaderLimit));
 
 	section = "Settings";
-	SetConfigValue(filePath, section, "KickReconnect", std::to_string(vars.reconnectDelay));
-	SetConfigValue(filePath, section, "AdminReconnect", std::to_string(vars.adminReconnectDelay));
-	SetConfigValue(filePath, section, "PasswordDialog", std::to_string(vars.dialogIdPassword));
-	SetConfigValue(filePath, section, "BanDialog", std::to_string(vars.dialogIdBan));
-	SetConfigValue(filePath, section, "AdminOnline", std::to_string(vars.adminOnlineAction));
-	SetConfigValue(filePath, section, "AdminNear", std::to_string(vars.adminNearAction));
-	SetConfigValue(filePath, section, "BusRoute", std::to_string(vars.busWorkerRoute));
-	SetConfigValue(filePath, section, "AntiAfkDelay", std::to_string(vars.antiAfkDelay));
-	SetConfigValue(filePath, section, "AntiAfkOffset", std::to_string(vars.antiAfkOffset));
+	SetConfigString(filePath, section, "KickReconnect", std::to_string(vars.reconnectDelay));
+	SetConfigString(filePath, section, "AdminReconnect", std::to_string(vars.adminReconnectDelay));
+	SetConfigString(filePath, section, "PasswordDialog", std::to_string(vars.dialogIdPassword));
+	SetConfigString(filePath, section, "BanDialog", std::to_string(vars.dialogIdBan));
+	SetConfigString(filePath, section, "AdminOnline", std::to_string(vars.adminOnlineAction));
+	SetConfigString(filePath, section, "AdminNear", std::to_string(vars.adminNearAction));
+	SetConfigString(filePath, section, "BusRoute", std::to_string(vars.busWorkerRoute));
+	SetConfigString(filePath, section, "AntiAfkDelay", std::to_string(vars.antiAfkDelay));
+	SetConfigString(filePath, section, "AntiAfkOffset", std::to_string(vars.antiAfkOffset));
 }

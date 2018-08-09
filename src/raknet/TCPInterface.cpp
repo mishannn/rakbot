@@ -253,7 +253,7 @@ void TCPInterface::CloseConnection(PlayerID playerId) {
 	requestedCloseConnections.WriteUnlock();
 }
 void TCPInterface::DeallocatePacket(Packet *packet) {
-	assert(incomingMessages.CheckReadUnlockOrder(packet));
+	// assert(incomingMessages.CheckReadUnlockOrder(packet));
 	delete[] packet->data;
 	incomingMessages.ReadUnlock();
 }

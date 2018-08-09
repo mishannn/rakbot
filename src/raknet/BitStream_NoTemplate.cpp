@@ -70,7 +70,7 @@ BitStream::BitStream() {
 	data = (unsigned char*)stackData;
 
 #ifdef _DEBUG	
-	//	assert( data );
+	//	// assert( data );
 #endif
 	//memset(data, 0, 32);
 	copyData = true;
@@ -87,7 +87,7 @@ BitStream::BitStream(int initialBytesToAllocate) {
 		numberOfBitsAllocated = initialBytesToAllocate << 3;
 	}
 #ifdef _DEBUG
-	assert(data);
+	// assert(data);
 #endif
 	// memset(data, 0, initialBytesToAllocate);
 	copyData = true;
@@ -108,7 +108,7 @@ BitStream::BitStream(char* _data, unsigned int lengthInBytes, bool _copyData) {
 				data = (unsigned char*)malloc(lengthInBytes);
 			}
 #ifdef _DEBUG
-			assert(data);
+			// assert(data);
 #endif
 			memcpy(data, _data, lengthInBytes);
 		} else
@@ -120,7 +120,7 @@ BitStream::BitStream(char* _data, unsigned int lengthInBytes, bool _copyData) {
 // Use this if you pass a pointer copy to the constructor (_copyData==false) and want to overallocate to prevent reallocation
 void BitStream::SetNumberOfBitsAllocated(const unsigned int lengthInBits) {
 #ifdef _DEBUG
-	assert(lengthInBits >= (unsigned int)numberOfBitsAllocated);
+	// assert(lengthInBits >= (unsigned int)numberOfBitsAllocated);
 #endif	
 	numberOfBitsAllocated = lengthInBits;
 }
@@ -536,7 +536,7 @@ void BitStream::WriteCompressed(const float input) {
 
 void BitStream::WriteNormVector(float x, float y, float z) {
 #ifdef _DEBUG
-	assert(x <= 1.01f && y <= 1.01f && z <= 1.01f && x >= -1.01f && y >= -1.01f && z >= -1.01f);
+	// assert(x <= 1.01f && y <= 1.01f && z <= 1.01f && x >= -1.01f && y >= -1.01f && z >= -1.01f);
 #endif
 	if (x > 1.0f)
 		x = 1.0f;
@@ -636,12 +636,12 @@ bool BitStream::Read(bool& output) {
 
 #ifdef _DEBUG
 
-	assert(ID == 0);
+	// assert(ID == 0);
 
 #endif
 #endif
 
-	//assert(readOffset+1 <=numberOfBitsUsed); // If this assert is hit the stream wasn't long enough to read from
+	//// assert(readOffset+1 <=numberOfBitsUsed); // If this assert is hit the stream wasn't long enough to read from
 	if (readOffset + 1 > numberOfBitsUsed)
 		return false;
 
@@ -661,7 +661,7 @@ bool BitStream::Read(unsigned char &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 1);
+	// assert(ID == 1);
 
 #endif
 
@@ -675,7 +675,7 @@ bool BitStream::Read(char &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 2);
+	// assert(ID == 2);
 
 #endif
 
@@ -689,7 +689,7 @@ bool BitStream::Read(unsigned short &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 3);
+	// assert(ID == 3);
 
 #endif
 
@@ -710,7 +710,7 @@ bool BitStream::Read(short &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 4);
+	// assert(ID == 4);
 
 #endif
 
@@ -731,7 +731,7 @@ bool BitStream::Read(unsigned int &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 5);
+	// assert(ID == 5);
 
 #endif
 
@@ -756,7 +756,7 @@ bool BitStream::Read(int &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 6);
+	// assert(ID == 6);
 
 #endif
 
@@ -803,7 +803,7 @@ bool BitStream::Read(uint64_t &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 7);
+	// assert(ID == 7);
 
 #endif
 
@@ -828,7 +828,7 @@ bool BitStream::Read(int64_t &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 8);
+	// assert(ID == 8);
 
 #endif
 
@@ -854,7 +854,7 @@ bool BitStream::Read(float &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 9);
+	// assert(ID == 9);
 
 #endif
 
@@ -875,7 +875,7 @@ bool BitStream::Read(double &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 10);
+	// assert(ID == 10);
 
 #endif
 
@@ -896,13 +896,13 @@ bool BitStream::Read(char* output, const int numberOfBytes) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 11);
+	// assert(ID == 11);
 
 	int NOB;
 
 	ReadBits((unsigned char*)& NOB, sizeof(int) * 8);
 
-	assert(NOB == numberOfBytes);
+	// assert(NOB == numberOfBytes);
 
 #endif
 
@@ -922,7 +922,7 @@ bool BitStream::ReadCompressed(unsigned char & output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 12);
+	// assert(ID == 12);
 
 #endif
 
@@ -936,7 +936,7 @@ bool BitStream::ReadCompressed(char &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 13);
+	// assert(ID == 13);
 
 #endif
 
@@ -950,7 +950,7 @@ bool BitStream::ReadCompressed(unsigned short &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 14);
+	// assert(ID == 14);
 
 #endif
 
@@ -972,7 +972,7 @@ bool BitStream::ReadCompressed(short &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 15);
+	// assert(ID == 15);
 
 #endif
 
@@ -993,7 +993,7 @@ bool BitStream::ReadCompressed(unsigned int &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 16);
+	// assert(ID == 16);
 
 #endif
 
@@ -1018,7 +1018,7 @@ bool BitStream::ReadCompressed(int &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 17);
+	// assert(ID == 17);
 
 #endif
 
@@ -1065,7 +1065,7 @@ bool BitStream::ReadCompressed(uint64_t &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 18);
+	// assert(ID == 18);
 
 #endif
 
@@ -1090,7 +1090,7 @@ bool BitStream::ReadCompressed(int64_t& output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 19);
+	// assert(ID == 19);
 
 #endif
 
@@ -1116,7 +1116,7 @@ bool BitStream::ReadCompressed(float &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 20);
+	// assert(ID == 20);
 
 #endif
 
@@ -1246,7 +1246,7 @@ bool BitStream::ReadCompressed(double &output) {
 	if (ReadBits((unsigned char*)& ID, sizeof(unsigned char) * 8) == false)
 		return false;
 
-	assert(ID == 21);
+	// assert(ID == 21);
 
 #endif
 
@@ -1307,7 +1307,7 @@ bool BitStream::ReadBit(void) {
 void BitStream::WriteAlignedBytes(const unsigned char* input,
 	const int numberOfBytesToWrite) {
 #ifdef _DEBUG
-	assert(numberOfBytesToWrite > 0);
+	// assert(numberOfBytesToWrite > 0);
 #endif
 
 	AlignWriteToByteBoundary();
@@ -1326,7 +1326,7 @@ void BitStream::WriteAlignedBytes(const unsigned char* input,
 bool BitStream::ReadAlignedBytes(unsigned char* output,
 	const int numberOfBytesToRead) {
 #ifdef _DEBUG
-	assert(numberOfBytesToRead > 0);
+	// assert(numberOfBytesToRead > 0);
 #endif
 
 	if (numberOfBytesToRead <= 0)
@@ -1408,7 +1408,7 @@ void BitStream::WriteBits(const unsigned char *input,
 // Set the stream to some initial data.  For internal use
 void BitStream::SetData(const unsigned char* input, const int numberOfBits) {
 #ifdef _DEBUG
-	assert(numberOfBitsUsed == 0); // Make sure the stream is clear
+	// assert(numberOfBitsUsed == 0); // Make sure the stream is clear
 #endif
 
 	if (numberOfBits <= 0)
@@ -1479,7 +1479,7 @@ void BitStream::WriteCompressed(const unsigned char* input,
 bool BitStream::ReadBits(unsigned char* output,
 	int numberOfBitsToRead, const bool alignBitsToRight) {
 #ifdef _DEBUG
-	assert(numberOfBitsToRead > 0);
+	// assert(numberOfBitsToRead > 0);
 #endif
 	// if (numberOfBitsToRead<=0)
 	//  return false;
@@ -1566,7 +1566,7 @@ bool BitStream::ReadCompressed(unsigned char* output,
 
 	// All but the first bytes are byteMatch.  If the upper half of the last byte is a 0 (positive) or 16 (negative) then what we read will be a 1 and the remaining 4 bits.
 	// Otherwise we read a 0 and the 8 bytes
-	//assert(readOffset+1 <=numberOfBitsUsed); // If this assert is hit the stream wasn't long enough to read from
+	//// assert(readOffset+1 <=numberOfBitsUsed); // If this assert is hit the stream wasn't long enough to read from
 	if (readOffset + 1 > numberOfBitsUsed)
 		return false;
 
@@ -1601,7 +1601,7 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 #ifdef _DEBUG
 		// If this assert hits then we need to specify true for the third parameter in the constructor
 		// It needs to reallocate to hold all the data and can't do it unless we allocated to begin with
-		assert(copyData == true);
+		// assert(copyData == true);
 #endif
 
 		// Less memory efficient but saves on news and deletes
@@ -1621,7 +1621,7 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 		}
 
 #ifdef _DEBUG
-		assert(data); // Make sure realloc succeeded
+		// assert(data); // Make sure realloc succeeded
 #endif
 		//  memset(data+newByteOffset, 0,  ((newNumberOfBitsAllocated-1)>>3) - ((numberOfBitsAllocated-1)>>3)); // Set the new data block to 0
 	}
@@ -1632,7 +1632,7 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 
 // Should hit if reads didn't match writes
 void BitStream::AssertStreamEmpty(void) {
-	assert(readOffset == numberOfBitsUsed);
+	// assert(readOffset == numberOfBitsUsed);
 }
 
 void BitStream::PrintBits(void) const {
@@ -1667,7 +1667,7 @@ void BitStream::PrintBits(void) const {
 // Data will point to the stream.  Returns the length in bits of the stream.
 int BitStream::CopyData(unsigned char** _data) const {
 #ifdef _DEBUG
-	assert(numberOfBitsUsed > 0);
+	// assert(numberOfBitsUsed > 0);
 #endif
 
 	*_data = new unsigned char[BITS_TO_BYTES(numberOfBitsUsed)];
@@ -1719,7 +1719,7 @@ void BitStream::AssertCopyData(void) {
 			unsigned char * newdata = (unsigned char*)malloc(BITS_TO_BYTES(numberOfBitsAllocated));
 #ifdef _DEBUG
 
-			assert(data);
+			// assert(data);
 #endif
 
 			memcpy(newdata, data, BITS_TO_BYTES(numberOfBitsAllocated));

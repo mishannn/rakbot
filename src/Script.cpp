@@ -44,7 +44,7 @@ Script::Script(std::string scriptName) : _scriptName(scriptName) {
 		for (int i = 0; i < LUA_MAXDEFCALLS; i++)
 			_defCalls[i].active = false;
 
-		std::string scriptPath = std::string(GetRakBotPath("scripts")) + "\\" + _scriptName;
+		std::string scriptPath = GetRakBotPath("scripts") + "\\" + _scriptName;
 
 		// LOAD FILE
 		std::ifstream scriptFile(scriptPath);
@@ -108,12 +108,14 @@ Script *Script::load(std::string scriptName) {
 
 		return new Script(scriptName);
 	} catch (const char *e) {
-		std::string message = "[ERROR] Исключение при создании объекта скрипта: " + std::string(e);
-		RakBot::app()->log(message.c_str());
+		std::stringstream message;
+		message << "[ERROR] Исключение при создании объекта скрипта: " << e;
+		RakBot::app()->log(message.str().c_str());
 		return nullptr;
 	} catch (const std::exception &e) {
-		std::string message = "[ERROR] Исключение при создании объекта скрипта: " + std::string(e.what());
-		RakBot::app()->log(message.c_str());
+		std::stringstream message;
+		message << "[ERROR] Исключение при создании объекта скрипта: " << e.what();
+		RakBot::app()->log(message.str().c_str());
 		return nullptr;
 	} catch (...) {
 		std::string message = "[ERROR] Необработанное исключение при создании объекта скрипта";
@@ -126,11 +128,13 @@ void Script::unload(Script *script) {
 	try {
 		delete script;
 	} catch (const char *e) {
-		std::string message = "[ERROR] Исключение при выгрузке скрипта: " + std::string(e);
-		RakBot::app()->log(message.c_str());
+		std::stringstream message;
+		message << "[ERROR] Исключение при выгрузке скрипта: " << e;
+		RakBot::app()->log(message.str().c_str());
 	} catch (const std::exception &e) {
-		std::string message = "[ERROR] Исключение при выгрузке скрипта: " + std::string(e.what());
-		RakBot::app()->log(message.c_str());
+		std::stringstream message;
+		message << "[ERROR] Исключение при выгрузке скрипта: " << e.what();
+		RakBot::app()->log(message.str().c_str());
 	} catch (...) {
 		std::string message = "[ERROR] Необработанное исключение при выгрузке скрипта";
 		RakBot::app()->log(message.c_str());
@@ -389,6 +393,10 @@ void Script::luaOnScriptExit() {
 
 void Script::luaOnScriptUpdate() {
 	luaCallback("onScriptUpdate");
+}
+
+void Script::luaOnCrash() {
+	luaCallback("onCrash");
 }
 
 void Script::luaRegisterFunctions() {
@@ -741,7 +749,7 @@ void Script::luaRegisterFunctions() {
 		else
 			bitStream->Read(strBuf, strSize);
 		strBuf[strSize] = 0;
-		return sol::make_object(_scriptState, std::string(strBuf));
+		return sol::make_object(_scriptState, strBuf);
 	});
 	_scriptState.set_function("bitStreamWriteByte", [this](int bsPtr, int val, sol::optional<bool> compressed) {
 		BitStream *bitStream = reinterpret_cast<BitStream *>(bsPtr);
@@ -879,7 +887,7 @@ void Script::luaRegisterFunctions() {
 		return true;
 	});
 	_scriptState.set_function("dumpMem", [this](int address, int size) {
-		return std::string(DumpMem(reinterpret_cast<uint8_t *>(address), size));
+		return DumpMem(reinterpret_cast<uint8_t *>(address), size);
 	});
 	_scriptState.set_function("openUrl", [this](std::string url) {
 		char safeUrlBuf[1024];
@@ -895,18 +903,14 @@ void Script::luaRegisterFunctions() {
 	_scriptState.set_function("getRakBotPath", [this](sol::optional<std::string> maybe_path) {
 		if (maybe_path) {
 			std::string &path = maybe_path.value();
-			const char *buf = GetRakBotPath(path.c_str());
-			std::string result = std::string(buf);
-			return result;
+			return GetRakBotPath(path);
 		}
-		const char *buf = GetRakBotPath();
-		std::string result = std::string(buf);
-		return result;
+		return GetRakBotPath();
 	});
 	_scriptState.set_function("getIniString", [this](std::string file, std::string section, std::string key, sol::optional<std::string> maybe_default) {
 		char buf[256];
 		GetPrivateProfileString(section.c_str(), key.c_str(), "nil", buf, sizeof(buf), file.c_str());
-		std::string result = std::string(buf);
+		std::string result = buf;
 		if (result == "nil")
 			return sol::make_object(_scriptState, sol::nil);
 		return sol::make_object(_scriptState, result);
@@ -1234,6 +1238,30 @@ void Script::luaRegisterFunctions() {
 		sampDialog->setDialogOffline(true);
 		return true;
 	});
+	_scriptState.set_function("sendVkNotify", [this](const std::string& message) {
+		const char *vkNotifyUrlFormat = VMProtectDecryptStringA("http://rakbot.ru/panel/action/vk-notify?key=%s&hwid=%u&message=%s");
+
+		std::string regKeyEncoded = UrlEncode(vars.regKey);
+		std::string messageEncoded = UrlEncode(message);
+
+		char *vkNotifyUrl;
+		int vkNotifyUrlLength = asprintf(&vkNotifyUrl, vkNotifyUrlFormat, regKeyEncoded.c_str(), GetDeviceID(), messageEncoded.c_str());
+
+		VMProtectFreeString(vkNotifyUrlFormat);
+
+		if (vkNotifyUrlLength < 1)
+			return sol::make_object(_scriptState, false);
+
+		CURLcode curlCode = OpenURL(vkNotifyUrl);
+
+		delete[] vkNotifyUrl;
+
+		if (curlCode != CURLE_OK)
+			return sol::make_object(_scriptState, curlCode);
+
+		std::string result = CurlBuffer;
+		return sol::make_object(_scriptState, result);
+	});
 }
 
 void Script::luaError(std::string error) {
@@ -1296,11 +1324,11 @@ void Script::luaUpdate() {
 }
 
 void LoadScripts() {
-	CreateDirectory(GetRakBotPath("scripts"), NULL);
-	CreateDirectory(GetRakBotPath("scripts\\libs"), NULL);
+	CreateDirectory(GetRakBotPath("scripts").c_str(), NULL);
+	CreateDirectory(GetRakBotPath("scripts\\libs").c_str(), NULL);
 
 	WIN32_FIND_DATA wfd;
-	HANDLE hFind = FindFirstFile(GetRakBotPath("scripts\\*.lua"), &wfd);
+	HANDLE hFind = FindFirstFile(GetRakBotPath("scripts\\*.lua").c_str(), &wfd);
 	setlocale(LC_ALL, "");
 
 	bool scriptsExists = false;

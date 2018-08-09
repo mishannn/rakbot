@@ -48,26 +48,26 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\</IntDir>
-    <TargetName>RakBot</TargetName>
+    <TargetName>RakBotClear</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\obj\$(Configuration)\</IntDir>
-    <TargetName>RakBot</TargetName>
+    <TargetName>RakBotClear</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_RELEASE;_RAKNET_THREADSAFE</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2;C:\Program Files\VMProtect Ultimate SND\Include\C</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4005;4020;</DisableSpecificWarnings>
       <MinimalRebuild>false</MinimalRebuild>
       <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBotDatabase.pdb</ProgramDataBaseFileName>
@@ -75,29 +75,31 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(SolutionDir)..\Output\$(TargetName)$(TargetExt)</OutputFile>
       <ProgramDatabaseFile>$(SolutionDir)..\Output\RakBot.pdb</ProgramDatabaseFile>
-      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src;C:\Program Files\VMProtect Ultimate SND\Lib\Windows;</AdditionalLibraryDirectories>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ManifestFile>app.manifest</ManifestFile>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_RELEASE;_RAKNET_THREADSAFE</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2;C:\Program Files\VMProtect Ultimate SND\Include\C</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>4005;4020;</DisableSpecificWarnings>
       <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBotDatabase.pdb</ProgramDataBaseFileName>
@@ -105,23 +107,24 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
       <ExceptionHandling>Async</ExceptionHandling>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ConformanceMode>false</ConformanceMode>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>$(SolutionDir)..\Output\$(TargetName)$(TargetExt)</OutputFile>
       <ProgramDatabaseFile>$(SolutionDir)..\Output\RakBot.pdb</ProgramDatabaseFile>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
       <UACUIAccess>false</UACUIAccess>
-      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src;C:\Program Files\VMProtect Ultimate SND\Lib\Windows;</AdditionalLibraryDirectories>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ManifestFile>app.manifest</ManifestFile>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

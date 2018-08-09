@@ -37,13 +37,13 @@ bool SystemAddressList::Deserialize(RakNet::BitStream *in) {
 	PlayerID systemAddress;
 	unsigned index;
 	if (in->Read(systemListSize) == false) {
-		RakAssert(0);
+		// assert(0);
 		return false;
 	}
 	systemList.Clear();
 	for (index = 0; index < systemListSize; index++) {
 		if (in->Read(systemAddress) == false) {
-			RakAssert(0);
+			// assert(0);
 			systemList.Clear();
 			return false;
 		}

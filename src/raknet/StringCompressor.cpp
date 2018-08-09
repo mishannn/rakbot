@@ -32,7 +32,7 @@ void StringCompressor::AddReference(void) {
 	}
 }
 void StringCompressor::RemoveReference(void) {
-	assert(referenceCount > 0);
+	// assert(referenceCount > 0);
 
 	if (referenceCount > 0) {
 		if (--referenceCount == 0) {

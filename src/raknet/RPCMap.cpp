@@ -60,9 +60,9 @@ RPCIndex RPCMap::GetIndexFromFunctionName(int *uniqueIdentifier) {
 // Called from the user thread for the local system
 void RPCMap::AddIdentifierWithFunction(int *uniqueIdentifier, void *functionPointer, bool isPointerToMember) {
 #ifdef _DEBUG
-	assert(rpcSet.Size() + 1 < MAX_RPC_MAP_SIZE); // If this hits change the typedef of RPCIndex to use an unsigned short
-	assert(uniqueIdentifier && uniqueIdentifier[0]);
-	assert(functionPointer);
+	// assert(rpcSet.Size() + 1 < MAX_RPC_MAP_SIZE); // If this hits change the typedef of RPCIndex to use an unsigned short
+	// assert(uniqueIdentifier && uniqueIdentifier[0]);
+	// assert(functionPointer);
 #endif
 
 	unsigned index, existingNodeIndex;
@@ -74,7 +74,7 @@ void RPCMap::AddIdentifierWithFunction(int *uniqueIdentifier, void *functionPoin
 		// Trying to insert an identifier at any free slot and that identifier already exists
 		// The user should not insert nodes that already exist in the list
 #ifdef _DEBUG
-//		assert(0);
+//		// assert(0);
 #endif
 		return;
 	}
@@ -133,7 +133,7 @@ void RPCMap::RemoveNode(int *uniqueIdentifier) {
 	unsigned index;
 	index = GetIndexFromFunctionName(uniqueIdentifier);
 #ifdef _DEBUG
-	assert(index != UNDEFINED_RPC_INDEX); // If this hits then the user was removing an RPC call that wasn't currently registered
+	// assert(index != UNDEFINED_RPC_INDEX); // If this hits then the user was removing an RPC call that wasn't currently registered
 #endif
 	RPCNode *node;
 	node = rpcSet[index];

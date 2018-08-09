@@ -30,7 +30,7 @@ void StringTable::AddReference(void) {
 	}
 }
 void StringTable::RemoveReference(void) {
-	assert(referenceCount > 0);
+	// assert(referenceCount > 0);
 
 	if (referenceCount > 0) {
 		if (--referenceCount == 0) {
@@ -61,7 +61,7 @@ void StringTable::AddString(const char *str, bool copyString) {
 	}
 
 	// If this assert hits you need to increase the range of StringTableType
-	assert(orderedStringList.Size() < (StringTableType)-1);
+	// assert(orderedStringList.Size() < (StringTableType)-1);
 }
 void StringTable::EncodeString(const char *input, int maxCharsToWrite, RakNet::BitStream *output) {
 	unsigned index;
@@ -80,7 +80,7 @@ void StringTable::EncodeString(const char *input, int maxCharsToWrite, RakNet::B
 
 bool StringTable::DecodeString(char *output, int maxCharsToWrite, RakNet::BitStream *input) {
 	bool hasIndex;
-	assert(maxCharsToWrite > 0);
+	// assert(maxCharsToWrite > 0);
 
 	if (maxCharsToWrite == 0)
 		return false;
@@ -96,7 +96,7 @@ bool StringTable::DecodeString(char *output, int maxCharsToWrite, RakNet::BitStr
 #ifdef _DEBUG
 			// Critical error - got a string index out of range, which means AddString was called more times on the remote system than on this system.
 			// All systems must call AddString the same number of types, with the same strings in the same order.
-			assert(0);
+			// assert(0);
 #endif
 			return false;
 		}

@@ -117,7 +117,7 @@ void SendCommand() {
 	char *text = new char[length + 1];
 	SendMessage(g_hWndInput, WM_GETTEXT, (WPARAM)length + 1, (LPARAM)text);
 	RunCommand(text);
-	commandHistory[(commandHistory.size() - 1)] = std::string(text);
+	commandHistory[(commandHistory.size() - 1)] = text;
 	commandHistory.push_back("");
 	currentCommand = (commandHistory.size() - 1);
 	delete[] text;
@@ -789,7 +789,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 					break;
 
 				case MENU_LUA_SCRIPTSDIR:
-					ShellExecute(g_hWndMain, "open", GetRakBotPath("//scripts"), 0, 0, SW_SHOWNORMAL);
+					ShellExecute(g_hWndMain, "open", GetRakBotPath("//scripts").c_str(), 0, 0, SW_SHOWNORMAL);
 					break;
 			}
 			break;

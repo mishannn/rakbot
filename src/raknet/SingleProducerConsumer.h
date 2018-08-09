@@ -100,7 +100,7 @@ namespace DataStructures {
 		readPointer->next = new DataPlusPtr;
 		int listSize;
 #ifdef _DEBUG
-		assert(MINIMUM_LIST_SIZE >= 3);
+		// assert(MINIMUM_LIST_SIZE >= 3);
 #endif
 		for (listSize = 2; listSize < MINIMUM_LIST_SIZE; listSize++) {
 			readPointer = readPointer->next;
@@ -131,7 +131,7 @@ namespace DataStructures {
 			writeAheadPointer->next->readyToRead == true) {
 			volatile DataPlusPtr *originalNext = writeAheadPointer->next;
 			writeAheadPointer->next = new DataPlusPtr;
-			assert(writeAheadPointer->next);
+			// assert(writeAheadPointer->next);
 			writeAheadPointer->next->next = originalNext;
 		}
 
@@ -152,8 +152,8 @@ namespace DataStructures {
 		//	DataPlusPtr *dataContainer = (DataPlusPtr *)structure;
 
 #ifdef _DEBUG
-		assert(writePointer->next != readPointer);
-		assert(writePointer != writeAheadPointer);
+		// assert(writePointer->next != readPointer);
+		// assert(writePointer != writeAheadPointer);
 #endif
 
 		writeCount++;
@@ -178,7 +178,7 @@ namespace DataStructures {
 	template <class SingleProducerConsumerType>
 	void SingleProducerConsumer<SingleProducerConsumerType>::CancelReadLock(SingleProducerConsumerType* cancelToLocation) {
 #ifdef _DEBUG
-		assert(readPointer != writePointer);
+		// assert(readPointer != writePointer);
 #endif
 		readAheadPointer = (DataPlusPtr *)cancelToLocation;
 	}
@@ -186,8 +186,8 @@ namespace DataStructures {
 	template <class SingleProducerConsumerType>
 	void SingleProducerConsumer<SingleProducerConsumerType>::ReadUnlock(void) {
 #ifdef _DEBUG
-		assert(readAheadPointer != readPointer); // If hits, then called ReadUnlock before ReadLock
-		assert(readPointer != writePointer); // If hits, then called ReadUnlock when Read returns 0
+		// assert(readAheadPointer != readPointer); // If hits, then called ReadUnlock before ReadLock
+		// assert(readPointer != writePointer); // If hits, then called ReadUnlock when Read returns 0
 #endif
 		readCount++;
 
@@ -212,7 +212,7 @@ namespace DataStructures {
 		while (listSize-- > MINIMUM_LIST_SIZE) {
 			next = writePointer->next;
 #ifdef _DEBUG
-			assert(writePointer != readPointer);
+			// assert(writePointer != readPointer);
 #endif
 			delete (char*)writePointer;
 			writePointer = next;
@@ -289,7 +289,7 @@ if (*readBlock!=readCount)
 {
 printf("Test failed! Expected %i got %i!\n", readCount, *readBlock);
 readCount = READ_COUNT_ITERATIONS;
-assert(0);
+// assert(0);
 }
 spc.ReadUnlock();
 readCount++;

@@ -103,7 +103,7 @@ namespace DataStructures {
 
 	template<class KeyType, class DataType, int order>
 	BPlusTree<KeyType, DataType, order>::BPlusTree() {
-		assert(order > 1);
+		// // assert();
 		root = 0;
 		leftmostLeaf = 0;
 	}
@@ -168,7 +168,7 @@ namespace DataStructures {
 		} else if (FindDeleteRebalance(key, root, &underflow, root->keys[0], &returnAction, out) == false)
 			return false;
 
-		//		assert(returnAction.action==ReturnAction::NO_ACTION);
+		//		// // assert();
 
 		if (underflow && root->size == 0) {
 			// Move the root down.
@@ -526,7 +526,7 @@ namespace DataStructures {
 				cur->size = (order + 1) / 2 - 1;
 				if (cur->size) {
 					bool b = GetIndexOf(key, cur, &insertionIndex);
-					assert(b == false);
+					// // assert();
 				} else
 					insertionIndex = 0;
 				InsertIntoNode(key, leafData, insertionIndex, nodeData, cur, returnAction);
@@ -664,7 +664,7 @@ namespace DataStructures {
 			}
 			if (newPage) {
 				if (newPage->isLeaf == false) {
-					assert(returnAction->action == ReturnAction::PUSH_KEY_TO_PARENT);
+					// // assert();
 					newPage->size--;
 					return InsertIntoNode(returnAction->key1, data, branchIndex, newPage, cur, returnAction);
 				} else {
@@ -705,7 +705,7 @@ namespace DataStructures {
 				KeyType newKey;
 				if (newPage->isLeaf == false) {
 					// One key is pushed up through the stack.  I store that at keys[0] but it has to be removed for the page to be correct
-					assert(returnAction.action == ReturnAction::PUSH_KEY_TO_PARENT);
+					// // assert();
 					newKey = returnAction.key1;
 					newPage->size--;
 				} else
@@ -757,7 +757,7 @@ namespace DataStructures {
 	}
 	template<class KeyType, class DataType, int order>
 	bool BPlusTree<KeyType, DataType, order>::GetIndexOf(const KeyType key, Page<KeyType, DataType, order> *page, int *out) const {
-		assert(page->size > 0);
+		// // assert();
 		int index, upperBound, lowerBound;
 		upperBound = page->size - 1;
 		lowerBound = 0;
@@ -843,11 +843,11 @@ namespace DataStructures {
 		int i, last = -9999;
 		DataStructures::Page<KeyType, DataType, order> *cur = GetListHead();
 		while (cur) {
-			assert(cur->size > 0);
+			// // assert();
 			for (i = 0; i < cur->size; i++) {
-				assert(cur->data[i] == cur->keys[i]);
+				// // assert();
 				if (last != -9999) {
-					assert(cur->data[i] > last);
+					// // assert();
 				}
 				last = cur->data[i];
 			}
@@ -858,12 +858,12 @@ namespace DataStructures {
 	}
 	template<class KeyType, class DataType, int order>
 	void BPlusTree<KeyType, DataType, order>::ValidateTreeRecursive(Page<KeyType, DataType, order> *cur) {
-		assert(cur == root || cur->size >= order / 2);
+		// // assert();
 
 		if (cur->children[0]->isLeaf) {
-			assert(cur->children[0]->keys[0] < cur->keys[0]);
+			// // assert();
 			for (int i = 0; i < cur->size; i++) {
-				assert(cur->children[i + 1]->keys[0] == cur->keys[i]);
+				// // assert();
 			}
 		} else {
 			for (int i = 0; i < cur->size + 1; i++)
@@ -968,15 +968,15 @@ void main(void)
 			for (j=0; j < removedList.Size(); j++)
 			{
 				b=btree.Get(removedList[j], temp);
-				assert(b==false);
+				// // assert();
 			}
 			for (j=0; j < haveList.Size(); j++)
 			{
 				b=btree.Get(haveList[j], temp);
-				assert(b==true);
-				assert(haveList[j]==temp);
+				// // assert();
+				// // assert();
 			}
-			assert(btree.Size()==haveList.Size());
+			// // assert();
 			btree.ValidateTree();
 		}
 		btree.Clear();

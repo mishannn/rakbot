@@ -1,10 +1,9 @@
 #pragma once
 
 #define ENCODE_BITS 4 // by z0rek
-#define RAKBOT_VERSION "0.8.1"
+#define RAKBOT_VERSION "0.8.2.1"
 #define NETCODE_OPENCONNLULZ 26985
 #define NETGAME_VERSION 4057
-#define AUTH_BS "3A4E5C94FF82BBFA2D89F257F846035B61F2F3F6988"
 
 #define TRNSLT_AUTHOR "Ruskadance"
 #define ADAPT_AUTHOR "MishaN, CentuiS"
@@ -16,7 +15,7 @@
 #define MAX_OBJECTS 1001
 #define MAX_ADMINS 300
 #define MAX_LOGLINES 1000
-#define MAX_LOGLEN 512
+// #define MAX_LOGLEN 512
 
 #define VEHICLE_ID_NONE -1
 #define PLAYER_ID_NONE -1

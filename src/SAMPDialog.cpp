@@ -205,20 +205,20 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 						wSelection = (uint16_t)SendMessage(hwndListBox, LB_GETCURSEL, 0, 0);
 						if (wSelection != (uint16_t)-1) {
 							SendMessage(hwndListBox, LB_GETTEXT, wSelection, (LPARAM)szResponse);
-							bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 1, wSelection, std::string(szResponse), RakBot::app()->getSampDialog()->isDialogOffline());
+							bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 1, wSelection, szResponse), RakBot::app()->getSampDialog()->isDialogOffline();
 							PostQuitMessage(0);
 						}
 						break;
 					}
 
 					GetWindowText(hwndEditBox, szResponse, 512);
-					bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 1, wSelection, std::string(szResponse), RakBot::app()->getSampDialog()->isDialogOffline());
+					bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 1, wSelection, szResponse), RakBot::app()->getSampDialog()->isDialogOffline();
 					PostQuitMessage(0);
 					break;
 
 				case IDB_BUTTON2:
 					GetWindowText(hwndEditBox, szResponse, 512);
-					bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 0, wSelection, std::string(szResponse), RakBot::app()->getSampDialog()->isDialogOffline());
+					bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 0, wSelection, szResponse), RakBot::app()->getSampDialog()->isDialogOffline();
 					PostQuitMessage(0);
 					break;
 			}
@@ -273,7 +273,7 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		}
 
 		case WM_DESTROY:
-			// bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 0, wSelection, std::string(szResponse));
+			// bot->dialogResponse(RakBot::app()->getSampDialog()->getDialogId(), 0, wSelection, szResponse);
 			PostQuitMessage(0);
 			break;
 

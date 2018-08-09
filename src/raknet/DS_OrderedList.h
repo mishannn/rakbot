@@ -91,7 +91,7 @@ namespace DataStructures {
 		bool objectExists;
 		unsigned index;
 		index = GetIndexFromKey(key, &objectExists);
-		assert(objectExists);
+		// assert(objectExists);
 		return orderedList[index];
 	}
 
@@ -159,7 +159,7 @@ namespace DataStructures {
 		index = GetIndexFromKey(key, &objectExists);
 
 		// Can't find the element to remove if this assert hits
-		assert(objectExists == true);
+		// assert(objectExists == true);
 		if (objectExists == false)
 			return 0;
 

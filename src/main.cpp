@@ -134,14 +134,26 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 
 void LoadAdmins() {
+	CreateDirectory(GetRakBotPath("admins").c_str(), NULL);
+
 	vars.adminsMutex.lock();
 	vars.admins.clear();
 	vars.adminsMutex.unlock();
 
-	std::fstream adminsFile(GetRakBotPath("admins.txt"), std::ios::in);
+	Settings *settings = RakBot::app()->getSettings();
+
+	std::stringstream serverAdminsFileName;
+	serverAdminsFileName << settings->getAddress()->getIp() << ";" << settings->getAddress()->getPort() << ".txt";
+
+	std::string serverAdminsFilePath = GetRakBotPath("admins\\" + serverAdminsFileName.str());
+
+	if (!IsFileExists(serverAdminsFilePath))
+		serverAdminsFilePath = GetRakBotPath("admins\\all.txt");
+
+	std::ifstream adminsFile(serverAdminsFilePath);
 
 	if (adminsFile.is_open()) {
-		RakBot::app()->log("[RAKBOT] Загрузка админов из файла admins.txt...");
+		RakBot::app()->log(("[RAKBOT] Загрузка админов из файла " + serverAdminsFilePath + "...").c_str());
 		while (!adminsFile.eof()) {
 			std::string admin;
 			adminsFile >> admin;
@@ -221,7 +233,9 @@ void CreateMiniDump(EXCEPTION_POINTERS *ExceptionInfo) {
 }
 
 LONG WINAPI unhandledExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo) {
-	CreateDirectory(GetRakBotPath("excepts"), NULL);
+	RakBot::app()->getEvents()->onCrash();
+
+	CreateDirectory(GetRakBotPath("excepts").c_str(), NULL);
 
 	CreateMiniDump(ExceptionInfo);
 

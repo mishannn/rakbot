@@ -29,7 +29,7 @@ TelnetTransport::~TelnetTransport() {
 #endif
 bool TelnetTransport::Start(unsigned short port, bool serverMode) {
 	AutoAllocate();
-	assert(serverMode);
+	// assert(serverMode);
 	return tcpInterface->Start(port, 64);
 }
 void TelnetTransport::Stop(void) {
@@ -100,7 +100,7 @@ Packet* TelnetTransport::Receive(void) {
 		if (remoteClients[i]->playerId == p->playerId)
 			remoteClient = remoteClients[i];
 	}
-	assert(remoteClient);
+	// assert(remoteClient);
 	if (remoteClient == 0) {
 		tcpInterface->DeallocatePacket(p);
 		return 0;
@@ -128,7 +128,7 @@ Packet* TelnetTransport::Receive(void) {
 		if (gotLine && remoteClient->textInput[0]) {
 			Packet *reassembledLine = new Packet;
 			reassembledLine->length = (unsigned int)strlen(remoteClient->textInput);
-			assert(reassembledLine->length < REMOTE_MAX_TEXT_INPUT);
+			// assert(reassembledLine->length < REMOTE_MAX_TEXT_INPUT);
 			reassembledLine->data = new unsigned char[reassembledLine->length + 1];
 			memcpy(reassembledLine->data, remoteClient->textInput, reassembledLine->length);
 #ifdef _PRINTF_DEBUG

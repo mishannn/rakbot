@@ -11,7 +11,7 @@ void Vehicle::loadModelData() {
 
 		_vehicleClass = VehicleList[i].classId;
 		_seatsAmount = VehicleList[i].passengers + 1;
-		_name = std::string(VehicleList[i].name);
+		_name = VehicleList[i].name;
 		_passenger = new Player *[_seatsAmount];
 		for (int i = 0; i < _seatsAmount; i++)
 			_passenger[i] = nullptr;

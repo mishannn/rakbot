@@ -39,9 +39,9 @@ void main(void)
 	table.AddColumn("Score", DataStructures::Table::NUMERIC);
 	table.AddColumn("Players", DataStructures::Table::NUMERIC);
 	table.AddColumn("Empty Test Column", DataStructures::Table::STRING);
-	assert(table.GetColumnCount()==5);
+	// // assert();
 	row=table.AddRow(0);
-	assert(row);
+	// // assert();
 	row->UpdateCell(0,"Kevin Jenkins");
 	row->UpdateCell(1,sizeof(dummydata), (char*)&dummydata);
 	row->UpdateCell(2,5);
@@ -61,7 +61,7 @@ void main(void)
 	row->UpdateCell(3,20);
 
 	row=table.AddRow(3);
-	assert(row);
+	// // assert();
 	row->UpdateCell(0,"Kevin Jenkins");
 	row->UpdateCell(1,sizeof(dummydata), (char*)&dummydata);
 	row->UpdateCell(2,15);
@@ -69,7 +69,7 @@ void main(void)
 	row->UpdateCell(4,"col index 4");
 
 	row=table.AddRow(4);
-	assert(row);
+	// // assert();
 	row->UpdateCell(0,"Kevin Jenkins");
 	row->UpdateCell(1,sizeof(dummydata), (char*)&dummydata);
 	//row->UpdateCell(2,25);
@@ -77,7 +77,7 @@ void main(void)
 	//row->UpdateCell(4,"should be unique");
 
 	row=table.AddRow(5);
-	assert(row);
+	// // assert();
 	row->UpdateCell(0,"Kevin Jenkins");
 	row->UpdateCell(1,sizeof(dummydata), (char*)&dummydata);
 	//row->UpdateCell(2,25);
@@ -85,7 +85,7 @@ void main(void)
 	//row->UpdateCell(4,"should be unique");
 
 	row=table.AddRow(6);
-	assert(row);
+	// // assert();
 	row->UpdateCell(0,"Kevin Jenkins");
 	row->UpdateCell(1,sizeof(dummydata), (char*)&dummydata);
 	row->UpdateCell(2,35);
@@ -93,11 +93,11 @@ void main(void)
 	//row->UpdateCell(4,"should be unique");
 
 	row=table.AddRow(7);
-	assert(row);
+	// // assert();
 	row->UpdateCell(0,"Bob Jenkins");
 
 	row=table.AddRow(8);
-	assert(row);
+	// // assert();
 	row->UpdateCell(0,"Zack Jenkins");
 
 	// Test multi-column sorting

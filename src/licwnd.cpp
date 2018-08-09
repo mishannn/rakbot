@@ -48,7 +48,7 @@ LRESULT CALLBACK licWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (wParam == MAKELONG(IDC_ACCEPT, BN_CLICKED)) {
 				char regKey[64];
 				SendMessage(KeyArea, WM_GETTEXT, (WPARAM)sizeof(regKey), (LPARAM)regKey);
-				vars.regKey = std::string(regKey);
+				vars.regKey = regKey;
 				Trim(vars.regKey);
 
 				if (IsWrongKey()) {

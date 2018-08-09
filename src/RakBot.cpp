@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 
+#include "MiscFuncs.h"
 #include "RakNet.h"
 
 #include "window.h"
@@ -205,29 +206,39 @@ void RakBot::log(const char *format, ...) {
 	if (strlen(format) < 1)
 		return;
 
-	char *buf = new char[MAX_LOGLEN + 1];
+	/*int formatLength = format.length();
+	char *fmt = new char[formatLength + 1];
+	strncpy(fmt, format.c_str(), formatLength);
+	fmt[formatLength] = 0;*/
+
+	// char *buf = new char[MAX_LOGLEN + 1];
+
 	std::va_list args;
 	va_start(args, format);
-	int bufLen = vsnprintf(buf, MAX_LOGLEN, format, args);
+	
+	char *buf;
+	int bufLen = vasprintf(&buf, format, args);
 	buf[bufLen] = 0;
 	va_end(args);
 
-	if (RakBot::app()->getEvents()->onPrintLog(std::string(buf))) {
+	// delete[] fmt;
+
+	if (RakBot::app()->getEvents()->onPrintLog(buf)) {
 		delete[] buf;
 		return;
 	}
 
-	logToFile(std::string(buf));
+	logToFile(buf);
 
 	if (g_hWndMain) {
 		if (vars.timeStamp) {
 			SYSTEMTIME time;
 			GetLocalTime(&time);
 
-			char tempBuf[MAX_LOGLEN + 64];
-			int bufLen = snprintf(tempBuf, MAX_LOGLEN, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
-			strncpy(buf, tempBuf, bufLen);
-			buf[bufLen] = 0;
+			char *tempBuf;
+			int bufLen = asprintf(&tempBuf, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
+			delete[] buf;
+			buf = tempBuf;
 		}
 
 		if (g_hWndLog) {

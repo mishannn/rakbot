@@ -108,7 +108,7 @@ void AsynchronousFileIO::DecreaseUserCount()
 {
 	userCountMutex.Lock();
 
-	assert( userCount > 0 );
+	// assert( userCount > 0 );
 
 	if ( userCount == 0 )
 		return ;
@@ -286,7 +286,7 @@ HANDLE_ERROR:
 			{
 				if ( lpOverlapped->read == true )
 				{
-					assert( dwIoSize > 0 );
+					// assert( dwIoSize > 0 );
 
 					ProcessNetworkPacket( lpOverlapped->binaryAddress, lpOverlapped->port, lpOverlapped->data, dwIoSize, lpOverlapped->rakPeer );
 
@@ -307,7 +307,7 @@ HANDLE_ERROR:
 			}
 
 			else
-				assert( 0 );
+				// assert( 0 );
 		}
 	}
 

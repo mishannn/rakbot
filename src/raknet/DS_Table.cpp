@@ -56,13 +56,13 @@ Table::Cell::Cell(const Table::Cell & input) {
 	}
 }
 void Table::Cell::Set(int input) {
-	assert(isEmpty);
+	// assert(isEmpty);
 	i = input;
 	c = 0;
 	isEmpty = false;
 }
 void Table::Cell::Set(char *input) {
-	assert(isEmpty);
+	// assert(isEmpty);
 	if (input && input[0]) {
 		i = (int)strlen(input) + 1;
 		c = new char[i];
@@ -73,7 +73,7 @@ void Table::Cell::Set(char *input) {
 	isEmpty = false;
 }
 void Table::Cell::Set(char *input, int inputLength) {
-	assert(isEmpty);
+	// assert(isEmpty);
 	if (input) {
 		c = new char[inputLength];
 		i = inputLength;
@@ -85,15 +85,15 @@ void Table::Cell::Set(char *input, int inputLength) {
 	isEmpty = false;
 }
 void Table::Cell::Get(int *output) {
-	assert(isEmpty == false);
+	// assert(isEmpty == false);
 	*output = i;
 }
 void Table::Cell::Get(char *output) {
-	assert(isEmpty == false);
+	// assert(isEmpty == false);
 	strcpy(output, c);
 }
 void Table::Cell::Get(char *output, int *outputLength) {
-	assert(isEmpty == false);
+	// assert(isEmpty == false);
 	memcpy(output, c, i);
 	if (outputLength)
 		*outputLength = i;
@@ -253,7 +253,7 @@ void Table::RemoveRows(Table *tableContainingRowIDs) {
 	return;
 }
 bool Table::UpdateCell(unsigned rowId, unsigned columnIndex, int value) {
-	assert(columns[columnIndex].columnType == NUMERIC);
+	// assert(columns[columnIndex].columnType == NUMERIC);
 
 	Row *row = GetRowByID(rowId);
 	if (row) {
@@ -263,7 +263,7 @@ bool Table::UpdateCell(unsigned rowId, unsigned columnIndex, int value) {
 	return false;
 }
 bool Table::UpdateCell(unsigned rowId, unsigned columnIndex, char *str) {
-	assert(columns[columnIndex].columnType == STRING);
+	// assert(columns[columnIndex].columnType == STRING);
 
 	Row *row = GetRowByID(rowId);
 	if (row) {
@@ -273,7 +273,7 @@ bool Table::UpdateCell(unsigned rowId, unsigned columnIndex, char *str) {
 	return false;
 }
 bool Table::UpdateCell(unsigned rowId, unsigned columnIndex, int byteLength, char *data) {
-	assert(columns[columnIndex].columnType == BINARY);
+	// assert(columns[columnIndex].columnType == BINARY);
 
 	Row *row = GetRowByID(rowId);
 	if (row) {

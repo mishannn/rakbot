@@ -136,7 +136,7 @@ void ReliabilityLayer::SetEncryptionKey(const unsigned char* key) {
 void ReliabilityLayer::SetSocket(SOCKET s) {
 #ifdef __USE_IO_COMPLETION_PORTS
 	// If this hits I am probably using sequential ports while doing IO completion ports
-	assert(s != INVALID_SOCKET);
+	// assert(s != INVALID_SOCKET);
 	readWriteSocket = s;
 #endif
 }
@@ -309,7 +309,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer(const char *buffer
 	RakNetTime start = RakNet::GetTime();
 
 #ifdef _DEBUG
-	assert(!(length <= 0 || buffer == 0));
+	// assert(!(length <= 0 || buffer == 0));
 #endif
 
 	if (length <= 1 || buffer == 0)   // Length of 1 is a connection request resend that we just ignore
@@ -354,7 +354,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer(const char *buffer
 
 		for (i = 0; i < incomingAcks.ranges.Size(); i++) {
 			if (incomingAcks.ranges[i].minIndex > incomingAcks.ranges[i].maxIndex) {
-				RakAssert(incomingAcks.ranges[i].minIndex <= incomingAcks.ranges[i].maxIndex);
+				// assert(incomingAcks.ranges[i].minIndex <= incomingAcks.ranges[i].maxIndex);
 				return false;
 			}
 
@@ -471,7 +471,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer(const char *buffer
 				hasReceivedPacketQueue.Push(0); // Got the packet
 #ifdef _DEBUG
 				// If this assert hits then MessageNumberType has overflowed
-				assert(hasReceivedPacketQueue.Size() < (unsigned int)((MessageNumberType)(-1)));
+				// assert(hasReceivedPacketQueue.Size() < (unsigned int)((MessageNumberType)(-1)));
 #endif
 			}
 
@@ -493,7 +493,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer(const char *buffer
 
 			if (internalPacket->reliability == RELIABLE_SEQUENCED || internalPacket->reliability == UNRELIABLE_SEQUENCED) {
 #ifdef _DEBUG
-				assert(internalPacket->orderingChannel < NUMBER_OF_ORDERED_STREAMS);
+				// assert(internalPacket->orderingChannel < NUMBER_OF_ORDERED_STREAMS);
 #endif
 
 				if (internalPacket->orderingChannel >= NUMBER_OF_ORDERED_STREAMS) {
@@ -576,7 +576,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer(const char *buffer
 
 			if (internalPacket->reliability == RELIABLE_ORDERED) {
 #ifdef _DEBUG
-				assert(internalPacket->orderingChannel < NUMBER_OF_ORDERED_STREAMS);
+				// assert(internalPacket->orderingChannel < NUMBER_OF_ORDERED_STREAMS);
 #endif
 
 				if (internalPacket->orderingChannel >= NUMBER_OF_ORDERED_STREAMS) {
@@ -641,7 +641,7 @@ bool ReliabilityLayer::HandleSocketReceiveFromConnectedPlayer(const char *buffer
 
 					internalPacket = 0;
 				} else {
-					//	assert(waitingForOrderedPacketReadIndex[ internalPacket->orderingChannel ] < internalPacket->orderingIndex);
+					//	// assert(waitingForOrderedPacketReadIndex[ internalPacket->orderingChannel ] < internalPacket->orderingIndex);
 					statistics.orderedMessagesOutOfOrder++;
 
 					// This is a newer ordered packet than we are waiting for. Store it for future use
@@ -732,7 +732,7 @@ int ReliabilityLayer::Receive(unsigned char **data) {
 
 	if (outputQueue.Size() > 0) {
 		//  #ifdef _DEBUG
-		//  assert(bitStream->GetNumberOfBitsUsed()==0);
+		//  // assert(bitStream->GetNumberOfBitsUsed()==0);
 		//  #endif
 		internalPacket = outputQueue.Pop();
 
@@ -757,10 +757,10 @@ int ReliabilityLayer::Receive(unsigned char **data) {
 //-------------------------------------------------------------------------------------------------------
 bool ReliabilityLayer::Send(char *data, int numberOfBitsToSend, PacketPriority priority, PacketReliability reliability, unsigned char orderingChannel, bool makeDataCopy, int MTUSize, RakNetTimeNS currentTime) {
 #ifdef _DEBUG
-	assert(!(reliability > RELIABLE_SEQUENCED || reliability < 0));
-	assert(!(priority > NUMBER_OF_PRIORITIES || priority < 0));
-	assert(!(orderingChannel < 0 || orderingChannel >= NUMBER_OF_ORDERED_STREAMS));
-	assert(numberOfBitsToSend > 0);
+	// assert(!(reliability > RELIABLE_SEQUENCED || reliability < 0));
+	// assert(!(priority > NUMBER_OF_PRIORITIES || priority < 0));
+	// assert(!(orderingChannel < 0 || orderingChannel >= NUMBER_OF_ORDERED_STREAMS));
+	// assert(numberOfBitsToSend > 0);
 #endif
 
 #ifdef __USE_IO_COMPLETION_PORTS
@@ -1090,14 +1090,14 @@ void ReliabilityLayer::SendBitStream(SOCKET s, PlayerID playerId, RakNet::BitStr
 		encryptor.Encrypt((unsigned char*)bitStream->GetData(), length, (unsigned char*)bitStream->GetData(), &length);
 		statistics.encryptionBitsSent = (length - oldLength) * 8;
 
-		assert((length % 16) == 0);
+		// assert((length % 16) == 0);
 	} else {
 		length = bitStream->GetNumberOfBytesUsed();
 	}
 
 #ifdef __USE_IO_COMPLETION_PORTS
 	if (readWriteSocket == INVALID_SOCKET) {
-		assert(0);
+		// assert(0);
 		return;
 	}
 
@@ -1180,7 +1180,7 @@ unsigned ReliabilityLayer::GenerateDatagram(RakNet::BitStream *output, int MTUSi
 				goto END_OF_GENERATE_FRAME;
 			}
 
-			RakAssert(internalPacket->priority >= 0);
+			// assert(internalPacket->priority >= 0);
 
 #ifdef _DEBUG_LOGGER
 			{
@@ -1447,7 +1447,7 @@ void ReliabilityLayer::SendAcknowledgementPacket(const MessageNumberType message
 //-------------------------------------------------------------------------------------------------------
 int ReliabilityLayer::GetBitStreamHeaderLength(const InternalPacket *const internalPacket) {
 #ifdef _DEBUG
-	assert(internalPacket);
+	// assert(internalPacket);
 #endif
 
 	int bitLength;
@@ -1502,7 +1502,7 @@ int ReliabilityLayer::GetBitStreamHeaderLength(const InternalPacket *const inter
 //-------------------------------------------------------------------------------------------------------
 int ReliabilityLayer::WriteToBitStreamFromInternalPacket(RakNet::BitStream *bitStream, const InternalPacket *const internalPacket) {
 #ifdef _DEBUG
-	assert(bitStream && internalPacket);
+	// assert(bitStream && internalPacket);
 #endif
 
 	int start = bitStream->GetNumberOfBitsUsed();
@@ -1523,7 +1523,7 @@ int ReliabilityLayer::WriteToBitStreamFromInternalPacket(RakNet::BitStream *bitS
 
 
 #ifdef _DEBUG
-	assert(internalPacket->dataBitLength > 0);
+	// assert(internalPacket->dataBitLength > 0);
 #endif
 
 	// Write the PacketReliability.  This is encoded in 3 bits
@@ -1551,7 +1551,7 @@ int ReliabilityLayer::WriteToBitStreamFromInternalPacket(RakNet::BitStream *bitS
 
 	// Write how many bits the packet data is. Stored in 13 bits
 #ifdef _DEBUG
-	assert(BITS_TO_BYTES(internalPacket->dataBitLength) < MAXIMUM_MTU_SIZE); // I never send more than MTU_SIZE bytes
+	// assert(BITS_TO_BYTES(internalPacket->dataBitLength) < MAXIMUM_MTU_SIZE); // I never send more than MTU_SIZE bytes
 
 #endif
 
@@ -1593,7 +1593,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 
 #ifdef _DEBUG
 	// 10/08/05 - Disabled assert since this hits from offline packets
-	//assert( bitStreamSucceeded );
+	//// assert( bitStreamSucceeded );
 #endif
 
 	if (bitStreamSucceeded == false) {
@@ -1603,7 +1603,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 
 #ifdef _DEBUG
 	// 10/08/05 - Disabled assert since this hits from offline packets
-	//assert( bitStreamSucceeded );
+	//// assert( bitStreamSucceeded );
 #endif
 
 	if (bitStreamSucceeded == false) {
@@ -1620,7 +1620,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 
 #ifdef _DEBUG
 	// 10/08/05 - Disabled assert since this hits from offline packets
-	// assert( bitStreamSucceeded );
+	// // assert( bitStreamSucceeded );
 #endif
 
 	if (bitStreamSucceeded == false) {
@@ -1634,7 +1634,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 		bitStreamSucceeded = bitStream->ReadBits((unsigned char*) & (internalPacket->orderingChannel), 5);
 #ifdef _DEBUG
 		// 10/08/05 - Disabled assert since this hits from offline packets
-		//assert( bitStreamSucceeded );
+		//// assert( bitStreamSucceeded );
 #endif
 
 		if (bitStreamSucceeded == false) {
@@ -1646,7 +1646,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 
 #ifdef _DEBUG
 		// 10/08/05 - Disabled assert since this hits from offline packets
-		//assert( bitStreamSucceeded );
+		//// assert( bitStreamSucceeded );
 #endif
 
 		if (bitStreamSucceeded == false) {
@@ -1662,7 +1662,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 
 #ifdef _DEBUG
 	// 10/08/05 - Disabled assert since this hits from offline packets
-	//assert( bitStreamSucceeded );
+	//// assert( bitStreamSucceeded );
 #endif
 
 	if (bitStreamSucceeded == false) {
@@ -1674,7 +1674,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 		bitStreamSucceeded = bitStream->Read(internalPacket->splitPacketId);
 #ifdef _DEBUG
 		// 10/08/05 - Disabled assert since this hits from offline packets
-		// assert( bitStreamSucceeded );
+		// // assert( bitStreamSucceeded );
 #endif
 
 		if (bitStreamSucceeded == false) {
@@ -1685,7 +1685,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 		bitStreamSucceeded = bitStream->ReadCompressed(internalPacket->splitPacketIndex);
 #ifdef _DEBUG
 		// 10/08/05 - Disabled assert since this hits from offline packets
-		//assert( bitStreamSucceeded );
+		//// assert( bitStreamSucceeded );
 #endif
 
 		if (bitStreamSucceeded == false) {
@@ -1696,7 +1696,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 		bitStreamSucceeded = bitStream->ReadCompressed(internalPacket->splitPacketCount);
 #ifdef _DEBUG
 		// 10/08/05 - Disabled assert since this hits from offline packets
-		//assert( bitStreamSucceeded );
+		//// assert( bitStreamSucceeded );
 #endif
 
 		if (bitStreamSucceeded == false) {
@@ -1711,7 +1711,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 	// Optimization - do byte alignment here
 	//unsigned char zero;
 	//bitStream->ReadBits(&zero, 8 - (bitStream->GetNumberOfBitsUsed() %8));
-	//assert(zero==0);
+	//// assert(zero==0);
 
 
 	unsigned short length;
@@ -1721,7 +1721,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 	// Read into an unsigned short.  Otherwise the data would be offset too high by two bytes
 #ifdef _DEBUG
 	// 10/08/05 - Disabled assert since this hits from offline packets
-	//assert( bitStreamSucceeded );
+	//// assert( bitStreamSucceeded );
 #endif
 
 	if (bitStreamSucceeded == false) {
@@ -1732,7 +1732,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 	internalPacket->dataBitLength = length;
 #ifdef _DEBUG
 	// 10/08/05 - Disabled assert since this hits from offline packets arriving when the sender does not know we just connected, which is an unavoidable condition sometimes
-	//	assert( internalPacket->dataBitLength > 0 && BITS_TO_BYTES( internalPacket->dataBitLength ) < MAXIMUM_MTU_SIZE );
+	//	// assert( internalPacket->dataBitLength > 0 && BITS_TO_BYTES( internalPacket->dataBitLength ) < MAXIMUM_MTU_SIZE );
 #endif
 	if (!(internalPacket->dataBitLength > 0 && BITS_TO_BYTES(internalPacket->dataBitLength) < MAXIMUM_MTU_SIZE)) {
 		// 10/08/05 - internalPacket->data wasn't allocated yet
@@ -1755,7 +1755,7 @@ InternalPacket* ReliabilityLayer::CreateInternalPacketFromBitStream(RakNet::BitS
 #ifdef _DEBUG
 
 	// 10/08/05 - Disabled assert since this hits from offline packets
-	//assert( bitStreamSucceeded );
+	//// assert( bitStreamSucceeded );
 #endif
 
 	if (bitStreamSucceeded == false) {
@@ -1888,7 +1888,7 @@ void ReliabilityLayer::SplitPacket(InternalPacket *internalPacket, int MTUSize) 
 
 #ifdef _DEBUG
 	// Make sure we need to split the packet to begin with
-	assert(dataByteLength > maxDataSize - headerLength);
+	// assert(dataByteLength > maxDataSize - headerLength);
 #endif
 
 	// How much to send in the largest block
@@ -2042,7 +2042,7 @@ InternalPacket * ReliabilityLayer::BuildPacketFromSplitPacketList(SplitPacketIdT
 
 	i = splitPacketChannelList.GetIndexFromKey(splitPacketId, &objectExists);
 #ifdef _DEBUG
-	assert(objectExists);
+	// assert(objectExists);
 #endif
 
 	if (splitPacketChannelList[i]->splitPacketList.Size() == splitPacketChannelList[i]->splitPacketList[0]->splitPacketCount) {
@@ -2136,7 +2136,7 @@ DataStructures::LinkedList<InternalPacket*> *ReliabilityLayer::GetOrderingListAt
 //-------------------------------------------------------------------------------------------------------
 void ReliabilityLayer::AddToOrderingList(InternalPacket * internalPacket) {
 #ifdef _DEBUG
-	assert(internalPacket->orderingChannel < NUMBER_OF_ORDERED_STREAMS);
+	// assert(internalPacket->orderingChannel < NUMBER_OF_ORDERED_STREAMS);
 #endif
 
 	if (internalPacket->orderingChannel >= NUMBER_OF_ORDERED_STREAMS) {
@@ -2178,7 +2178,7 @@ void ReliabilityLayer::InsertPacketIntoResendList(InternalPacket *internalPacket
 		memcpy(pool, internalPacket, sizeof(InternalPacket));
 		resendQueue.Push(pool);
 	} else {
-		RakAssert(internalPacket->nextActionTime != 0);
+		// assert(internalPacket->nextActionTime != 0);
 
 		resendQueue.Push(internalPacket);
 	}
@@ -2209,7 +2209,7 @@ void ReliabilityLayer::KillConnection(void) {
 // How long to wait between packet resends
 //-------------------------------------------------------------------------------------------------------
 void ReliabilityLayer::SetPing(RakNetTime i) {
-	//assert(i < (RakNetTimeNS)timeoutTime*1000);
+	//// assert(i < (RakNetTimeNS)timeoutTime*1000);
 	if (i > timeoutTime)
 		ping = 500;
 	else

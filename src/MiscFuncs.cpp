@@ -140,21 +140,23 @@ const char *GenRandomString(char *s, const int len, bool numbers) {
 	return s;
 }
 
-const char *GetRakBotPath() {
-	static char path[MAX_PATH];
-	GetModuleFileName(NULL, path, sizeof(path));
-	*(strrchr(path, '\\')) = 0;
-	return path;
+std::string GetRakBotPath() {
+	static char rakBotPathBuffer[MAX_PATH];
+	GetModuleFileName(NULL, rakBotPathBuffer, sizeof(rakBotPathBuffer));
+	*(strrchr(rakBotPathBuffer, '\\') + 1) = 0;
+
+	std::string rakBotPath = rakBotPathBuffer;
+	return rakBotPath;
 }
 
-const char *GetRakBotPath(const char *append) {
-	static char path[MAX_PATH];
-	GetModuleFileName(NULL, path, sizeof(path));
+std::string GetRakBotPath(const std::string& append) {
+	static char rakBotPathBuffer[MAX_PATH];
+	GetModuleFileName(NULL, rakBotPathBuffer, sizeof(rakBotPathBuffer));
+	*(strrchr(rakBotPathBuffer, '\\') + 1) = 0;
 
-	*(strrchr(path, '\\') + 1) = 0;
-	strcat(path, append);
-
-	return path;
+	std::string rakBotPath = rakBotPathBuffer;
+	rakBotPath = rakBotPath + append;
+	return rakBotPath;
 }
 
 std::string UrlEncode(const std::string &s) {
@@ -162,8 +164,10 @@ std::string UrlEncode(const std::string &s) {
 	escaped.fill('0');
 	escaped << std::hex;
 
-	for (std::string::const_iterator i = s.begin(), n = s.end(); i != n; ++i) {
-		std::string::value_type c = (*i);
+	// for (std::string::const_iterator i = s.begin(), n = s.end(); i != n; ++i) {
+	for (size_t i = 0; i < s.length(); i++) {
+		// std::string::value_type c = *i;
+		std::string::value_type c = s[i];
 
 		// Keep alphanumeric and other accepted characters intact
 		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
@@ -236,4 +240,53 @@ void DoCoordMaster(bool state, float x, float y, float z) {
 		vars.coordMasterEnabled = false;
 		RakBot::app()->log("[RAKBOT] CoordMaster: телепорт остановлен");
 	}
+}
+
+bool IsDirExists(const std::string& dirPath) {
+	DWORD ftyp = GetFileAttributesA(dirPath.c_str());
+	if (ftyp == INVALID_FILE_ATTRIBUTES)
+		return false;
+
+	if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
+		return true;
+
+	return false;
+}
+
+bool IsFileExists(const std::string &filePath) {
+	FILE *f;
+	if (fopen_s(&f, filePath.c_str(), "rb") == 0) {
+		fclose(f);
+		return true;
+	}
+	return false;
+}
+
+int vasprintf(char **strp, const char *fmt, va_list ap) {
+	// _vscprintf tells you how big the buffer needs to be
+	int len = _vscprintf(fmt, ap);
+	if (len == -1) {
+		return -1;
+	}
+	size_t size = (size_t)len + 1;
+	char *str = new char[size];
+	if (!str) {
+		return -1;
+	}
+	// _vsprintf_s is the "secure" version of vsprintf
+	int r = vsprintf_s(str, len + 1, fmt, ap);
+	if (r == -1) {
+		free(str);
+		return -1;
+	}
+	*strp = str;
+	return r;
+}
+
+int asprintf(char **strp, const char *fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	int r = vasprintf(strp, fmt, ap);
+	va_end(ap);
+	return r;
 }

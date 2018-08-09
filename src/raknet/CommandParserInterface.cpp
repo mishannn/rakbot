@@ -60,7 +60,7 @@ void CommandParserInterface::ParseConsoleString(char *str, const char delineator
 		if (str[strIndex] != 0) {
 			parameterList[parameterListIndex] = str + strIndex;
 			parameterListIndex++;
-			assert(parameterListIndex < parameterListLength);
+			// // assert(parameterListIndex < parameterListLength);
 			if (parameterListIndex >= parameterListLength)
 				break;
 

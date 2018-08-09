@@ -58,11 +58,11 @@ void ServerJoin(RPCParameters *rpcParams) {
 
 	printf("Player joined to the server: %s[%d]\n", name, playerId);
 
-	player->setName(std::string(name));
+	player->setName(name);
 
 	vars.adminsMutex.lock();
 	for (int i = 0; i < static_cast<int>(vars.admins.size()); i++) {
-		if (vars.admins[i] == std::string(name)) {
+		if (vars.admins[i] == name) {
 			player->setAdmin(true);
 			break;
 		}
@@ -135,7 +135,7 @@ void InitGame(RPCParameters *rpcParams) {
 	bsInitGame.Read(byteStrLen);
 	bsInitGame.Read(hostName, byteStrLen);
 	hostName[byteStrLen] = 0;
-	RakBot::app()->getServer()->setServerName(std::string(hostName));
+	RakBot::app()->getServer()->setServerName(hostName);
 
 	bsInitGame.Read((char *)&byteVehicleModels[0], 212);
 
@@ -152,7 +152,7 @@ void InitGame(RPCParameters *rpcParams) {
 	RakBot::app()->getServer()->setGameInited(true);
 	vars.gameInitedTimer.setTimerFromCurrentTime();
 
-	RakBot::app()->getEvents()->onGameInited(std::string(hostName));
+	RakBot::app()->getEvents()->onGameInited(hostName);
 
 	bot->requestClass(0);
 }
@@ -354,11 +354,11 @@ void ClientMessage(RPCParameters *rpcParams) {
 	char *msgBuf = new char[msgLen + 1];
 	bsData.Read(msgBuf, msgLen);
 	msgBuf[msgLen] = 0;
-	std::string msg = std::string(msgBuf);
+	std::string msg = msgBuf;
 	delete[] msgBuf;
 	msgBuf = nullptr;
 
-	msg = std::regex_replace(msg, std::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string());
+	msg = std::regex_replace(msg, std::regex("\\{[0-9A-Fa-f]{6}\\}"), "");
 
 	if (RakBot::app()->getEvents()->onServerMessage(msg))
 		return;
@@ -378,7 +378,7 @@ void Chat(RPCParameters *rpcParams) {
 	char *textBuf = new char[textLen + 1];
 	bsData.Read((char*)textBuf, textLen);
 	textBuf[textLen] = 0;
-	std::string text = std::string(text);
+	std::string text = text;
 	delete[] textBuf;
 
 	Player *player = RakBot::app()->getPlayer(playerId);
@@ -612,7 +612,7 @@ void ScrShowDialog(RPCParameters *rpcParams) {
 	char *titleBuf = new char[titleLen + 1];
 	bsData.Read(titleBuf, titleLen);
 	titleBuf[titleLen] = 0;
-	RakBot::app()->getSampDialog()->setDialogTitle(std::string(titleBuf));
+	RakBot::app()->getSampDialog()->setDialogTitle(titleBuf);
 	delete[] titleBuf;
 
 	uint8_t okButtonLen;
@@ -620,7 +620,7 @@ void ScrShowDialog(RPCParameters *rpcParams) {
 	char *okButtonBuf = new char[okButtonLen + 1];
 	bsData.Read(okButtonBuf, okButtonLen);
 	okButtonBuf[okButtonLen] = 0;
-	RakBot::app()->getSampDialog()->setOkButtonText(std::string(okButtonBuf));
+	RakBot::app()->getSampDialog()->setOkButtonText(okButtonBuf);
 	delete[] okButtonBuf;
 
 	uint8_t cancelButtonLen;
@@ -628,13 +628,13 @@ void ScrShowDialog(RPCParameters *rpcParams) {
 	char *cancelButtonBuf = new char[cancelButtonLen + 1];
 	bsData.Read(cancelButtonBuf, cancelButtonLen);
 	cancelButtonBuf[cancelButtonLen] = 0;
-	RakBot::app()->getSampDialog()->setCancelButtonText(std::string(cancelButtonBuf));
+	RakBot::app()->getSampDialog()->setCancelButtonText(cancelButtonBuf);
 	delete[] cancelButtonBuf;
 
 	int dialogTextSize = 10000;
 	char *dialogTextBuf = new char[dialogTextSize + 1];
 	stringCompressor->DecodeString(dialogTextBuf, dialogTextSize, &bsData);
-	RakBot::app()->getSampDialog()->setDialogText(std::string(dialogTextBuf));
+	RakBot::app()->getSampDialog()->setDialogText(dialogTextBuf);
 	delete[] dialogTextBuf;
 
 	RakBot::app()->getSampDialog()->setDialogOffline(false);
@@ -677,7 +677,7 @@ void ScrGameText(RPCParameters *rpcParams) {
 	char *textBuf = new char[textLen + 1];
 	bsData.Read(textBuf, textLen);
 	textBuf[textLen] = 0;
-	std::string gameText = std::string(textBuf);
+	std::string gameText = textBuf;
 	delete[] textBuf;
 
 	gameText = std::regex_replace(gameText, std::regex("~n~"), "\n");
@@ -1077,7 +1077,7 @@ void ShowTextDraw(RPCParameters *rpcParams) {
 	char *textDrawStringBuf = new char[textDrawStringLen + 1];
 	bsData.Read(textDrawStringBuf, textDrawStringLen);
 	textDrawStringBuf[textDrawStringLen] = 0;
-	std::string textDrawString = std::string(textDrawStringBuf);
+	std::string textDrawString = textDrawStringBuf;
 	delete[] textDrawStringBuf;
 
 	if (vars.textDrawCreateLogging)
@@ -1109,7 +1109,7 @@ void TextDrawSetString(RPCParameters *rpcParams) {
 	char *textDrawStringBuf = new char[textDrawStringLen + 1];
 	bsData.Read(textDrawStringBuf, textDrawStringLen);
 	textDrawStringBuf[textDrawStringLen] = 0;
-	std::string textDrawString = std::string(textDrawStringBuf);
+	std::string textDrawString = textDrawStringBuf;
 	delete[] textDrawStringBuf;
 
 	if (vars.textDrawSetStringLogging)
@@ -1174,10 +1174,10 @@ void Create3DTextLabel(RPCParameters *rpcParams) {
 	ZeroMemory(labelTextBuf, sizeof(labelTextBuf));
 	stringCompressor->DecodeString(labelTextBuf, sizeof(labelTextBuf) - 1, &bsData);
 
-	std::string labelText = std::string(labelTextBuf);
+	std::string labelText = labelTextBuf;
 	RakBot::app()->getEvents()->onTextLabelShow(labelId, labelPosition[0], labelPosition[1], labelPosition[2], labelText);
 
-	labelText = std::regex_replace(labelText, std::regex("\\{[0-9A-Fa-f]{6}\\}"), std::string());
+	labelText = std::regex_replace(labelText, std::regex("\\{[0-9A-Fa-f]{6}\\}"), "");
 
 	if (vars.textLabelCreateLogging) {
 		RakBot::app()->log("[RAKBOT] Показана 3D метка с ID %d (X: %.2f; Y: %.2f; Z: %.2f; текст: %s)",
@@ -1188,7 +1188,7 @@ void Create3DTextLabel(RPCParameters *rpcParams) {
 /* void Update3DTextLabel(RPCParameters *rpcParams) {
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
-	std::string dump = std::string(DumpMem(bsData.GetData(), bsData.GetNumberOfBytesUsed()));
+	std::string dump = DumpMem(bsData.GetData(), bsData.GetNumberOfBytesUsed());
 	std::vector<std::string> dumpLines = Split(dump, '\n');
 	for (std::string line : dumpLines) {
 		RakBot::app()->log(line.c_str());

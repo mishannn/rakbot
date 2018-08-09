@@ -190,7 +190,7 @@ namespace DataStructures {
 	template <class weight_type, class data_type, bool isMaxHeap>
 	unsigned Heap<weight_type, data_type, isMaxHeap>::Parent(const unsigned i) const {
 #ifdef _DEBUG
-		assert(i != 0);
+		// // assert();
 #endif
 		return (i - 1) / 2;
 	}

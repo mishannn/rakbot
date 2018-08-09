@@ -65,7 +65,7 @@ BitStream::BitStream() {
 	data = (unsigned char*)stackData;
 
 #ifdef _DEBUG	
-	//	assert( data );
+	//	// assert( data );
 #endif
 	//memset(data, 0, 32);
 	copyData = true;
@@ -82,7 +82,7 @@ BitStream::BitStream(int initialBytesToAllocate) {
 		numberOfBitsAllocated = initialBytesToAllocate << 3;
 	}
 #ifdef _DEBUG
-	assert(data);
+	// assert(data);
 #endif
 	// memset(data, 0, initialBytesToAllocate);
 	copyData = true;
@@ -103,7 +103,7 @@ BitStream::BitStream(unsigned char* _data, unsigned int lengthInBytes, bool _cop
 				data = (unsigned char*)malloc(lengthInBytes);
 			}
 #ifdef _DEBUG
-			assert(data);
+			// assert(data);
 #endif
 			memcpy(data, _data, lengthInBytes);
 		} else
@@ -115,7 +115,7 @@ BitStream::BitStream(unsigned char* _data, unsigned int lengthInBytes, bool _cop
 // Use this if you pass a pointer copy to the constructor (_copyData==false) and want to overallocate to prevent reallocation
 void BitStream::SetNumberOfBitsAllocated(const unsigned int lengthInBits) {
 #ifdef _DEBUG
-	assert(lengthInBits >= (unsigned int)numberOfBitsAllocated);
+	// assert(lengthInBits >= (unsigned int)numberOfBitsAllocated);
 #endif	
 	numberOfBitsAllocated = lengthInBits;
 }
@@ -255,7 +255,7 @@ bool BitStream::ReadBit(void) {
 void BitStream::WriteAlignedBytes(const unsigned char* input,
 	const int numberOfBytesToWrite) {
 #ifdef _DEBUG
-	assert(numberOfBytesToWrite > 0);
+	// assert(numberOfBytesToWrite > 0);
 #endif
 
 	AlignWriteToByteBoundary();
@@ -267,7 +267,7 @@ void BitStream::WriteAlignedBytes(const unsigned char* input,
 // unless you byte align the coalesced packets.
 bool BitStream::ReadAlignedBytes(unsigned char* output, const int numberOfBytesToRead) {
 #ifdef _DEBUG
-	assert(numberOfBytesToRead > 0);
+	// assert(numberOfBytesToRead > 0);
 #endif
 
 	if (numberOfBytesToRead <= 0)
@@ -408,7 +408,7 @@ void BitStream::WriteCompressed(const unsigned char* input,
 // It should be false if you used WriteBits with rightAlignedBits false
 bool BitStream::ReadBits(unsigned char* output, int numberOfBitsToRead, const bool alignBitsToRight) {
 #ifdef _DEBUG
-	assert(numberOfBitsToRead > 0);
+	// assert(numberOfBitsToRead > 0);
 #endif
 	if (numberOfBitsToRead <= 0)
 		return false;
@@ -495,7 +495,7 @@ bool BitStream::ReadCompressed(unsigned char* output,
 
 	// All but the first bytes are byteMatch.  If the upper half of the last byte is a 0 (positive) or 16 (negative) then what we read will be a 1 and the remaining 4 bits.
 	// Otherwise we read a 0 and the 8 bytes
-	//assert(readOffset+1 <=numberOfBitsUsed); // If this assert is hit the stream wasn't long enough to read from
+	//// assert(readOffset+1 <=numberOfBitsUsed); // If this assert is hit the stream wasn't long enough to read from
 	if (readOffset + 1 > numberOfBitsUsed)
 		return false;
 
@@ -530,7 +530,7 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 #ifdef _DEBUG
 		// If this assert hits then we need to specify true for the third parameter in the constructor
 		// It needs to reallocate to hold all the data and can't do it unless we allocated to begin with
-		assert(copyData == true);
+		// assert(copyData == true);
 #endif
 
 		// Less memory efficient but saves on news and deletes
@@ -550,7 +550,7 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 		}
 
 #ifdef _DEBUG
-		assert(data); // Make sure realloc succeeded
+		// assert(data); // Make sure realloc succeeded
 #endif
 		//  memset(data+newByteOffset, 0,  ((newNumberOfBitsAllocated-1)>>3) - ((numberOfBitsAllocated-1)>>3)); // Set the new data block to 0
 	}
@@ -561,7 +561,7 @@ void BitStream::AddBitsAndReallocate(const int numberOfBitsToWrite) {
 
 // Should hit if reads didn't match writes
 void BitStream::AssertStreamEmpty(void) {
-	assert(readOffset == numberOfBitsUsed);
+	// // assert(readOffset == numberOfBitsUsed);
 }
 
 void BitStream::PrintBits(void) const {
@@ -596,7 +596,7 @@ void BitStream::PrintBits(void) const {
 // Data will point to the stream.  Returns the length in bits of the stream.
 int BitStream::CopyData(unsigned char** _data) const {
 #ifdef _DEBUG
-	assert(numberOfBitsUsed > 0);
+	// assert(numberOfBitsUsed > 0);
 #endif
 
 	*_data = new unsigned char[BITS_TO_BYTES(numberOfBitsUsed)];
@@ -666,7 +666,7 @@ void BitStream::AssertCopyData(void) {
 			unsigned char * newdata = (unsigned char*)malloc(BITS_TO_BYTES(numberOfBitsAllocated));
 #ifdef _DEBUG
 
-			assert(data);
+			// assert(data);
 #endif
 
 			memcpy(newdata, data, BITS_TO_BYTES(numberOfBitsAllocated));

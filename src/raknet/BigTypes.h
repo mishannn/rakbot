@@ -1655,7 +1655,7 @@ namespace big {
 	}
 
 	BIGONETYPE BIGINTFAST Int<T>::operator=(const char *s) {
-		fromString(std::string(s), raw);
+		fromString(s, raw);
 		return *this;
 	}
 

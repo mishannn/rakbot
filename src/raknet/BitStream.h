@@ -862,7 +862,7 @@ namespace RakNet {
 	/// For values between -1 and 1
 	template <>
 	inline void BitStream::WriteCompressed(float var) {
-		assert(var > -1.01f && var < 1.01f);
+		// // assert();
 		if (var < -1.0f)
 			var = -1.0f;
 		if (var > 1.0f)
@@ -873,13 +873,13 @@ namespace RakNet {
 	/// For values between -1 and 1
 	template <>
 	inline void BitStream::WriteCompressed(double var) {
-		assert(var > -1.01 && var < 1.01);
+		// // assert();
 		if (var < -1.0f)
 			var = -1.0f;
 		if (var > 1.0f)
 			var = 1.0f;
 #ifdef _DEBUG
-		assert(sizeof(unsigned long) == 4);
+		// // assert();
 #endif
 		Write((unsigned long)((var + 1.0)*2147483648.0));
 	}
@@ -1099,7 +1099,7 @@ namespace RakNet {
 	template <class templateType> // templateType for this function must be a float or double
 	void BitStream::WriteNormVector(templateType x, templateType y, templateType z) {
 #ifdef _DEBUG
-		assert(x <= 1.01 && y <= 1.01 && z <= 1.01 && x >= -1.01 && y >= -1.01 && z >= -1.01);
+		// // assert();
 #endif
 		if (x > 1.0)
 			x = 1.0;

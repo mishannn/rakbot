@@ -84,7 +84,7 @@ HRESULT QueryValue(IWbemServices* pService, const wchar_t* query, const wchar_t*
 
 	IEnumWbemClassObject* pEnumerator = NULL;
 	HRESULT result = pService->ExecQuery(
-		bstr_t(L"WQL"),                                         // strQueryLanguage
+		bstr_t(VMProtectDecryptStringW(L"WQL")),                                         // strQueryLanguage
 		bstr_t(query),                                          // strQuery
 		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,  // lFlags
 		NULL,                                                   // pCtx
@@ -154,7 +154,10 @@ HRESULT GetCMB() {
 		return result;
 	}
 
-	result = QueryValue(pService, L"Select Name from Win32_Processor", L"Name", Processor, sizeof(Processor));
+	const wchar_t *getProcessorQuery = VMProtectDecryptStringW(L"Select Name from Win32_Processor");
+	const wchar_t *getProcessorProperty = VMProtectDecryptStringW(L"Name");
+
+	result = QueryValue(pService, getProcessorQuery, getProcessorProperty, Processor, sizeof(Processor));
 	if (FAILED(result)) {
 		pService->Release();
 		pLocator->Release();
@@ -162,13 +165,22 @@ HRESULT GetCMB() {
 		return result;
 	}
 
-	result = QueryValue(pService, L"Select ReleaseDate from Win32_BIOS", L"ReleaseDate", Bios, sizeof(Bios));
+	VMProtectFreeString(getProcessorQuery);
+	VMProtectFreeString(getProcessorProperty);
+
+	const wchar_t *getBiosQuery = VMProtectDecryptStringW(L"Select ReleaseDate from Win32_BIOS");
+	const wchar_t *getBiosProperty = VMProtectDecryptStringW(L"ReleaseDate");
+
+	result = QueryValue(pService, getBiosQuery, getBiosProperty, Bios, sizeof(Bios));
 	if (FAILED(result)) {
 		pService->Release();
 		pLocator->Release();
 		CoUninitialize();
 		return result;
 	}
+
+	VMProtectFreeString(getBiosQuery);
+	VMProtectFreeString(getBiosProperty);
 
 	pService->Release();
 	pLocator->Release();
@@ -238,6 +250,11 @@ CURLcode OpenURL(const std::string &url) {
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYSTATUS, false);
+
+	DWORD adapterAddress = inet_addr(vars.adapterAddress.c_str());
+	if (adapterAddress) {
+		curl_easy_setopt(curl, CURLOPT_INTERFACE, vars.adapterAddress.c_str());
+	}
 
 	ZeroMemory(CurlBufferUtf8, sizeof(CurlBufferUtf8));
 	CURLcode result = curl_easy_perform(curl);
@@ -335,14 +352,13 @@ void HandleCheckKey() {
 }
 
 void CheckKey() {
-	const char *keyPath = GetRakBotPath("settings\\license.key");
-	std::fstream keyFile(keyPath, std::ios::in | std::ios::binary);
+	std::fstream keyFile(GetRakBotPath("settings\\license.key"), std::ios::in | std::ios::binary);
 
 	if (keyFile.is_open()) {
 		char regKey[30];
 		keyFile.read(regKey, sizeof(regKey));
 		regKey[29] = 0;
-		vars.regKey = std::string(regKey);
+		vars.regKey = regKey;
 		keyFile.close();
 	}
 
@@ -355,10 +371,18 @@ void CheckKey() {
 	DWORD pcNameLen = sizeof(pcName);
 	GetComputerName(pcName, &pcNameLen);
 
-	char buffer[512];
-	sprintf(buffer, "http://rakbot.ru/keys/action/check?key=%s&hwid=%u&ver=%s&pc_name=%s",
-		UrlEncode(vars.regKey).c_str(), GetDeviceID(), UrlEncode(std::string(RAKBOT_VERSION)).c_str(), pcName);
+	const char *checkUrlFormat = VMProtectDecryptStringA("http://rakbot.ru/keys/action/check?key=%s&hwid=%u&ver=%s&pc_name=%s");
+
+	std::string regKeyEncoded = UrlEncode(vars.regKey);
+	std::string versionEncoded = UrlEncode(RAKBOT_VERSION);
+	std::string pcNameEncoded = UrlEncode(pcName);
+
+	char buffer[1024];
+	snprintf(buffer, sizeof(buffer), checkUrlFormat,
+		regKeyEncoded.c_str(), GetDeviceID(), versionEncoded.c_str(), pcNameEncoded.c_str());
 	CURLcode curlCode = OpenURL(buffer);
+
+	VMProtectFreeString(checkUrlFormat);
 
 	if (curlCode == CURLE_OK) {
 		HandleCheckKey();

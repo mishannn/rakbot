@@ -28,7 +28,7 @@ namespace DataStructures {
 	template<class MemoryBlockType>
 	MemoryPool<MemoryBlockType>::~MemoryPool() {
 #ifdef _DEBUG
-		assert(blocksOut == 0);
+		// // assert();
 #endif
 		unsigned i;
 		for (i = 0; i < pool.Size(); i++)
@@ -61,14 +61,14 @@ namespace DataStructures {
 	void MemoryPool<MemoryBlockType>::Release(MemoryBlockType *m) {
 		pool.Insert(m);
 #ifdef _DEBUG
-		assert(blocksOut > 0);
+		// // assert();
 		blocksOut--;
 #endif
 	}
 	template<class MemoryBlockType>
 	void MemoryPool<MemoryBlockType>::Clear(void) {
 #ifdef _DEBUG
-		assert(blocksOut == 0);
+		// // assert();
 #endif
 		unsigned i;
 		for (i = 0; i < pool.Size(); i++)

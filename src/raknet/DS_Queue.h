@@ -90,7 +90,7 @@ namespace DataStructures {
 	template <class queue_type>
 	inline queue_type Queue<queue_type>::Pop(void) {
 #ifdef _DEBUG
-		assert(allocation_size > 0 && Size() >= 0 && head != tail);
+		// assert(allocation_size > 0 && Size() >= 0 && head != tail);
 #endif
 		//head=(head+1) % allocation_size;
 
@@ -134,7 +134,7 @@ namespace DataStructures {
 			new_array = new queue_type[allocation_size * 2];
 #ifdef _DEBUG
 
-			assert(new_array);
+			// assert(new_array);
 #endif
 
 			for (unsigned int counter = 0; counter < allocation_size; ++counter)
@@ -157,8 +157,8 @@ namespace DataStructures {
 	template <class queue_type>
 	inline queue_type Queue<queue_type>::Peek(void) const {
 #ifdef _DEBUG
-		assert(head != tail);
-		assert(allocation_size > 0 && Size() >= 0);
+		// assert(head != tail);
+		// assert(allocation_size > 0 && Size() >= 0);
 #endif
 
 		return (queue_type)array[head];
@@ -188,7 +188,7 @@ namespace DataStructures {
 			new_array = new queue_type[allocation_size * 2];
 #ifdef _DEBUG
 
-			assert(new_array);
+			// assert(new_array);
 #endif
 
 			for (unsigned int counter = 0; counter < allocation_size; ++counter)
@@ -326,7 +326,7 @@ namespace DataStructures {
 	template <class queue_type>
 	inline queue_type& Queue<queue_type>::operator[] (unsigned int position) const {
 #ifdef _DEBUG
-		assert(position < Size());
+		// assert(position < Size());
 #endif
 		//return array[(head + position) % allocation_size];
 
@@ -339,8 +339,8 @@ namespace DataStructures {
 	template <class queue_type>
 	void Queue<queue_type>::Del(unsigned int position) {
 #ifdef _DEBUG
-		assert(position < Size());
-		assert(head != tail);
+		// assert(position < Size());
+		// assert(head != tail);
 #endif
 
 		if (head == tail || position >= Size())

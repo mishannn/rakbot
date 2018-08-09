@@ -13,17 +13,78 @@
 #include "main.h"
 #include "netrpc.h"
 
-void Packet_AUTH_KEY(Packet *p) {
-	char *authKey = genAuthKey((char *)(p->data + 2));
-	uint8_t byteAuthKeyLen = static_cast<uint8_t>(strlen(authKey));
+void BIG_NUM_MUL(unsigned long in[5], unsigned long out[6], unsigned long factor) {
+	/*
+	Based on TTMath library by Tomasz Sowa.
+	*/
 
-	RakClientInterface *rakClient = RakBot::app()->getRakClient();
-	RakNet::BitStream bsKey;
-	bsKey.Write((uint8_t)ID_AUTH_KEY);
-	bsKey.Write(byteAuthKeyLen);
-	bsKey.Write(authKey, byteAuthKeyLen);
+	unsigned long src[5] = { 0 };
+	for (int i = 0; i < 5; i++)
+		src[i] = ((in[4 - i] >> 24) | ((in[4 - i] << 8) & 0x00FF0000) | ((in[4 - i] >> 8) & 0x0000FF00) | (in[4 - i] << 24));
 
-	rakClient->Send(&bsKey, SYSTEM_PRIORITY, RELIABLE, NULL);
+	unsigned long long tmp = 0;
+
+	tmp = unsigned long long(src[0])*unsigned long long(factor);
+	out[0] = tmp & 0xFFFFFFFF;
+	out[1] = tmp >> 32;
+	tmp = unsigned long long(src[1])*unsigned long long(factor) + unsigned long long(out[1]);
+	out[1] = tmp & 0xFFFFFFFF;
+	out[2] = tmp >> 32;
+	tmp = unsigned long long(src[2])*unsigned long long(factor) + unsigned long long(out[2]);
+	out[2] = tmp & 0xFFFFFFFF;
+	out[3] = tmp >> 32;
+	tmp = unsigned long long(src[3])*unsigned long long(factor) + unsigned long long(out[3]);
+	out[3] = tmp & 0xFFFFFFFF;
+	out[4] = tmp >> 32;
+	tmp = unsigned long long(src[4])*unsigned long long(factor) + unsigned long long(out[4]);
+	out[4] = tmp & 0xFFFFFFFF;
+	out[5] = tmp >> 32;
+
+	for (int i = 0; i < 12; i++) {
+		unsigned char temp = ((unsigned char*)out)[i];
+		((unsigned char*)out)[i] = ((unsigned char*)out)[23 - i];
+		((unsigned char*)out)[23 - i] = temp;
+	}
+}
+
+int gen_gpci(char buf[64], unsigned long factor) /* by bartekdvd */
+{
+	unsigned char out[6 * 4] = { 0 };
+
+	static const char alphanum[] =
+		"0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	for (int i = 0; i < 6 * 4; ++i)
+		out[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+
+	// out[6 * 4] = 0;
+
+	BIG_NUM_MUL((unsigned long*)out, (unsigned long*)out, factor);
+
+	unsigned int notzero = 0;
+	buf[0] = '0'; buf[1] = '\0';
+
+	if (factor == 0) return 1;
+
+	int pos = 0;
+	for (int i = 0; i < 24; i++) {
+		unsigned char tmp = out[i] >> 4;
+		unsigned char tmp2 = out[i] & 0x0F;
+
+		if (notzero || tmp) {
+			buf[pos++] = (char)((tmp > 9) ? (tmp + 55) : (tmp + 48));
+			if (!notzero) notzero = 1;
+		}
+
+		if (notzero || tmp2) {
+			buf[pos++] = (char)((tmp2 > 9) ? (tmp2 + 55) : (tmp2 + 48));
+			if (!notzero) notzero = 1;
+		}
+	}
+	buf[pos] = 0;
+
+	return pos;
 }
 
 void Packet_ConnectionSucceeded(Packet *p) {
@@ -46,14 +107,25 @@ void Packet_ConnectionSucceeded(Packet *p) {
 	bot->setName(RakBot::app()->getSettings()->getName());
 	bot->setPlayerId(localPlayerId);
 
+	/*if (!VMProtectIsValidImageCRC()) {
+		VMProtectBeginUltra(__FUNCTION__);
+		DWORD tickCount = GetTickCount();
+		while (GetTickCount() - tickCount > 10000) { }
+		VMProtectEnd();
+	}*/
+
 	RakBot::app()->log("[RAKBOT] Подключено. Вход в игру...");
 	bot->setConnected(true);
 	vars.botConnectedTimer.setTimerFromCurrentTime();
 	RakBot::app()->getEvents()->onConnect(localPlayerId);
 
+	char authBS[64];
+	memset(authBS, 0, sizeof(authBS));
+	gen_gpci(authBS, 0x3e9);
+
 	int iVersion = NETGAME_VERSION;
 	uint8_t byteMod = 1;
-	uint8_t byteAuthBSLen = static_cast<uint8_t>(strlen(AUTH_BS));
+	uint8_t byteAuthBSLen = static_cast<uint8_t>(strlen(authBS));
 	uint8_t byteNameLen = static_cast<uint8_t>(RakBot::app()->getSettings()->getName().length());
 
 	unsigned int uiClientChallengeResponse = vars.uiChallenge ^ iVersion;
@@ -66,7 +138,7 @@ void Packet_ConnectionSucceeded(Packet *p) {
 
 	bsSend.Write(uiClientChallengeResponse);
 	bsSend.Write(byteAuthBSLen);
-	bsSend.Write(AUTH_BS, byteAuthBSLen);
+	bsSend.Write(authBS, byteAuthBSLen);
 	char szClientVer[] = "0.3.7";
 	uint8_t byteClientVerLen = sizeof(szClientVer) - 1;
 	bsSend.Write(byteClientVerLen);
@@ -557,9 +629,6 @@ void UpdateNetwork() {
 					break;
 				case ID_CONNECTION_REQUEST_ACCEPTED:
 					Packet_ConnectionSucceeded(pkt);
-					break;
-				case ID_AUTH_KEY:
-					Packet_AUTH_KEY(pkt);
 					break;
 				case ID_PLAYER_SYNC:
 					Packet_PlayerSync(pkt);

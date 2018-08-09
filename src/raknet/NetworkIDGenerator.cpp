@@ -113,7 +113,7 @@ void NetworkIDGenerator::SetStaticNetworkID(unsigned short i) {
 
 //-------------------------------------------------------------------------------------
 void NetworkIDGenerator::SetExternalPlayerID(PlayerID playerId) {
-	assert(playerId != UNASSIGNED_PLAYER_ID);
+	// assert(playerId != UNASSIGNED_PLAYER_ID);
 	externalPlayerId = playerId;
 }
 //-------------------------------------------------------------------------------------
@@ -184,7 +184,7 @@ void NetworkIDGenerator::SetParent(void *_parent) {
 	unsigned i;
 	for (i = 0; i < size; i++) {
 		// If this assert hits then this _parent is already in the tree.  Classes instance should never contain more than one NetworkIDGenerator
-		assert(nodeArray->object->GetParent() != parent);
+		// assert(nodeArray->object->GetParent() != parent);
 	}
 
 	if (usedAlloca == false)
@@ -199,14 +199,14 @@ void* NetworkIDGenerator::GetParent(void) const {
 }
 //-------------------------------------------------------------------------------------
 void NetworkIDGenerator::GenerateID(void) {
-	assert(IsNetworkIDAuthority());
+	// assert(IsNetworkIDAuthority());
 
 	NetworkIDNode* collision;
 	do {
 		networkID.localSystemId = staticItemID++;
 		if (NetworkID::peerToPeerMode) {
 			// If this assert hits you forgot to call SetExternalPlayerID
-			assert(externalPlayerId != UNASSIGNED_PLAYER_ID);
+			// assert(externalPlayerId != UNASSIGNED_PLAYER_ID);
 			networkID.playerId = externalPlayerId;
 		}
 		collision = NetworkIDGenerator::IDTree.GetPointerToNode(NetworkIDNode((networkID), 0));
@@ -237,7 +237,7 @@ void* NetworkIDGenerator::GET_OBJECT_FROM_ID(NetworkID x) {
 		} else {
 #ifdef _DEBUG
 			// If this assert hit then this object requires a call to SetParent and it never got one.
-			assert(object->RequiresSetParent() == false);
+			// assert(object->RequiresSetParent() == false);
 #endif
 			return object;
 		}

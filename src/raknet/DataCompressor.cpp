@@ -7,7 +7,7 @@
 
 void DataCompressor::Compress(unsigned char *userData, unsigned sizeInBytes, RakNet::BitStream * output) {
 	// Don't use this for small files as you will just make them bigger!
-	assert(sizeInBytes > 2048);
+	// assert(sizeInBytes > 2048);
 
 	unsigned int frequencyTable[256];
 	unsigned int i;
@@ -45,13 +45,13 @@ unsigned DataCompressor::DecompressAndAllocate(RakNet::BitStream * input, unsign
 	if (input->Read(bitsUsed) == false) {
 		// Read error
 #ifdef _DEBUG
-		assert(0);
+		// assert(0);
 #endif
 		return 0;
 	}
 	*output = new unsigned char[destinationSizeInBytes];
 	tree.GenerateFromFrequencyTable(frequencyTable);
 	decompressedBytes = tree.DecodeArray(input, bitsUsed, destinationSizeInBytes, *output);
-	assert(decompressedBytes == destinationSizeInBytes);
+	// assert(decompressedBytes == destinationSizeInBytes);
 	return destinationSizeInBytes;
 }

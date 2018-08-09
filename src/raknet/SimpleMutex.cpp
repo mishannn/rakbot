@@ -22,11 +22,11 @@
 SimpleMutex::SimpleMutex() {
 #ifdef _WIN32
 	// hMutex = CreateMutex(NULL, FALSE, 0);
-	//	assert(hMutex);
+	//	// assert(hMutex);
 	InitializeCriticalSection(&criticalSection);
 #else
 	int error = pthread_mutex_init(&hMutex, 0);
-	assert(error == 0);
+	// assert(error == 0);
 #endif
 }
 
@@ -74,13 +74,13 @@ void SimpleMutex::Lock(void) {
 	// Free the buffer.
 	LocalFree( messageBuffer );}
 
-	assert(d==WAIT_OBJECT_0);
+	// assert(d==WAIT_OBJECT_0);
 	*/
 	EnterCriticalSection(&criticalSection);
 
 #else
 	int error = pthread_mutex_lock(&hMutex);
-	assert(error == 0);
+	// assert(error == 0);
 #endif
 }
 
@@ -91,7 +91,7 @@ void SimpleMutex::Unlock(void) {
 	LeaveCriticalSection(&criticalSection);
 #else
 	int error = pthread_mutex_unlock(&hMutex);
-	assert(error == 0);
+	// assert(error == 0);
 #endif
 }
 

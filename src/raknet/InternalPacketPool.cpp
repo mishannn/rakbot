@@ -47,7 +47,7 @@ void InternalPacketPool::ReleasePointer(InternalPacket *p) {
 	if (p == 0) {
 		// Releasing a null pointer?
 #ifdef _DEBUG
-		assert(0);
+		// assert(0);
 #endif
 		return;
 	}

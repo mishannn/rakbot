@@ -218,7 +218,7 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 
 	if (vars.botFarmerEnabled) {
 		if (dialogId == 135) {
-			bot->dialogResponse(dialogId, FarmGetPay ? 0 : 1, 0, std::string());
+			bot->dialogResponse(dialogId, FarmGetPay ? 0 : 1, 0, "");
 			if (FarmGetPay)
 				FarmGetPay = 0;
 			return true;
@@ -230,7 +230,7 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 	if (vars.iSetWorkIndex) {
 		if (dialogId == 6) {
 			RakBot::app()->log("[RAKBOT] Устройство на работу...");
-			bot->dialogResponse(dialogId, 1, 0, std::string());
+			bot->dialogResponse(dialogId, 1, 0, "");
 			return true;
 		}
 		if (dialogId == 7) {

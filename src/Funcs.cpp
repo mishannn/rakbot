@@ -684,7 +684,7 @@ void Flood() {
 			case 2:
 				char buf[256];
 				snprintf(buf, sizeof(buf), "/sms %d %s", id, vars.floodText.c_str());
-				bot->sendInput(std::string(buf));
+				bot->sendInput(buf);
 				id = id < 1000 ? id + 1 : 0;
 				break;
 		}

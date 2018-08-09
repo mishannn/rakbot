@@ -80,7 +80,7 @@ struct Vars {
 	bool followEnabled;
 
 	// AutoReger
-	int autoRegEnabled;
+	bool autoRegEnabled;
 	std::string autoRegMail;
 	std::string autoRegReferer;
 	int autoRegSex;

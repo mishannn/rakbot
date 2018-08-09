@@ -105,6 +105,7 @@ public:
 	bool luaOnCoordMasterStart(float targetX, float targetY, float targetZ);
 	bool luaOnCoordMasterStop();
 	void luaOnCoordMasterComplete();
+	void luaOnCrash();
 
 	// LUA STUFF
 	std::string getScriptName() { return _scriptName; }

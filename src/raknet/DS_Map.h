@@ -123,7 +123,7 @@ namespace DataStructures {
 		bool objectExists;
 		unsigned index;
 		index = mapNodeList.GetIndexFromKey(key, &objectExists);
-		assert(objectExists);
+		// // assert();
 		SaveLastSearch(key, index);
 		return mapNodeList[index].mapNodeData;
 	}
@@ -136,7 +136,7 @@ namespace DataStructures {
 		bool objectExists;
 		unsigned index;
 		index = mapNodeList.GetIndexFromKey(key, &objectExists);
-		assert(objectExists);
+		// // assert();
 		SaveLastSearch(key, index);
 		return index;
 	}
@@ -155,7 +155,7 @@ namespace DataStructures {
 			index = lastSearchIndex;
 		else {
 			index = mapNodeList.GetIndexFromKey(key, &objectExists);
-			assert(objectExists);
+			// // assert();
 		}
 		data_type tmp = mapNodeList[index].mapNodeData;
 		mapNodeList.RemoveAtIndex(index);
@@ -192,7 +192,7 @@ namespace DataStructures {
 			index = lastSearchIndex;
 		} else {
 			index = mapNodeList.GetIndexFromKey(key, &objectExists);
-			assert(objectExists);
+			// // assert();
 			SaveLastSearch(key, index);
 		}
 
@@ -205,7 +205,7 @@ namespace DataStructures {
 		unsigned index;
 		bool objectExists;
 		index = mapNodeList.GetIndexFromKey(key, &objectExists);
-		assert(objectExists == false);
+		// // assert();
 #endif
 		SaveLastSearch(key, mapNodeList.Insert(key, MapNode(key, data)));
 	}

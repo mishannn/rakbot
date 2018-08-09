@@ -113,4 +113,7 @@ public:
 	bool onCoordMasterStart(float targetX, float targetY, float targetZ);
 	bool onCoordMasterStop();
 	void onCoordMasterComplete();
+
+	// CRASH
+	void onCrash();
 };

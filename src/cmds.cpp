@@ -30,7 +30,7 @@ void RunCommand(const char *cmdstr) {
 	static std::mutex mutex;
 	std::lock_guard<std::mutex> lock(mutex);
 
-	std::string command = std::string(cmdstr);
+	std::string command = cmdstr;
 
 	if (command.empty())
 		return;
@@ -645,7 +645,7 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		std::string str = std::string(cmd);
+		std::string str = cmd;
 		std::smatch matches;
 		std::regex_search(str, matches, std::regex("\\S+\\s+(\\d+)\\s+(\\d+)\\s+(.+)"));
 
@@ -1442,7 +1442,7 @@ void RunCommand(const char *cmdstr) {
 
 		char szBuf[512];
 
-		if (FILE *f = fopen(GetRakBotPath("places.txt"), "r")) {
+		if (FILE *f = fopen(GetRakBotPath("places.txt").c_str(), "r")) {
 			for (int i = 0; i < 300; i++) {
 				if (fgets(szBuf, 128, f)) {
 					strcpy(vars.teleportPlaces[i].szName, strtok(szBuf, "|"));
@@ -1478,7 +1478,7 @@ void RunCommand(const char *cmdstr) {
 		}
 
 		char buf[128];
-		if (FILE *f = fopen(GetRakBotPath("places.txt"), "r")) {
+		if (FILE *f = fopen(GetRakBotPath("places.txt").c_str(), "r")) {
 			for (int i = 0; i < 300; i++) {
 				if (fgets(buf, 128, f)) {
 					strcpy(vars.teleportPlaces[i].szName, strtok(buf, "|"));
@@ -1680,7 +1680,7 @@ void RunCommand(const char *cmdstr) {
 			minLvl = atol(&cmd[11]);
 		}
 
-		FILE *fOut = fopen(GetRakBotPath("nicks.txt"), "w");
+		FILE *fOut = fopen(GetRakBotPath("nicks.txt").c_str(), "w");
 
 		int iCount = 0;
 		for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -2264,7 +2264,7 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		RakBot::app()->getSettings()->setName(std::string(nickName));
+		RakBot::app()->getSettings()->setName(nickName);
 		RakBot::app()->log("[RAKBOT] Настройка ника: установлен ник - %s", RakBot::app()->getSettings()->getName().c_str());
 		return;
 	}
@@ -2287,7 +2287,7 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		RakBot::app()->getSettings()->setLoginPassword(std::string(loginPass));
+		RakBot::app()->getSettings()->setLoginPassword(loginPass);
 		RakBot::app()->log("[RAKBOT] Настройка пароля: установлен пароль - %s",
 			RakBot::app()->getSettings()->getLoginPassword());
 		return;
@@ -2330,7 +2330,7 @@ void RunCommand(const char *cmdstr) {
 			return;
 		}
 
-		RakBot::app()->getSettings()->getAddress()->setIp(std::string(addrName));
+		RakBot::app()->getSettings()->getAddress()->setIp(addrName);
 		RakBot::app()->getSettings()->getAddress()->setPort(static_cast<uint16_t>(addrPort));
 		RakBot::app()->log("[RAKBOT] Настройка сервера: установлен сервер - %s:%d",
 			RakBot::app()->getSettings()->getAddress()->getIp().c_str(),
@@ -2574,6 +2574,12 @@ void RunCommand(const char *cmdstr) {
 
 	if (cmdcmp("showdialog")) {
 		RakBot::app()->getSampDialog()->showDialog();
+		return;
+	}
+
+	if (cmdcmp("crash")) {
+		int *test = 0;
+		*test = 1337;
 		return;
 	}
 

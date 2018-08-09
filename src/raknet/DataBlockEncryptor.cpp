@@ -57,10 +57,10 @@ void DataBlockEncryptor::Encrypt(unsigned char *input, int inputLength, unsigned
 
 #ifdef _DEBUG
 
-	assert(keySet);
+	// assert(keySet);
 #endif
 
-	assert(input && inputLength);
+	// assert(input && inputLength);
 
 
 	// randomChar will randomize the data so the same data sent twice will not look the same
@@ -136,7 +136,7 @@ bool DataBlockEncryptor::Decrypt(unsigned char *input, int inputLength, unsigned
 	CheckSum checkSumCalculator;
 #ifdef _DEBUG
 
-	assert(keySet);
+	// assert(keySet);
 #endif
 
 	if (input == 0 || inputLength < 16 || (inputLength % 16) != 0) {

@@ -131,7 +131,7 @@ void MapWindowThread() {
 		return;
 	}
 
-	BitmapHandle = LoadImage(NULL, GetRakBotPath("map.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	BitmapHandle = LoadImage(NULL, GetRakBotPath("map.bmp").c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
 	MapWindow = CreateWindowEx(WS_EX_APPWINDOW, wcex.lpszClassName, "San Andreas",
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,

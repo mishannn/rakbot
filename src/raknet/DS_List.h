@@ -171,7 +171,7 @@ namespace DataStructures {
 	template <class list_type>
 	inline list_type& List<list_type>::operator[] (const unsigned int position) const {
 #ifdef _DEBUG
-		assert(position < list_size);
+		// assert(position < list_size);
 #endif
 		return listArray[position];
 	}
@@ -179,7 +179,7 @@ namespace DataStructures {
 	template <class list_type>
 	void List<list_type>::Insert(const list_type input, const unsigned int position) {
 #ifdef _DEBUG
-		assert(position <= list_size);
+		// assert(position <= list_size);
 #endif
 
 		// Reallocate list if necessary
@@ -292,7 +292,7 @@ namespace DataStructures {
 
 #ifdef _DEBUG
 
-			assert(list_size == position + 1);
+			// assert(list_size == position + 1);
 
 #endif
 
@@ -308,7 +308,7 @@ namespace DataStructures {
 	template <class list_type>
 	void List<list_type>::RemoveAtIndex(const unsigned int position) {
 #ifdef _DEBUG
-		assert(position < list_size);
+		// assert(position < list_size);
 #endif
 
 		if (position < list_size) {
@@ -327,7 +327,7 @@ namespace DataStructures {
 	inline void List<list_type>::Del(const unsigned num) {
 		// Delete the last elements on the list.  No compression needed
 #ifdef _DEBUG
-		assert(list_size >= num);
+		// assert(list_size >= num);
 #endif
 		list_size -= num;
 	}

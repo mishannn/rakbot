@@ -708,3 +708,10 @@ void Events::onCoordMasterComplete() {
 			script->luaOnCoordMasterComplete();
 	}
 }
+
+void Events::onCrash() {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnCrash();
+	}
+}

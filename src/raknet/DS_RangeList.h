@@ -42,7 +42,7 @@ namespace DataStructures {
 
 	template <class range_type>
 	unsigned RangeList<range_type>::Serialize(RakNet::BitStream *in, int maxBits, bool clearSerialized) {
-		assert(ranges.Size() < (unsigned short)-1);
+		// // assert();
 		RakNet::BitStream tempBS;
 		int bitsWritten;
 		unsigned short countWritten;

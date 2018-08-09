@@ -83,7 +83,7 @@ void TableSerializer::SerializeCell(RakNet::BitStream *out, DataStructures::Tabl
 			stringCompressor->EncodeString(cell->c, 65535, out);
 		} else {
 			// Binary
-			assert(columnType == DataStructures::Table::BINARY);
+			// assert(columnType == DataStructures::Table::BINARY);
 			out->Write((unsigned)cell->i);
 			out->WriteAlignedBytes((const unsigned char *)cell->c, cell->i);
 		}
@@ -108,7 +108,7 @@ bool TableSerializer::DeserializeCell(RakNet::BitStream *in, DataStructures::Tab
 			cell->Set(tempString);
 		} else {
 			// Binary
-			assert(columnType == DataStructures::Table::BINARY);
+			// assert(columnType == DataStructures::Table::BINARY);
 			if (in->Read(value) == false || value > 10000000)
 				return false; // Sanity check to max binary cell of 10 megabytes
 			in->AlignReadToByteBoundary();
