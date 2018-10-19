@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "RakBot.h"
@@ -595,8 +597,6 @@ void RunCommand(const char *cmdstr) {
 				vars.busWorkerBusModel = 431;
 				RakBot::app()->log("[RAKBOT] Выбран маршрут автобуса: пригородный ЛС-ЗАВОД");
 				break;
-
-				return;
 		}
 		return;
 	}
@@ -2403,8 +2403,6 @@ void RunCommand(const char *cmdstr) {
 		CoUninitialize();
 
 		if (FAILED(hResult)) {
-			if (pPersistFile)
-				pPersistFile->Release();
 			if (pShellLink)
 				pShellLink->Release();
 
@@ -2567,8 +2565,6 @@ void RunCommand(const char *cmdstr) {
 				AdapterInfo = AdapterInfo->Next;
 			}
 		}
-
-		getchar();
 		return;
 	}
 

@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // rijndael-alg-fst.c   v2.0   August '99
 // Optimised ANSI C code
 // authors: v1.0: Antoon Bosselaers

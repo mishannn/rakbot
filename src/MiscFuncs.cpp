@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "RakBot.h"
@@ -276,7 +278,7 @@ int vasprintf(char **strp, const char *fmt, va_list ap) {
 	// _vsprintf_s is the "secure" version of vsprintf
 	int r = vsprintf_s(str, len + 1, fmt, ap);
 	if (r == -1) {
-		free(str);
+		delete[] str;
 		return -1;
 	}
 	*strp = str;

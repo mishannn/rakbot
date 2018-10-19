@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "RakBot.h"
@@ -378,7 +380,7 @@ void Chat(RPCParameters *rpcParams) {
 	char *textBuf = new char[textLen + 1];
 	bsData.Read((char*)textBuf, textLen);
 	textBuf[textLen] = 0;
-	std::string text = text;
+	std::string text = textBuf;
 	delete[] textBuf;
 
 	Player *player = RakBot::app()->getPlayer(playerId);
@@ -1113,7 +1115,7 @@ void TextDrawSetString(RPCParameters *rpcParams) {
 	delete[] textDrawStringBuf;
 
 	if (vars.textDrawSetStringLogging)
-		RakBot::app()->log("[RAKBOT] Изменен текст текстдрава с ID %d (текст: %s)", textDrawId, textDrawString);
+		RakBot::app()->log("[RAKBOT] Изменен текст текстдрава с ID %d (текст: %s)", textDrawId, textDrawString.c_str());
 
 	RakBot::app()->getEvents()->onTextDrawSetString(textDrawId, textDrawString);
 }

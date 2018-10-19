@@ -46,6 +46,7 @@
 #include <winsock2.h>
 #include <WinInet.h>
 #include <commctrl.h>
+#include <process.h>
 
 #include "curl\curl.h"
 

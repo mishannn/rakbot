@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "RakBot.h"
@@ -130,7 +132,7 @@ void Bot::enterVehicle(Vehicle *vehicle, uint8_t seatId) {
 		return;
 	}
 
-	if (seatId < 0 || seatId >= vehicle->getSeatsAmount()) {
+	if (seatId >= vehicle->getSeatsAmount()) {
 		RakBot::app()->log("[ERROR] ѕосадка в транспорт: неверное посадочное место!");
 		return;
 	}

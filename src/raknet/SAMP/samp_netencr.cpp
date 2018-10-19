@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "main.h"
@@ -15,7 +17,7 @@ TCHAR GetChar(TCHAR _char)
 
 char *DumpMem(unsigned char *pAddr, int len)
 {
-	memset(buffer, 0, 16384);
+	memset(buffer, 0, sizeof(buffer));
 
 	char temp[256];
 	uint8_t fChar;

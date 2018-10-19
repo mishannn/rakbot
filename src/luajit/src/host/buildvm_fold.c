@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
 ** LuaJIT VM builder: IR folding hash table generator.
 ** Copyright (C) 2005-2017 Mike Pall. See Copyright Notice in luajit.h

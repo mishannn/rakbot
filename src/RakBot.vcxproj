@@ -67,7 +67,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_RELEASE;_RAKNET_THREADSAFE</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2;C:\Program Files\VMProtect Ultimate SND\Include\C</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\VMProtect Ultimate\Include\C;.\luajit\src;.\;.\libiconv\include;.\sol2;C:\Program Files\VMProtect Ultimate SND\Include\C</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4005;4020;</DisableSpecificWarnings>
       <MinimalRebuild>false</MinimalRebuild>
       <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBotDatabase.pdb</ProgramDataBaseFileName>
@@ -99,7 +99,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_RELEASE;_RAKNET_THREADSAFE</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>.\luajit\src;.\;.\libiconv\include;.\sol2;C:\Program Files\VMProtect Ultimate SND\Include\C</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\VMProtect Ultimate\Include\C;.\luajit\src;.\;.\libiconv\include;.\sol2;</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>4005;4020;</DisableSpecificWarnings>
       <ProgramDataBaseFileName>$(SolutionDir)..\Output\RakBotDatabase.pdb</ProgramDataBaseFileName>

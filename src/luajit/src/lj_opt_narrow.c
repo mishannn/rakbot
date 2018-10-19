@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /*
 ** NARROW: Narrowing of numbers to integers (double to int32_t).
 ** STRIPOV: Stripping of overflow checks.

@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /* This is a heavily customized and minimized copy of Lua 5.1.5. */
 /* It's only used to build LuaJIT. It does NOT have all standard functions! */
 /******************************************************************************

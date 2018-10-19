@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "Pickup.h"
@@ -59,7 +61,7 @@ int Pickup::getType() {
 }
 
 void Pickup::setPosition(int n, float val) {
-	if (n < 0 || n > 3)
+	if (n < 0 || n > 2)
 		return;
 
 	std::lock_guard<std::mutex> lock(_pickupMutex);
@@ -67,7 +69,7 @@ void Pickup::setPosition(int n, float val) {
 }
 
 float Pickup::getPosition(int n) {
-	if (n < 0 || n > 3)
+	if (n < 0 || n > 2)
 		return 0.f;
 
 	std::lock_guard<std::mutex> lock(_pickupMutex);

@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "MiscFuncs.h"
@@ -236,7 +238,7 @@ void RakBot::log(const char *format, ...) {
 			GetLocalTime(&time);
 
 			char *tempBuf;
-			int bufLen = asprintf(&tempBuf, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
+			bufLen = asprintf(&tempBuf, "[%02d:%02d:%02d] %s", time.wHour, time.wMinute, time.wSecond, buf);
 			delete[] buf;
 			buf = tempBuf;
 		}

@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /**
 * Original file by the_viking, fixed by R√¥mulo Fernandes, fixed by Emmanuel Nars
 * Should emulate windows finddata structure

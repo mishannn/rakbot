@@ -1,3 +1,5 @@
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "StdAfx.h"
 
 #include "RakBot.h"
@@ -262,11 +264,11 @@ void AdminChecker() {
 						return;
 				}
 
-				strncat(szBuf, "!", sizeof(szBuf));
+				strncat(szBuf, "!", sizeof(szBuf) - 1);
 				iCountNear++;
 			}
 			snprintf(szBuf, sizeof(szBuf), "%s[%d] | L:%d\n", player->getName().c_str(), i, player->getInfo()->getScore());
-			strncat(szAdminList, szBuf, sizeof(szAdminList));
+			strncat(szAdminList, szBuf, sizeof(szAdminList) - 1);
 			iCount++;
 		}
 	}
@@ -604,7 +606,7 @@ void AntiAFK() {
 	bot->setPosition(0, bot->getPosition(0) + (offset * (k * n)));
 	bot->sync();
 
-	if (k <= 2.f || k >= 2.f)
+	if (k <= -2.f || k >= 2.f)
 		n *= -1.f;
 	else
 		k += (1.f * n);
