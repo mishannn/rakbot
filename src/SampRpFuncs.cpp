@@ -220,7 +220,7 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 
 	if (vars.botFarmerEnabled) {
 		if (dialogId == 135) {
-			bot->dialogResponse(dialogId, FarmGetPay ? 0 : 1, 0, "");
+			bot->dialogResponse(dialogId, FarmGetPay ? 0 : 1, -1, "");
 			if (FarmGetPay)
 				FarmGetPay = 0;
 			return true;
@@ -232,7 +232,7 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 	if (vars.iSetWorkIndex) {
 		if (dialogId == 6) {
 			RakBot::app()->log("[RAKBOT] Устройство на работу...");
-			bot->dialogResponse(dialogId, 1, 0, "");
+			bot->dialogResponse(dialogId, 1, -1, "");
 			return true;
 		}
 		if (dialogId == 7) {
@@ -252,7 +252,7 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 
 	if (vars.botAutoSchoolEnabled) {
 		if (dialogId == 96 || dialogId == 97) {
-			bot->dialogResponse(dialogId);
+			bot->dialogResponse(dialogId, 1, -1);
 			vars.botAutoSchoolActive = 1;
 			return true;
 		}
@@ -261,15 +261,15 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 	if (vars.busWorkerRoute) {
 		switch (dialogId) {
 			case 276:
-				bot->dialogResponse(dialogId);
+				bot->dialogResponse(dialogId, 1, -1);
 				return true;
 
 			case 169:
-				bot->dialogResponse(dialogId);
+				bot->dialogResponse(dialogId, 1, -1);
 				return true;
 
 			case 17:
-				bot->dialogResponse(dialogId);
+				bot->dialogResponse(dialogId, 1, -1);
 				return true;
 
 			case 18:
@@ -280,9 +280,9 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 
 	if (vars.botLoaderEnabled && dialogId == 128) {
 		if (bot->getSkin() == 260 || bot->getSkin() == 16 || bot->getSkin() == 27) {
-			bot->dialogResponse(dialogId, 0);
+			bot->dialogResponse(dialogId, 0, -1);
 		} else {
-			bot->dialogResponse(dialogId, 1);
+			bot->dialogResponse(dialogId, 1, -1);
 		}
 		return true;
 	}
@@ -291,19 +291,19 @@ bool SampRpFuncs::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::stri
 		switch (dialogId) {
 			case 2:
 				RakBot::app()->log("[RAKBOT] Регистрация аккаунта...");
-				bot->dialogResponse(dialogId, 1, 0, RakBot::app()->getSettings()->getLoginPassword());
+				bot->dialogResponse(dialogId, 1, -1, RakBot::app()->getSettings()->getLoginPassword());
 				return true;
 
 			case 3:
-				bot->dialogResponse(dialogId);
+				bot->dialogResponse(dialogId, 1, -1);
 				return true;
 
 			case 21:
-				bot->dialogResponse(dialogId, 1, 0, vars.autoRegMail);
+				bot->dialogResponse(dialogId, 1, -1, vars.autoRegMail);
 				return true;
 
 			case 109:
-				bot->dialogResponse(dialogId, 1, 0, vars.autoRegReferer);
+				bot->dialogResponse(dialogId, 1, -1, vars.autoRegReferer);
 				return true;
 
 			case 4:

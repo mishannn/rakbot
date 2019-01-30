@@ -110,7 +110,7 @@ LRESULT CALLBACK SAMPDialogBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	HWND hwndButton1, hwndButton2;
 	HWND hwndEditBox = GetDlgItem(hwnd, IDE_INPUTEDIT);
 	HWND hwndListBox = GetDlgItem(hwnd, IDL_LISTBOX);
-	uint16_t wSelection = NULL;
+	uint16_t wSelection = 65535;
 	char szResponse[512];
 
 	switch (msg) {

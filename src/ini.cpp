@@ -8,6 +8,7 @@
 
 #include "Settings.h"
 #include "ini.h"
+#include "netrpc.h"
 
 bool SetConfigString(const std::string &filePath, const std::string &section, const std::string &key, const std::string &value) {
 	return WritePrivateProfileString(section.c_str(), key.c_str(), value.c_str(), filePath.c_str());
@@ -132,6 +133,10 @@ bool LoadCustom() {
 
 		section = "NetworkAdapter";
 		vars.adapterAddress = GetConfigString(filePath, section, "Address", "0.0.0.0");
+
+		section = "BadSync";
+		vars.badSyncSurfId = GetConfigInt(filePath, section, "SurfId", 2002);
+		vars.badSyncNanOffset = static_cast<bool>(GetConfigInt(filePath, section, "NanOffsets", 0));
 	} else {
 		section = "Log";
 		SetConfigString(filePath, section, "FileMode", "a");
@@ -172,6 +177,10 @@ bool LoadCustom() {
 
 		section = "NetworkAdapter";
 		SetConfigString(filePath, section, "Address", "0.0.0.0");
+
+		section = "BadSync";
+		SetConfigString(filePath, section, "SurdId", "2002");
+		SetConfigString(filePath, section, "NanOffsets", "0");
 
 		MessageBox(NULL, "Файл \"settings\\custom.ini\" создан! Перезапустите бота.", "Первая настройка", MB_ICONASTERISK);
 		result = false;
@@ -378,6 +387,13 @@ bool LoadConfig() {
 	vars.noAfk = true;
 	vars.timeStamp = true;
 	vars.logFile = nullptr;
+
+	ZeroMemory(Objects, sizeof(GTAObject) * MAX_OBJECTS);
+	ZeroMemory(&checkpoint, sizeof(Checkpoint));
+	ZeroMemory(&raceCheckpoint, sizeof(RaceCheckpoint));
+	spawnInfoExists = false;
+	ZeroMemory(&spawnInfo, sizeof(SpawnInfo));
+	ZeroMemory(&gtaMenu, sizeof(GTAMenu));
 
 	vars.botConnectedTimer.setTimer(UINT32_MAX);
 	vars.botSpawnedTimer.setTimer(UINT32_MAX);

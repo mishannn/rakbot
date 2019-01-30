@@ -83,7 +83,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(SolutionDir)..\Output\$(TargetName)$(TargetExt)</OutputFile>
       <ProgramDatabaseFile>$(SolutionDir)..\Output\RakBot.pdb</ProgramDatabaseFile>
-      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src;C:\Program Files\VMProtect Ultimate SND\Lib\Windows;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src;C:\Program Files\VMProtect Ultimate\Lib\Windows;</AdditionalLibraryDirectories>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ManifestFile>app.manifest</ManifestFile>
@@ -120,7 +120,7 @@
       <ProgramDatabaseFile>$(SolutionDir)..\Output\RakBot.pdb</ProgramDatabaseFile>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
       <UACUIAccess>false</UACUIAccess>
-      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src;C:\Program Files\VMProtect Ultimate SND\Lib\Windows;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\libiconv\lib;.\luajit\src;C:\Program Files\VMProtect Ultimate\Lib\Windows;</AdditionalLibraryDirectories>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ManifestFile>app.manifest</ManifestFile>
@@ -136,6 +136,7 @@
     <ClInclude Include="SAMPDialog.h" />
     <ClInclude Include="SampRpFuncs.h" />
     <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="TextDraw.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Vehicle.h" />
     <ClInclude Include="VehicleStuff.h" />
@@ -269,6 +270,7 @@
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="SAMPDialog.cpp" />
     <ClCompile Include="SampRpFuncs.cpp" />
+    <ClCompile Include="TextDraw.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Vehicle.cpp" />
     <ClCompile Include="VehicleStuff.cpp" />

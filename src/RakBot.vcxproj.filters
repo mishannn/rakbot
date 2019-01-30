@@ -344,6 +344,7 @@
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="ServerInfo.h" />
+    <ClInclude Include="TextDraw.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="raknet\_findfirst.cpp">
@@ -515,6 +516,7 @@
     <ClCompile Include="Vehicle.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="ServerInfo.cpp" />
+    <ClCompile Include="TextDraw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon.ico" />

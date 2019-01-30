@@ -1,7 +1,7 @@
 #pragma once
 
 #define ENCODE_BITS 4 // by z0rek
-#define RAKBOT_VERSION "0.8.2.1"
+#define RAKBOT_VERSION "0.8.3.2"
 #define NETCODE_OPENCONNLULZ 26985
 #define NETGAME_VERSION 4057
 
@@ -12,6 +12,7 @@
 #define MAX_PLAYERS 1000
 #define MAX_VEHICLES 2001
 #define MAX_PICKUPS 4097
+#define MAX_TEXTDRAWS 2048 + 256
 #define MAX_OBJECTS 1001
 #define MAX_ADMINS 300
 #define MAX_LOGLINES 1000

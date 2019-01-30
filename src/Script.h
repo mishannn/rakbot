@@ -88,6 +88,7 @@ public:
 	void luaOnDestroyRaceCheckpoint();
 	void luaOnCreatePickup(uint16_t pickupId);
 	void luaOnDestroyPickup(uint16_t pickupId);
+	bool luaOnSetInteriorId(uint8_t interiorId);
 	void luaOnCreateObject(uint16_t objectId);
 	void luaOnDestroyObject(uint16_t objectId);
 	void luaOnAttachObjectToPlayer(uint16_t playerId, uint32_t slotId, bool attach);
@@ -106,6 +107,7 @@ public:
 	bool luaOnCoordMasterStop();
 	void luaOnCoordMasterComplete();
 	void luaOnCrash();
+	void luaOnEnterVehicle(uint16_t playerId, uint16_t vehicleId, uint8_t seatId);
 
 	// LUA STUFF
 	std::string getScriptName() { return _scriptName; }

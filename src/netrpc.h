@@ -3,6 +3,7 @@
 #define REJECT_REASON_BAD_MOD 3
 #define REJECT_REASON_BAD_PLAYERID 4
 
+extern bool spawnInfoExists;
 extern SpawnInfo spawnInfo;
 extern GTAMenu gtaMenu;
 extern GTAObject Objects[MAX_OBJECTS];

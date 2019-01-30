@@ -98,6 +98,9 @@ public:
 	void onCreateRaceCheckpoint(RaceCheckpoint *raceCheckpoint);
 	void onDestroyRaceCheckpoint(RaceCheckpoint *raceCheckpoint);
 
+	// INTERIOR
+	bool onSetInteriorId(uint8_t interiorId);
+
 	// OBJECTS
 	void onCreateObject(GTAObject *object);
 	void onDestroyObject(GTAObject *object);
@@ -116,4 +119,6 @@ public:
 
 	// CRASH
 	void onCrash();
+
+	void onEnterVehicle(uint16_t playerId, uint16_t vehicleId, uint8_t seatId);
 };

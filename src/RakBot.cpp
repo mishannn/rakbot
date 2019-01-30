@@ -77,7 +77,6 @@ Player *RakBot::addPlayer(uint16_t playerId) {
 		return &_players[playerId];
 
 	_players[playerId].setPlayerId(playerId);
-	_players[playerId].setActive(true);
 
 	return &_players[playerId];
 }
@@ -125,7 +124,6 @@ Pickup *RakBot::addPickup(int pickupId) {
 		return &_pickups[pickupId];
 
 	_pickups[pickupId].setPickupId(pickupId);
-	_pickups[pickupId].setActive(true);
 
 	return &_pickups[pickupId];
 }
@@ -158,7 +156,6 @@ Vehicle *RakBot::addVehicle(uint16_t vehicleId) {
 		return &_vehicles[vehicleId];
 
 	_vehicles[vehicleId].setVehicleId(vehicleId);
-	_vehicles[vehicleId].setActive(true);
 
 	return &_vehicles[vehicleId];
 }
@@ -171,6 +168,38 @@ void RakBot::deleteVehicle(uint16_t vehicleId) {
 		return;
 
 	_vehicles[vehicleId].reset();
+}
+
+TextDraw *RakBot::getTextDraw(int textDrawId) {
+	if (textDrawId < 0 || textDrawId >= MAX_TEXTDRAWS)
+		return nullptr;
+
+	if (!_textDraws[textDrawId].isActive())
+		return nullptr;
+
+	return &_textDraws[textDrawId];
+}
+
+TextDraw *RakBot::addTextDraw(int textDrawId) {
+	if (textDrawId < 0 || textDrawId >= MAX_TEXTDRAWS)
+		return nullptr;
+
+	if (_textDraws[textDrawId].isActive())
+		return &_textDraws[textDrawId];
+
+	_textDraws[textDrawId].setTextDrawId(textDrawId);
+
+	return &_textDraws[textDrawId];
+}
+
+void RakBot::deleteTextDraw(int textDrawId) {
+	if (textDrawId < 0 || textDrawId >= MAX_TEXTDRAWS)
+		return;
+
+	if (!_textDraws[textDrawId].isActive())
+		return;
+
+	_textDraws[textDrawId].reset();
 }
 
 Bot *RakBot::getBot() {

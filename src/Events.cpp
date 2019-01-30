@@ -333,7 +333,7 @@ bool Events::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string di
 
 	if (dialogId == vars.dialogIdPassword) {
 		RakBot::app()->log("[RAKBOT] Ввод пароля...");
-		bot->dialogResponse(1, 1, 0, RakBot::app()->getSettings()->getLoginPassword());
+		bot->dialogResponse(dialogId, 1, -1, RakBot::app()->getSettings()->getLoginPassword());
 		return true;
 	}
 
@@ -343,12 +343,12 @@ bool Events::onDialogShow(uint16_t dialogId, uint8_t dialogStyle, std::string di
 	switch (vars.skipDialog) {
 		case 1:
 			RakBot::app()->log("[RAKBOT] Пропуск диалога %d с нижатием 1й кнопки(ENTER)", dialogId);
-			bot->dialogResponse(dialogId);
+			bot->dialogResponse(dialogId, 1, -1);
 			return true;
 
 		case 2:
 			RakBot::app()->log("[RAKBOT] Пропуск диалога %d с нижатием 2й кнопки(ESC)", dialogId);
-			bot->dialogResponse(dialogId, 0);
+			bot->dialogResponse(dialogId, 0, -1);
 			return true;
 
 		case 3:
@@ -624,6 +624,19 @@ void Events::onDestroyRaceCheckpoint(RaceCheckpoint * raceCheckpoint) {
 	}
 }
 
+bool Events::onSetInteriorId(uint8_t interiorId) {
+	bool luaResult = false;
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			if (script->luaOnSetInteriorId(interiorId))
+				luaResult = true;
+	}
+	if (luaResult)
+		return true;
+
+	return false;
+}
+
 void Events::onCreateObject(GTAObject * object) {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
@@ -715,5 +728,12 @@ void Events::onCrash() {
 	for each (Script *script in scripts) {
 		if (script != nullptr)
 			script->luaOnCrash();
+	}
+}
+
+void Events::onEnterVehicle(uint16_t playerId, uint16_t vehicleId, uint8_t seatId) {
+	for each (Script *script in scripts) {
+		if (script != nullptr)
+			script->luaOnEnterVehicle(playerId, vehicleId, seatId);
 	}
 }

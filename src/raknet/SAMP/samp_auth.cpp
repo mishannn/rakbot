@@ -102,7 +102,7 @@ uint8_t mask3[] = {
 std::string genAuthKey(const std::string &authIn) {
 	VMProtectBeginUltra(__FUNCTION__);
 
-	const char *authKeyUrlFormat = VMProtectDecryptStringA("http://rakbot.ru/keys/action/auth-key2?auth_in=%s&key=%s&hwid=%u&ver=%s");
+	const char *authKeyUrlFormat = VMProtectDecryptStringA("https://rakbot.ru/keys/action/auth-key?v=3&auth_in=%s&key=%s&hwid=%u&ver=%s");
 
 	std::string regKeyEncoded = UrlEncode(vars.regKey);
 	std::string versionEncoded = UrlEncode(RAKBOT_VERSION);
@@ -110,11 +110,12 @@ std::string genAuthKey(const std::string &authIn) {
 	int authInLength = authIn.length();
 	std::string authInHex = binToHex(reinterpret_cast<const uint8_t *>(authIn.c_str()), authInLength);
 
-	uint8_t *authInBytes = new uint8_t[authInLength];
+	uint8_t *authInBytes = new uint8_t[authInLength + 2];
 	hexToBin(authInHex, authInBytes);
 
 	uint8_t tmp1 = 0;
 	uint8_t tmp2 = 0;
+	uint8_t tmp3 = 0;
 
 	for (int i = 0; i < authInLength; i++) {
 		tmp1 = authInBytes[i];
@@ -134,7 +135,25 @@ std::string genAuthKey(const std::string &authIn) {
 		authInBytes[i] = tmp2;
 	}
 
-	std::string authInEncrypted = binToHex(authInBytes, authInLength);
+	srand(time(nullptr));
+	authInBytes[authInLength] = rand() % 100;
+	authInBytes[authInLength + 1] = rand() % 100;
+
+	for (int k = 0; k < authInBytes[authInLength + 1]; k++) {
+		for (int i = 0; i < authInLength; i++) {
+			tmp1 = authInBytes[i];
+			tmp2 = authInBytes[i + 1];
+			tmp3 = authInBytes[authInLength + 1];
+			authInBytes[i] = tmp1 ^ tmp2 ^ tmp3 ^ mask3[k];
+		}
+
+		tmp1 = authInBytes[authInLength];
+		tmp2 = authInBytes[authInLength + 1];
+		authInBytes[authInLength] = tmp1 ^ tmp2 ^ mask3[k];
+	}
+
+	std::string authInEncrypted = binToHex(authInBytes, authInLength + 2);
+	delete[] authInBytes;
 
 	char url[256];
 	snprintf(url, sizeof(url), authKeyUrlFormat,
@@ -150,8 +169,21 @@ std::string genAuthKey(const std::string &authIn) {
 		if (!isHexString(authTempKey))
 			return authIn;
 
-		uint8_t authOutBytes[20];
+		uint8_t *authOutBytes = new uint8_t[authTempKey.length() + 1];
 		hexToBin(authTempKey, authOutBytes);
+
+		for (int k = (authOutBytes[21] - 1); k >= 0; k--) {
+			tmp1 = authOutBytes[20];
+			tmp2 = authOutBytes[21];
+			authOutBytes[20] = tmp1 ^ tmp2 ^ mask3[k];
+
+			for (int i = 20; i > 0; i--) {
+				tmp1 = authOutBytes[i - 1];
+				tmp2 = authOutBytes[i];
+				tmp3 = authOutBytes[21];
+				authOutBytes[i - 1] = tmp1 ^ tmp2 ^ tmp3 ^ mask3[k];
+			}
+		}
 
 		for (int i = 0; i < 20; i++) {
 			tmp1 = authOutBytes[i];
@@ -211,8 +243,11 @@ std::string genAuthKey(const std::string &authIn) {
 			authOutBytes[i] ^= mask2[i];
 		}
 
+		std::string authOut = binToHex(authOutBytes, 20);
+		delete[] authOutBytes;
+
 		VMProtectEnd();
-		return binToHex(authOutBytes, sizeof(authOutBytes));
+		return authOut;
 	} else {
 		RakBot::app()->log("[RAKBOT] Ошибка #%d при получении AUTH_KEY");
 		VMProtectEnd();

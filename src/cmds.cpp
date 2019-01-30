@@ -1046,9 +1046,9 @@ void RunCommand(const char *cmdstr) {
 
 		uint8_t currentWeapon = bot->getWeapon();
 		bot->setWeapon(weapon);
-		bot->sync(10);
+		bot->sync();
 
-		RakBot::app()->getEvents()->defCallAdd(300, false, [bot, currentWeapon](DefCall *) {
+		RakBot::app()->getEvents()->defCallAdd(500, false, [bot, currentWeapon](DefCall *) {
 			if (!bot->isConnected())
 				return;
 

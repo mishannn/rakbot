@@ -175,6 +175,9 @@ struct Vars {
 
 	float syncSpeedOffset[3];
 	float syncPositionOffset[3];
+
+	uint16_t badSyncSurfId;
+	bool badSyncNanOffset;
 };
 
 extern Vars vars;

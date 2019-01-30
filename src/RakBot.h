@@ -15,6 +15,7 @@
 #include "PlayerBase.h"
 #include "Player.h"
 #include "Vehicle.h"
+#include "TextDraw.h"
 
 class RakClientInterface;
 
@@ -27,6 +28,7 @@ private:
 	Player _players[MAX_PLAYERS];
 	Pickup _pickups[MAX_PICKUPS];
 	Vehicle _vehicles[MAX_VEHICLES];
+	TextDraw _textDraws[MAX_TEXTDRAWS];
 
 	Bot _bot;
 	Settings _settings;
@@ -64,6 +66,10 @@ public:
 	Vehicle *getVehicle(uint16_t vehicleId);
 	Vehicle *addVehicle(uint16_t vehicleId);
 	void deleteVehicle(uint16_t vehicleId);
+
+	TextDraw *getTextDraw(int textDrawId);
+	TextDraw *addTextDraw(int textDrawId);
+	void deleteTextDraw(int textDrawId);
 
 	Bot *getBot();
 	Settings *getSettings();

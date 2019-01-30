@@ -32,6 +32,8 @@ Checkpoint checkpoint;
 GTAMenu gtaMenu;
 GTAObject Objects[MAX_OBJECTS];
 RaceCheckpoint raceCheckpoint;
+
+bool spawnInfoExists = false;
 SpawnInfo spawnInfo;
 
 void ServerJoin(RPCParameters *rpcParams) {
@@ -70,6 +72,8 @@ void ServerJoin(RPCParameters *rpcParams) {
 		}
 	}
 	vars.adminsMutex.unlock();
+
+	player->setActive(true);
 
 	RakBot::app()->getEvents()->onPlayerJoin(player);
 }
@@ -156,7 +160,8 @@ void InitGame(RPCParameters *rpcParams) {
 
 	RakBot::app()->getEvents()->onGameInited(hostName);
 
-	bot->requestClass(0);
+	if (m_iSpawnsAvailable != 0)
+		bot->requestClass(0);
 }
 
 void WorldPlayerAdd(RPCParameters *rpcParams) {
@@ -274,6 +279,7 @@ void WorldVehicleAdd(RPCParameters *rpcParams) {
 	vehicle->setFirstColor(newVehicle.aColor1);
 	vehicle->setSecondColor(newVehicle.aColor2);
 	vehicle->setCarHealth(1000.f);
+	vehicle->setActive(true);
 
 	RakBot::app()->getEvents()->onCreateVehicle(vehicle);
 }
@@ -562,6 +568,8 @@ void ScrCreatePickup(RPCParameters *rpcParams) {
 	for (int i = 0; i < 3; i++)
 		pickup->setPosition(i, position[i]);
 
+	pickup->setActive(true);
+
 	RakBot::app()->getEvents()->onCreatePickup(pickup);
 }
 
@@ -743,6 +751,7 @@ void ScrSetSpawnInfo(RPCParameters *rpcParams) {
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
 	bsData.Read((char *)&spawnInfo, sizeof(SpawnInfo));
+	spawnInfoExists = true;
 
 	char buf[256];
 	snprintf(buf, sizeof(buf), "[RAKBOT] Установлена позиция спавна: (%.2f; %.2f; %.2f)",
@@ -810,6 +819,7 @@ void RequestClass(RPCParameters *rpcParams) {
 	if (requestOutcome) {
 		RakBot::app()->log("[RAKBOT] Конечный класс получен");
 		bsData.Read((char *)&spawnInfo, sizeof(SpawnInfo));
+		spawnInfoExists = true;
 
 		char buf[256];
 		snprintf(buf, sizeof(buf), "[RAKBOT] Установлена позиция спавна: (%.2f; %.2f; %.2f)",
@@ -910,15 +920,21 @@ void SetPlayerSkin(RPCParameters *rpcParams) {
 	}
 }
 
-void SetInterior(RPCParameters *rpcParams) {
+void SetInteriorId(RPCParameters *rpcParams) {
 	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
 
-	bsData.Read(vars.interiorId);
-	RakBot::app()->log("[RAKBOT] Бот перемещен в интерьер %d", vars.interiorId);
+	uint8_t interiorId;
+	bsData.Read(interiorId);
+
+	if (RakBot::app()->getEvents()->onSetInteriorId(interiorId))
+		return;
 
 	RakNet::BitStream bsSend;
-	bsSend.Write(vars.interiorId);
+	bsSend.Write(interiorId);
 	RakBot::app()->getRakClient()->RPC(&RPC_SetInteriorId, &bsSend, HIGH_PRIORITY, RELIABLE, 0, FALSE, UNASSIGNED_NETWORK_ID, NULL);
+
+	RakBot::app()->log("[RAKBOT] Бот перемещен в интерьер %d", vars.interiorId);
+	vars.interiorId = interiorId;
 }
 
 void SetPlayerAttachedObject(RPCParameters *rpcParams) {
@@ -1044,48 +1060,118 @@ void ShowTextDraw(RPCParameters *rpcParams) {
 
 	// printf("%s\n\n", DumpMem(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1));
 
-	uint8_t textDrawShadow, textDrawOutline, textDrawFont, textDrawSelectable;
-	uint16_t textDrawId, textDrawStringLen;
-	uint32_t textDrawColor, textDrawBoxColor, textDrawBgColor;
-	float textDrawPosX, textDrawPosY, textLetterSizeX, textLetterSizeY, textTextSizeX, textTextSizeY;
+	uint16_t id;
+	bsData.Read(id);
 
-	bsData.Read(textDrawId);
-	bsData.IgnoreBits(1 * 8);
-	bsData.Read(textLetterSizeX);
-	bsData.Read(textLetterSizeY);
-	bsData.Read(((uint8_t *)&textDrawColor)[3]);
-	bsData.Read(((uint8_t *)&textDrawColor)[2]);
-	bsData.Read(((uint8_t *)&textDrawColor)[1]);
-	bsData.Read(((uint8_t *)&textDrawColor)[0]);
-	bsData.Read(textTextSizeX);
-	bsData.Read(textTextSizeY);
-	bsData.Read(((uint8_t *)&textDrawBoxColor)[3]);
-	bsData.Read(((uint8_t *)&textDrawBoxColor)[2]);
-	bsData.Read(((uint8_t *)&textDrawBoxColor)[1]);
-	bsData.Read(((uint8_t *)&textDrawBoxColor)[0]);
-	bsData.Read(textDrawShadow);
-	bsData.Read(textDrawOutline);
-	bsData.Read(((uint8_t *)&textDrawBgColor)[3]);
-	bsData.Read(((uint8_t *)&textDrawBgColor)[2]);
-	bsData.Read(((uint8_t *)&textDrawBgColor)[1]);
-	bsData.Read(((uint8_t *)&textDrawBgColor)[0]);
-	bsData.Read(textDrawFont);
-	bsData.Read(textDrawSelectable);
-	bsData.Read(textDrawPosX);
-	bsData.Read(textDrawPosY);
-	bsData.IgnoreBits(22 * 8);
-	bsData.Read(textDrawStringLen);
+	uint8_t flags;
+	bsData.Read(flags);
 
-	char *textDrawStringBuf = new char[textDrawStringLen + 1];
-	bsData.Read(textDrawStringBuf, textDrawStringLen);
-	textDrawStringBuf[textDrawStringLen] = 0;
-	std::string textDrawString = textDrawStringBuf;
+	float letterSize[2];
+	bsData.Read(letterSize[0]);
+	bsData.Read(letterSize[1]);
+
+	uint32_t letterColor;
+	bsData.Read(((uint8_t *)&letterColor)[3]);
+	bsData.Read(((uint8_t *)&letterColor)[2]);
+	bsData.Read(((uint8_t *)&letterColor)[1]);
+	bsData.Read(((uint8_t *)&letterColor)[0]);
+
+	float lineSize[2];
+	bsData.Read(lineSize[0]);
+	bsData.Read(lineSize[1]);
+
+	uint32_t boxColor;
+	bsData.Read(((uint8_t *)&boxColor)[3]);
+	bsData.Read(((uint8_t *)&boxColor)[2]);
+	bsData.Read(((uint8_t *)&boxColor)[1]);
+	bsData.Read(((uint8_t *)&boxColor)[0]);
+
+	uint8_t shadow;
+	bsData.Read(shadow);
+
+	uint8_t outline;
+	bsData.Read(outline);
+
+	uint32_t backgroundColor;
+	bsData.Read(((uint8_t *)&backgroundColor)[3]);
+	bsData.Read(((uint8_t *)&backgroundColor)[2]);
+	bsData.Read(((uint8_t *)&backgroundColor)[1]);
+	bsData.Read(((uint8_t *)&backgroundColor)[0]);
+
+	uint8_t style;
+	bsData.Read(style);
+
+	uint8_t selectable;
+	bsData.Read(selectable);
+
+	float position[2];
+	bsData.Read(position[0]);
+	bsData.Read(position[1]);
+
+	uint16_t modelId;
+	bsData.Read(modelId);
+
+	float rotation[3];
+	bsData.Read(rotation[0]);
+	bsData.Read(rotation[1]);
+	bsData.Read(rotation[2]);
+
+	float zoom;
+	bsData.Read(zoom);
+
+	uint32_t color;
+	bsData.Read(((uint8_t *)&color)[3]);
+	bsData.Read(((uint8_t *)&color)[2]);
+	bsData.Read(((uint8_t *)&color)[1]);
+	bsData.Read(((uint8_t *)&color)[0]);
+
+	uint16_t stringLength;
+	bsData.Read(stringLength);
+
+	char *textDrawStringBuf = new char[stringLength + 1];
+	bsData.Read(textDrawStringBuf, stringLength);
+	textDrawStringBuf[stringLength] = 0;
+
+	std::string string = textDrawStringBuf;
 	delete[] textDrawStringBuf;
 
-	if (vars.textDrawCreateLogging)
-		RakBot::app()->log("[RAKBOT] Показан текстдрав с ID %d (X: %.2f; Y: %.2f; текст: %s)", textDrawId, textDrawPosX, textDrawPosY, textDrawString.c_str());
+	TextDraw *textDraw = RakBot::app()->addTextDraw(id);
+	if (textDraw == nullptr)
+		return;
 
-	RakBot::app()->getEvents()->onTextDrawShow(textDrawId, textDrawPosX, textDrawPosY, textDrawString);
+	textDraw->setHasShadow(shadow);
+	textDraw->setHasOutline(outline);
+	textDraw->setSelectable(selectable);
+	textDraw->setFlags(flags);
+	textDraw->setStyle(style);
+	textDraw->setModelId(modelId);
+	textDraw->setLetterColor(letterColor);
+	textDraw->setBoxColor(boxColor);
+	textDraw->setBackgroundColor(backgroundColor);
+	textDraw->setColor(color);
+	textDraw->setZoom(zoom);
+	textDraw->setString(string);
+
+	for (int i = 0; i < 2; i++)
+		textDraw->setLetterSize(i, letterSize[i]);
+
+	for (int i = 0; i < 2; i++)
+		textDraw->setLineSize(i, lineSize[i]);
+
+	for (int i = 0; i < 2; i++)
+		textDraw->setPosition(i, position[i]);
+
+	for (int i = 0; i < 3; i++)
+		textDraw->setRotation(i, rotation[i]);
+
+	textDraw->setActive(true);
+
+	if (vars.textDrawCreateLogging) {
+		RakBot::app()->log("[RAKBOT] Показан текстдрав с ID %d (модель: %d; клик: %s; X: %.2f; Y: %.2f; текст: %s)",
+			id, modelId, selectable ? "да" : "нет", position[0], position[1], string.c_str());
+	}
+
+	RakBot::app()->getEvents()->onTextDrawShow(id, position[0], position[1], string);
 }
 
 void TextDrawHideForPlayer(RPCParameters *rpcParams) {
@@ -1098,6 +1184,7 @@ void TextDrawHideForPlayer(RPCParameters *rpcParams) {
 		RakBot::app()->log("[RAKBOT] Скрыт текстдрав с ID %d", textDrawId);
 
 	RakBot::app()->getEvents()->onTextDrawHide(textDrawId);
+	RakBot::app()->deleteTextDraw(textDrawId);
 }
 
 void TextDrawSetString(RPCParameters *rpcParams) {
@@ -1113,6 +1200,12 @@ void TextDrawSetString(RPCParameters *rpcParams) {
 	textDrawStringBuf[textDrawStringLen] = 0;
 	std::string textDrawString = textDrawStringBuf;
 	delete[] textDrawStringBuf;
+
+	TextDraw *textDraw = RakBot::app()->getTextDraw(textDrawId);
+	if (textDraw == nullptr)
+		return;
+
+	textDraw->setString(textDrawString);
 
 	if (vars.textDrawSetStringLogging)
 		RakBot::app()->log("[RAKBOT] Изменен текст текстдрава с ID %d (текст: %s)", textDrawId, textDrawString.c_str());
@@ -1197,6 +1290,31 @@ void Create3DTextLabel(RPCParameters *rpcParams) {
 	}
 } */
 
+void EnterVehicle(RPCParameters *rpcParams) {
+	RakNet::BitStream bsData(rpcParams->input, (rpcParams->numberOfBitsOfData / 8) + 1, false);
+
+	uint16_t playerId;
+	uint16_t vehicleId;
+	uint8_t seatId;
+
+	bsData.Read(playerId);
+	bsData.Read(vehicleId);
+	bsData.Read(seatId);
+
+	RakBot::app()->getEvents()->onEnterVehicle(playerId, vehicleId, seatId);
+
+	Player *player = RakBot::app()->getPlayer(playerId);
+	if (player == nullptr)
+		return;
+
+	Vehicle *vehicle = RakBot::app()->getVehicle(vehicleId);
+	if (vehicle == nullptr)
+		return;
+
+	RakBot::app()->log("[RAKBOT] Игрок %s[%d] садится в транспорт %s[%d] на место %d",
+		player->getName(), playerId, vehicle->getName(), vehicleId, seatId);
+}
+
 void RegisterRPCs() {
 	RakClientInterface *rakClient = RakBot::app()->getRakClient();
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_RequestSpawn, RequestSpawn);
@@ -1231,7 +1349,7 @@ void RegisterRPCs() {
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrDisplayGameText, ScrGameText);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrApplyAnimation, ScrApplyAnimation);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerSkin, SetPlayerSkin);
-	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerInterior, SetInterior);
+	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerInterior, SetInteriorId);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerAttachedObject, SetPlayerAttachedObject);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrCreateObject, CreateObject);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrDestroyObject, DestroyObject);
@@ -1244,5 +1362,6 @@ void RegisterRPCs() {
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrTogglePlayerSpectating, TogglePlayerSpectating);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrSetPlayerFacingAngle, SetPlayerFacingAngle);
 	rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrCreate3DTextLabel, Create3DTextLabel);
+	rakClient->RegisterAsRemoteProcedureCall(&RPC_EnterVehicle, EnterVehicle);
 	// rakClient->RegisterAsRemoteProcedureCall(&RPC_ScrUpdate3DTextLabel, Update3DTextLabel);
 }

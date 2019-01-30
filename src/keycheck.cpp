@@ -373,7 +373,7 @@ void CheckKey() {
 	DWORD pcNameLen = sizeof(pcName);
 	GetComputerName(pcName, &pcNameLen);
 
-	const char *checkUrlFormat = VMProtectDecryptStringA("http://rakbot.ru/keys/action/check?key=%s&hwid=%u&ver=%s&pc_name=%s");
+	const char *checkUrlFormat = VMProtectDecryptStringA("https://rakbot.ru/keys/action/check?key=%s&hwid=%u&ver=%s&pc_name=%s");
 
 	std::string regKeyEncoded = UrlEncode(vars.regKey);
 	std::string versionEncoded = UrlEncode(RAKBOT_VERSION);

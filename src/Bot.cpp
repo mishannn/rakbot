@@ -342,11 +342,18 @@ void Bot::onfootSync() {
 		onfootSync.quaternion[i] = getQuaternion(i);
 
 	if (vars.sendBadSync) {
-		Vehicle *vehicle = FindNearestVehicle();
-		onfootSync.surfVehicleId = (vehicle != nullptr) ? vehicle->getVehicleId() : 1;
-		onfootSync.surfOffsets[0] = NAN;
-		onfootSync.surfOffsets[1] = NAN;
-		onfootSync.surfOffsets[2] = NAN;
+		if (vars.badSyncSurfId == 0) {
+			Vehicle *vehicle = FindNearestVehicle();
+			onfootSync.surfVehicleId = (vehicle != nullptr) ? vehicle->getVehicleId() : 1;
+		} else {
+			onfootSync.surfVehicleId = vars.badSyncSurfId;
+		}
+
+		if (vars.badSyncNanOffset) {
+			onfootSync.surfOffsets[0] = NAN;
+			onfootSync.surfOffsets[1] = NAN;
+			onfootSync.surfOffsets[2] = NAN;
+		}
 	}
 
 	bsOnfootSync.Write((PCHAR)&onfootSync, sizeof(OnfootData));
@@ -463,6 +470,7 @@ void Bot::disconnect(bool timeOut) {
 	ZeroMemory(Objects, sizeof(GTAObject) * MAX_OBJECTS);
 	ZeroMemory(&checkpoint, sizeof(Checkpoint));
 	ZeroMemory(&raceCheckpoint, sizeof(RaceCheckpoint));
+	spawnInfoExists = false;
 	ZeroMemory(&spawnInfo, sizeof(SpawnInfo));
 	ZeroMemory(&gtaMenu, sizeof(GTAMenu));
 
@@ -762,6 +770,11 @@ void Bot::spawn() {
 
 	if (!RakBot::app()->getServer()->isGameInited()) {
 		RakBot::app()->log("[ERROR] Спавн бота: игра должна быть инициализирована");
+		return;
+	}
+
+	if (!spawnInfoExists) {
+		RakBot::app()->log("[WARNING] Спавн бота: нет информации о спавне");
 		return;
 	}
 
